@@ -193,7 +193,7 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' && vars.BUILD_INFRASTRUCTURE == 'FALSE' }}
     steps:
       
-      # Halt all containers, restart docker daemon and prune app image only
+      # Halt all containers, restart docker daemon and prune app image only.
       - name: Halt all containers and prune app image only
         uses: appleboy/ssh-action@master
         env:
