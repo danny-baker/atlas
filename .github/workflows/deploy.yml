@@ -1,7 +1,8 @@
 # This workflow does one of the two following things:
-  # 1 builds infrastructure (tears down and rebuilds VM) and deploys app; or
-  # 2 skips infrastructure step and deploys straight to existing VM 
-#Conrol based on a flag set on the repository variable: BUILD_INFRASTRUCTURE=TRUE/FALSE
+  # 1 deploy everything. Infrastructure (tears down and rebuilds VM) and deploys app
+  # 2 deploy app only. Skips infrastructure step and deploys straight to existing VM lazily (just repulls app image only)
+  # 3 deploy all containers. Full reset on existing VM hardware, including repulling all container images and recloning repo
+#Control based on a flag set on the repository variable: BUILD_INFRASTRUCTURE=TRUE/FALSE (default=false)
 
 name: deploy
 
@@ -22,8 +23,8 @@ jobs:
     steps:
       - run: echo 'The triggering build workflow failed'
 
-  # FULL INFRA BUILD HAS NOT BEEN TESTED LATELY
-  on-success-build:
+  # Note this requires valid TLS certs in repo secrets or HTTPS will not work
+  deploy-everything:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' && vars.BUILD_INFRASTRUCTURE == 'TRUE' }}
     steps:
@@ -185,13 +186,79 @@ jobs:
 #        inlineScript: |
 #          az network nsg rule update --name SSH --nsg-name $VM_NSG --resource-group $RESOURCE_GROUP_NAME --access Deny
 
-  on-success-nobuild:
+  # Lazy CI/CD bodge. Just stop containers, repull app image and restart everything (keep TLS etc)
+  # Use this for regular small changes to the app only.
+  deploy-app-only:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' && vars.BUILD_INFRASTRUCTURE == 'FALSE' }}
     steps:
-      - run: echo 'Skip building infrastructure'
+      
+      # Halt all containers, restart docker daemon and prune app image only
+      - name: Halt all containers and prune app image only
+        uses: appleboy/ssh-action@master
+        env:
+          GHUB_TOKEN: ${{ secrets.GHUB_TOKEN }}
+        with:
+          host: ${{ vars.AZURE_VM_SSHHOST }}
+          username: ${{ vars.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_VM_SSH_PORT }}
+          envs: GHUB_TOKEN
+          script: |
+            sudo docker stop $(sudo docker ps -a -q)
+            sudo systemctl restart docker
+            sudo docker image rm ghcr.io/danny-baker/atlas/atlas_app
+            
+      # Bring up app (should auto-pull all images)
+      - name: Bring up the app
+        uses: appleboy/ssh-action@master
+        env:
+          GHUB_TOKEN: ${{ secrets.GHUB_TOKEN }}
+        with:
+          host: ${{ vars.AZURE_VM_SSHHOST }}
+          username: ${{ vars.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_VM_SSH_PORT }}
+          envs: GHUB_TOKEN
+          script: |
+            echo "Logging into github container registry"
+            echo $GHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+            echo "Starting up NOW"
+            cd ~/atlas
+            . startup-manual-certs.sh
 
-    
+
+
+
+# Another hypothetical job for when you want to rebuild all containers freshly on the VM, without actually tearing it down and rebuilding it.
+# i.e. major changes to the container orchestration etc. Note this also requires valid TLS certs in the repo secrets, or it will fail
+# because you need to prune all images, and potentially delete and reclone the repo. So it's basically a full wipe without rebuilding infrastructure.            
+#  deploy-all-containers:
+
+
+#      # Refresh github access, dump repo and reclone it in full (in case of major changes)
+#      - name: Removing and recloning repo
+#      uses: appleboy/ssh-action@master
+#      env:
+#          GITHUB_PRIVATE_KEY: ${{ secrets.GHUB_PRIVATE_KEY }}
+#          GITHUB_PUBLIC_KEY: ${{ secrets.GHUB_PUBLIC_KEY }}
+#      with:
+#        host: ${{ vars.AZURE_VM_SSHHOST }}
+#        username: ${{ vars.AZURE_VM_USERNAME }}
+#        key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+#        port: ${{ vars.AZURE_VM_SSH_PORT }}
+#        envs: GITHUB_PRIVATE_KEY, GITHUB_PUBLIC_KEY
+#        script: |
+#          sudo rm -r ~/atlas
+#          echo "$GITHUB_PRIVATE_KEY" > ~/.ssh/github
+#          echo "$GITHUB_PUBLIC_KEY" > ~/.ssh/github.pub
+#          chmod 600 ~/.ssh/github
+#          eval "$(ssh-agent -s)"
+#          ssh-add ~/.ssh/github
+#          ssh-keyscan github.com >> ~/.ssh/known_hosts
+#          ssh -T git@github.com
+#          cd ~
+#          git clone git@github.com:danny-baker/atlas.git       
 
     
 
