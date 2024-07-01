@@ -2,11 +2,11 @@
 # It then connects to the VM via SSH and configures everything (installs docker, pulls container images, injects secrets)
 # Finally it sets up security (revokes SSH access and puts VM behind Wireguard) and brings up all the containers
 
-name: Deploy
+name: build_infrastructure
 
 on:
   workflow_run:
-    workflows: [Build]
+    workflows: [build_app]
     types: [completed]
 
 env:
@@ -21,10 +21,21 @@ jobs:
     steps:
       - run: echo 'The triggering build workflow failed'
 
-  on-success:
+  on-success-build:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && vars.BUILD_INFRASTRUCTURE == 'TRUE' }}
     steps:
+      - run: echo 'Building infrastructure'
+
+  on-success-nobuild:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' && vars.BUILD_INFRASTRUCTURE == 'FALSE' }}
+    steps:
+      - run: echo 'Skip building infrastructure'
+
+    
+
+    
 
 #     # Checkout code (needed to access bicep file)
 #    - uses: actions/checkout@main
@@ -152,23 +163,23 @@ jobs:
 #        port: ${{ vars.AZURE_VM_SSH_PORT }}
 #        script: . ~/atlas/infrastructure/azure-deploy/setup-vm.sh
 
-      # Bring up app
-    - name: Bring up the app
-      uses: appleboy/ssh-action@master
-      env:
-        GHUB_TOKEN: ${{ secrets.GHUB_TOKEN }}
-      with:
-        host: ${{ vars.AZURE_VM_SSHHOST }}
-        username: ${{ vars.AZURE_VM_USERNAME }}
-        key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
-        port: ${{ vars.AZURE_VM_SSH_PORT }}
-        envs: GHUB_TOKEN
-        script: |
-          echo "Logging into github container registry"
-          echo $GHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
-          echo "Starting up NOW"
-          cd ~/atlas
-          . startup-manual-certs.sh
+#      # Bring up app
+#    - name: Bring up the app
+#      uses: appleboy/ssh-action@master
+#      env:
+#        GHUB_TOKEN: ${{ secrets.GHUB_TOKEN }}
+#      with:
+#        host: ${{ vars.AZURE_VM_SSHHOST }}
+#        username: ${{ vars.AZURE_VM_USERNAME }}
+#        key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+#        port: ${{ vars.AZURE_VM_SSH_PORT }}
+#        envs: GHUB_TOKEN
+#        script: |
+#          echo "Logging into github container registry"
+#          echo $GHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+#          echo "Starting up NOW"
+#          cd ~/atlas
+#          . startup-manual-certs.sh
 
 #      # Revoke public SSH access
 #    - name: Revoke SSH public access (most be via tailnet)
