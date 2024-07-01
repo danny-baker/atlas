@@ -1,5 +1,4 @@
-# This refreshes the cloud infrastructure (builds a new vm) or skips this stage if the repository variable boolean advises it to.
-# It's a bit dirty, but at least allows for rapid deployment/redeployment of the app without tearing down infrastructure.
+# This builds infrastructure (tears down and rebuilds VM) or skips this step based on a flag set on the repository variable: BUILD_INFRASTRUCTURE=TRUE/FALSE
 
 name: build_infrastructure
 
