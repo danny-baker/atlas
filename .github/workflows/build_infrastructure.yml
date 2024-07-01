@@ -1,6 +1,5 @@
-# This refreshes the cloud infrastructure (builds a new vm)
-# It then connects to the VM via SSH and configures everything (installs docker, pulls container images, injects secrets)
-# Finally it sets up security (revokes SSH access and puts VM behind Wireguard) and brings up all the containers
+# This refreshes the cloud infrastructure (builds a new vm) or skips this stage if the repository variable boolean advises it to.
+# It's a bit dirty, but at least allows for rapid deployment/redeployment of the app without tearing down infrastructure.
 
 name: build_infrastructure
 
