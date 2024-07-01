@@ -6,7 +6,7 @@ on:
   
   push:
     branches: [ "main" ]
-    tags: [ 'v*.*.*' ] # Publish semver tags as releases.
+    tags: [ 'v*.*.*' ] # Publish server tags as releases.
   pull_request:
     branches: [ "main" ]
 
