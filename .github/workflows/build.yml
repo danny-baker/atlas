@@ -27,12 +27,24 @@ jobs:
       - name: Checkout the repo
         uses: actions/checkout@v3
 
-      # Bake secrets into container
-      - name: Injecting secrets
+      # Bake secrets into container before building it
+      - name: Injecting GA4 tag
         run: sed -i "s/SECRET_GA4_TAG/$SECRET_GA4_TAG/" ./flask_app/dash_app/dash_html.py     
         env: 
           SECRET_GA4_TAG: ${{ vars.SECRET_GA4_TAG }}
-            
+      
+      # Set Gunicorn workers
+      - name: Set Gunicorn worker number
+        run: sed -i "s/GUNICORN_WORKERS/$GUNICORN_WORKERS/" ./Dockerfile     
+        env: 
+          GUNICORN_WORKERS: ${{ vars.GUNICORN_WORKERS }}
+
+      # Set Gunicorn threads
+      - name: Set Gunicorn thread number
+        run: sed -i "s/GUNICORN_THREADS/$GUNICORN_THREADS/" ./Dockerfile     
+        env: 
+          GUNICORN_THREADS: ${{ vars.GUNICORN_THREADS }}
+          
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
       - name: Log into container registry

@@ -66,4 +66,4 @@ USER app
 EXPOSE 8050
 
 # start gunicorn and specify workers and threads
-ENTRYPOINT gunicorn --bind 0.0.0.0:8050 wsgi:app --timeout=0 --workers 2 --worker-class gthread --threads 3
+ENTRYPOINT gunicorn --bind 0.0.0.0:8050 wsgi:app --timeout=0 --workers GUNICORN_WORKERS --worker-class gthread --threads GUNICORN_THREADS
