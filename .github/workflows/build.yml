@@ -1,6 +1,6 @@
 # This builds the dash app into a container and pushes it into the github container registry
 
-name: build_app
+name: build
 
 on:
   
