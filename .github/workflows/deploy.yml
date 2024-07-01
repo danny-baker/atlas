@@ -125,8 +125,8 @@ jobs:
             chmod 600 ~/atlas/infrastructure/certbot/conf/live/worldatlas.org/privkey.pem
             chmod 600 ~/atlas/infrastructure/certbot/conf/live/worldatlas.org/fullchain.pem
 
-      # Inject secrets
-      - name: ssh to server and inject secrets
+      # Inject datadog and tailscale secrets
+      - name: ssh to server and inject datadog and tailscale secrets
         uses: appleboy/ssh-action@master
         env:
             SECRET_DATADOG_API_KEY: ${{ vars.SECRET_DATADOG_API_KEY }}
@@ -192,8 +192,28 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' && vars.BUILD_INFRASTRUCTURE == 'FALSE' }}
     steps:
       
+      # Inject datadog and tailscale secrets
+      - name: ssh to server and inject datadog and tailscale secrets
+        uses: appleboy/ssh-action@master
+        env:
+            SECRET_DATADOG_API_KEY: ${{ vars.SECRET_DATADOG_API_KEY }}
+            SECRET_EMAIL_FOR_TLS_CERT_GENERATOR: ${{ vars.SECRET_EMAIL_FOR_TLS_CERT_GENERATOR }}
+            SECRET_TAILSCALE_AUTHKEY: ${{ secrets.SECRET_TAILSCALE_AUTHKEY }}
+
+        with:
+          host: ${{ vars.AZURE_VM_SSHHOST }}
+          username: ${{ vars.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_VM_SSH_PORT }}
+          envs: SECRET_DATADOG_API_KEY, SECRET_EMAIL_FOR_TLS_CERT_GENERATOR, SECRET_TAILSCALE_AUTHKEY 
+          script: |
+            sed -i "s/SECRET_DATADOG_API_KEY/$SECRET_DATADOG_API_KEY/" ~/atlas/docker-compose.yml
+            sed -i "s/SECRET_EMAIL_FOR_TLS_CERT_GENERATOR/$SECRET_EMAIL_FOR_TLS_CERT_GENERATOR/" ~/atlas/startup-generate-certs.sh
+            sed -i "s/SECRET_TAILSCALE_AUTHKEY/$SECRET_TAILSCALE_AUTHKEY/" ~/atlas/infrastructure/azure-deploy/setup-vm.sh
+            echo "Secrets injected."
+
       # Halt all containers, restart docker daemon, prune all images and re-pull
-      - name: Halt all containers and prune app image only
+      - name: Halt all containers, prune all images, pull images and bring up app
         uses: appleboy/ssh-action@master
         env:
           GHUB_TOKEN: ${{ secrets.GHUB_TOKEN }}
