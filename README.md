@@ -251,6 +251,8 @@ If I have done something stupid, please tell me so I can fix it.
 
 ## Backlog
 
+July 2024: I'm working on building out a proper backlog. Here are some quick notes.
+
 **Expanding the mapping capabilities beyond Plotly charts**
 
 Presently the site is built as a Flask app, wrapping a Plotly Dash (Python) web app. Most of the visualisations such as charts and maps are out-of-the box Plotly javascript charts. Some I've pushed hard but, at base, I think the main map is limited as it is really just a Choropleth chart. I'd love to explore more open frameworks for map specific stuff, like Leaflet and Mapbox.
