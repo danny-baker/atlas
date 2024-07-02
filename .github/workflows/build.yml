@@ -35,13 +35,13 @@ jobs:
       
       # Set Gunicorn workers
       - name: Set Gunicorn worker number
-        run: sed -i "s/GUNICORN_WORKERS/$GUNICORN_WORKERS/" ./Dockerfile     
+        run: sed -i "s/workers 1/$GUNICORN_WORKERS/" ./Dockerfile     
         env: 
           GUNICORN_WORKERS: ${{ vars.GUNICORN_WORKERS }}
 
       # Set Gunicorn threads
       - name: Set Gunicorn thread number
-        run: sed -i "s/GUNICORN_THREADS/$GUNICORN_THREADS/" ./Dockerfile     
+        run: sed -i "s/threads 1/$GUNICORN_THREADS/" ./Dockerfile     
         env: 
           GUNICORN_THREADS: ${{ vars.GUNICORN_THREADS }}
           
