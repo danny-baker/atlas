@@ -10,10 +10,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-#Expose port 8050 in the container (can be mapped to another port on host)
 EXPOSE 8050
 
-# start gunicorn and specify workers and threads
+# start gunicorn and specify workers and threads (these are injected at build via github actions from repository variables)
 ENTRYPOINT gunicorn --bind 0.0.0.0:8050 wsgi:app --timeout=0 --workers GUNICORN_WORKERS --worker-class gthread --threads GUNICORN_THREADS
 
 
