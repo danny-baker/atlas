@@ -29,7 +29,9 @@ This is the least complex way to run the app as we will spin it up directly from
 
 Recommend using [Github Desktop](https://desktop.github.com/) or Git command line interface (CLI) in a terminal
 
-`git clone git@github.com:danny-baker/atlas.git`
+`git clone https://github.com/danny-baker/atlas.git` (using https)
+
+`git clone git@github.com:danny-baker/atlas.git` (requires ssh keys)
 
 #### 2. Setup virtual environment 
 
