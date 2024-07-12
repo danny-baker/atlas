@@ -1,6 +1,6 @@
 __pycache__/
 tmp/
-data_lakehouse/
+#data_lakehouse/
 infrastructure/
 
 
