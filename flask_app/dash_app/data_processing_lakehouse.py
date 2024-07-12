@@ -28,7 +28,7 @@ def run_lakehouse_tasks():
     process_STAGING()
     process_COPPER()
     process_IRON()  
-    #clean_lakehouse_for_build() #purge and zip, leaving TITANIUM (for run-time)
+    clean_lakehouse_for_build() #purge and zip, leaving TITANIUM (for run-time)
     #clean_lakehouse() #purge everything except STAGING (useful during pipeline testing)
     toc = time.perf_counter()
     print("Successfully ran data pipeline build. Operation time: ",(toc-tic)/60," minutes.")
