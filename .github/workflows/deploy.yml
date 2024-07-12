@@ -1,0 +1,239 @@
+# This workflow does one of the two following things:
+  # 1 deploy everything. Infrastructure (tears down and rebuilds VM) and deploys app
+  # 2 deploy app only. Skips infrastructure step and deploys straight to existing VM lazily (prunes all images)
+#Control based on a flag set on the repository variable: BUILD_INFRASTRUCTURE=TRUE/FALSE (default=false)
+
+name: deploy
+
+on:
+  workflow_run:
+    workflows: [build]
+    types: [completed]
+
+env:
+  REGISTRY: ghcr.io # the github container registry
+  IMAGE_NAME: ${{ github.repository }} # github.repository as <account>/<repo> i.e. danny-baker/atlas
+
+jobs:
+
+  on-failure:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    steps:
+      - run: echo 'The triggering build workflow failed'
+
+  # Note this requires valid TLS certs in repo secrets or HTTPS will not work
+  deploy-everything:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' && vars.BUILD_INFRASTRUCTURE == 'TRUE' }}
+    steps:
+
+      # Checkout code (needed to access bicep file)
+      - uses: actions/checkout@main
+     
+      # Log into Azure
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # Tear it all down, regardless if it exists or not
+      - name: Tear down azure resources (force)
+        uses: azure/CLI@v1
+        env:
+          RESOURCE_GROUP_NAME: ${{ vars.AZURE_RG }}
+          RESOURCE_GROUP_LOCATION: ${{ vars.AZURE_RG_LOCN }}
+          VM_PROJECT_NAME: ${{ vars.AZURE_VM_PROJECT_NAME }} 
+          VM_NIC: "${{ vars.AZURE_VM_PROJECT_NAME }}-nic"
+          VM_IP: "${{ vars.AZURE_VM_PROJECT_NAME }}-ip"
+          VM_NSG: "${{ vars.AZURE_VM_PROJECT_NAME }}-nsg"
+          VM_NAME: "${{ vars.AZURE_VM_PROJECT_NAME }}-vm"
+          VM_VNET: "${{ vars.AZURE_VM_PROJECT_NAME }}-VNet"
+          VM_DISK: "${{ vars.AZURE_VM_PROJECT_NAME }}-disk"
+
+        with:
+          azcliversion: 2.30.0
+          inlineScript: |
+            az resource delete -g $RESOURCE_GROUP_NAME -n $VM_NAME --resource-type "Microsoft.Compute/virtualMachines"
+            az resource delete -g $RESOURCE_GROUP_NAME -n $VM_NIC --resource-type "Microsoft.Network/networkInterfaces"
+            az resource delete -g $RESOURCE_GROUP_NAME -n $VM_NSG --resource-type "Microsoft.Network/networkSecurityGroups"
+            az resource delete -g $RESOURCE_GROUP_NAME -n $VM_IP --resource-type "Microsoft.Network/publicIPAddresses"
+            az resource delete -g $RESOURCE_GROUP_NAME -n $VM_VNET --resource-type "Microsoft.Network/virtualNetworks"
+            az resource delete -g $RESOURCE_GROUP_NAME -n $VM_DISK --resource-type "Microsoft.Compute/disks"
+
+      # Deploy VM via Bicep file, passing in parameters from repository secrets
+      - name: Deploy VM with bicep file
+        uses: azure/arm-deploy@v1
+        with:
+          subscriptionId: ${{ vars.AZURE_SUBSCRIPTION }}
+          resourceGroupName: ${{ vars.AZURE_RG }}
+          template: ./infrastructure/azure-deploy/create-vm.bicep
+          parameters: adminUsername="${{ vars.AZURE_VM_USERNAME }}" adminPublicKey="${{ secrets.AZURE_VM_SSHPUBKEY }}" vmModel="${{ vars.AZURE_VM_MODEL }}" osDiskSize=${{ vars.AZURE_VM_DISK_SIZE_GB }} osDiskType="${{ vars.AZURE_VM_DISK_TYPE }}" projectName="${{ vars.AZURE_VM_PROJECT_NAME }}" ipConfig="${{ vars.AZURE_VM_IPCONFIG }}"
+          failOnStdErr: false
+
+      # Bind static ip to NIC
+      - name: Associate the static IP with the VM's NIC 
+        uses: azure/CLI@v1
+        env:
+          RESOURCE_GROUP_NAME: ${{ vars.AZURE_RG }} 
+          VM_NIC: "${{ vars.AZURE_VM_PROJECT_NAME }}-nic"
+          VM_IPCONFIG: ${{ vars.AZURE_VM_IPCONFIG }} # this is the default ipconfig name Azure gives the nic which is "myIPconfig"
+          VM_STATIC_IP: ${{ vars.AZURE_VM_STATIC_IP }}  #this is the literal IP address resource name in Azure portal (it need not be a secret handle)
+      
+        with:
+          azcliversion: 2.30.0
+          inlineScript: |
+            az network nic ip-config update --name $VM_IPCONFIG --nic-name $VM_NIC --resource-group $RESOURCE_GROUP_NAME --public-ip-address $VM_STATIC_IP
+
+      # Setup github and clone repo to new vm (server)
+      - name: ssh to server, setup github keys and clone repo
+        uses: appleboy/ssh-action@master
+        env:
+            GITHUB_PRIVATE_KEY: ${{ secrets.GHUB_PRIVATE_KEY }}
+            GITHUB_PUBLIC_KEY: ${{ secrets.GHUB_PUBLIC_KEY }}
+        with:
+          host: ${{ vars.AZURE_VM_SSHHOST }}
+          username: ${{ vars.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_VM_SSH_PORT }}
+          envs: GITHUB_PRIVATE_KEY, GITHUB_PUBLIC_KEY
+          script: |
+            echo "$GITHUB_PRIVATE_KEY" > ~/.ssh/github
+            echo "$GITHUB_PUBLIC_KEY" > ~/.ssh/github.pub
+            chmod 600 ~/.ssh/github
+            eval "$(ssh-agent -s)"
+            ssh-add ~/.ssh/github
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
+            ssh -T git@github.com
+            cd ~
+            git clone git@github.com:danny-baker/atlas.git
+
+      # Inject TLS certs (HTTPS)
+      - name: ssh to server and obtain TLS certs
+        uses: appleboy/ssh-action@master
+        env:
+            TLS_PRIVKEY: ${{ secrets.TLS_PRIVKEY }}
+            TLS_FULLCHAIN: ${{ secrets.TLS_FULLCHAIN }}
+        with:
+          host: ${{ vars.AZURE_VM_SSHHOST }}
+          username: ${{ vars.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_VM_SSH_PORT }}
+          envs: TLS_PRIVKEY, TLS_FULLCHAIN
+          script: |
+            echo "$TLS_PRIVKEY" > ~/atlas/infrastructure/certbot/conf/live/worldatlas.org/privkey.pem
+            echo "$TLS_FULLCHAIN" > ~/atlas/infrastructure/certbot/conf/live/worldatlas.org/fullchain.pem
+            chmod 600 ~/atlas/infrastructure/certbot/conf/live/worldatlas.org/privkey.pem
+            chmod 600 ~/atlas/infrastructure/certbot/conf/live/worldatlas.org/fullchain.pem
+
+      # Inject datadog and tailscale secrets
+      - name: ssh to server and inject datadog and tailscale secrets
+        uses: appleboy/ssh-action@master
+        env:
+            SECRET_DATADOG_API_KEY: ${{ vars.SECRET_DATADOG_API_KEY }}
+            SECRET_EMAIL_FOR_TLS_CERT_GENERATOR: ${{ vars.SECRET_EMAIL_FOR_TLS_CERT_GENERATOR }}
+            SECRET_TAILSCALE_AUTHKEY: ${{ secrets.SECRET_TAILSCALE_AUTHKEY }}
+
+        with:
+          host: ${{ vars.AZURE_VM_SSHHOST }}
+          username: ${{ vars.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_VM_SSH_PORT }}
+          envs: SECRET_DATADOG_API_KEY, SECRET_EMAIL_FOR_TLS_CERT_GENERATOR, SECRET_TAILSCALE_AUTHKEY 
+          script: |
+            sed -i "s/SECRET_DATADOG_API_KEY/$SECRET_DATADOG_API_KEY/" ~/atlas/docker-compose.yml
+            sed -i "s/SECRET_EMAIL_FOR_TLS_CERT_GENERATOR/$SECRET_EMAIL_FOR_TLS_CERT_GENERATOR/" ~/atlas/startup-generate-certs.sh
+            sed -i "s/SECRET_TAILSCALE_AUTHKEY/$SECRET_TAILSCALE_AUTHKEY/" ~/atlas/infrastructure/azure-deploy/setup-vm.sh
+            echo "Secrets injected."
+      
+      # Install services (Docker, docker-compose)
+      - name: ssh to server and setup services (docker, docker-compose)
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ vars.AZURE_VM_SSHHOST }}
+          username: ${{ vars.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_VM_SSH_PORT }}
+          script: . ~/atlas/infrastructure/azure-deploy/setup-vm.sh
+
+      # Bring up app
+      - name: Bring up the app
+        uses: appleboy/ssh-action@master
+        env:
+          GHUB_TOKEN: ${{ secrets.GHUB_TOKEN }}
+        with:
+          host: ${{ vars.AZURE_VM_SSHHOST }}
+          username: ${{ vars.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_VM_SSH_PORT }}
+          envs: GHUB_TOKEN
+          script: |
+            echo "Logging into github container registry"
+            echo $GHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+            echo "Starting up NOW"
+            cd ~/atlas
+            . startup-manual-certs.sh
+
+#      # Revoke public SSH access (disabled temporarily)
+#    - name: Revoke SSH public access (most be via tailnet)
+#      uses: azure/CLI@v1
+#      env:
+#        RESOURCE_GROUP_NAME: ${{ vars.AZURE_RG }}
+#        VM_NSG: "${{ vars.AZURE_VM_PROJECT_NAME }}-nsg"
+#
+#      with:
+#        azcliversion: 2.30.0
+#        inlineScript: |
+#          az network nsg rule update --name SSH --nsg-name $VM_NSG --resource-group $RESOURCE_GROUP_NAME --access Deny
+
+  # Lazy CI/CD bodge. Just stop containers, repull app image and restart everything (keep TLS etc)
+  # Use this for regular small changes to the app only.
+  deploy-app-only:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' && vars.BUILD_INFRASTRUCTURE == 'FALSE' }}
+    steps:
+      
+      # Inject datadog and tailscale secrets
+      - name: ssh to server and inject datadog and tailscale secrets
+        uses: appleboy/ssh-action@master
+        env:
+            SECRET_DATADOG_API_KEY: ${{ vars.SECRET_DATADOG_API_KEY }}
+            SECRET_EMAIL_FOR_TLS_CERT_GENERATOR: ${{ vars.SECRET_EMAIL_FOR_TLS_CERT_GENERATOR }}
+            SECRET_TAILSCALE_AUTHKEY: ${{ secrets.SECRET_TAILSCALE_AUTHKEY }}
+
+        with:
+          host: ${{ vars.AZURE_VM_SSHHOST }}
+          username: ${{ vars.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_VM_SSH_PORT }}
+          envs: SECRET_DATADOG_API_KEY, SECRET_EMAIL_FOR_TLS_CERT_GENERATOR, SECRET_TAILSCALE_AUTHKEY 
+          script: |
+            sed -i "s/SECRET_DATADOG_API_KEY/$SECRET_DATADOG_API_KEY/" ~/atlas/docker-compose.yml
+            sed -i "s/SECRET_EMAIL_FOR_TLS_CERT_GENERATOR/$SECRET_EMAIL_FOR_TLS_CERT_GENERATOR/" ~/atlas/startup-generate-certs.sh
+            sed -i "s/SECRET_TAILSCALE_AUTHKEY/$SECRET_TAILSCALE_AUTHKEY/" ~/atlas/infrastructure/azure-deploy/setup-vm.sh
+            echo "Secrets injected."
+
+      # Halt all containers, restart docker daemon, prune all images and re-pull
+      - name: Halt all containers, prune all images, pull images and bring up app
+        uses: appleboy/ssh-action@master
+        env:
+          GHUB_TOKEN: ${{ secrets.GHUB_TOKEN }}
+        with:
+          host: ${{ vars.AZURE_VM_SSHHOST }}
+          username: ${{ vars.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_VM_SSH_PORT }}
+          envs: GHUB_TOKEN
+          script: |
+            sudo docker stop $(sudo docker ps -a -q)
+            sudo systemctl restart docker
+            sudo docker system prune --all -f
+            echo "Logging into github container registry"
+            echo $GHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+            echo "Starting up NOW"
+            cd ~/atlas
+            docker-compose up -d
+            
+
+
+
+

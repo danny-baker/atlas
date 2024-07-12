@@ -1,0 +1,12 @@
+/* Ensure text in popovers persist newline characters to allow better formatting */
+
+.popover {
+    white-space: pre-wrap; 
+    max-width: 25%;      
+}
+
+.popover {
+    html:true;       
+}
+
+
