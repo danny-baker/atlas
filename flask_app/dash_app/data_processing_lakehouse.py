@@ -1,9 +1,12 @@
 # Houses all processing that can be done preruntime. In preparation for lakehouse build
+
 # For now, if reprocessing is necessary this is done offline on a local machine using this file. (e.g. adding new datasets)
-# The target for all run-time files is the TITANIUM folder, which houses the master stats, config and metadata as well as geojson for the map and globe.
-# The clean helper functions can be used to decompress and run the pipeline as well as repackage it ready for pushing to remote repo (preserving 100MB file sizes on github)
-# This process must be run from the root repo directory. i.e. run python console and ensure in Spyder.
-# 
+# run_lakehouse_tasks() to do a full pipeline build
+# clean_lakehouse_for_build() to delete all uneeded files, zip up STAGING and leave TITANIUM files available for app
+# Can then push repo to main and conform to the 100MB file size limit.
+
+# This process must be run from the root repo directory. i.e. run python console and ensure in Spyder. Hit play button to parse Python and ensure back in the root project folder.
+
 
 import data_paths as paths 
 import json
