@@ -10,7 +10,7 @@ index_string = '''
             <title>{%title%}</title> 
             <title>WORLD ATLAS 2.0</title>
             <meta name="title" content="WORLD ATLAS 2.0 - Explore 2,500 datasets">
-            <meta name="description" content="With over 12 million data points spanning 100 categories, find a dataset that interests you and analyse it using a suite of interactive charts. All data is fully sourced and available for download. It's designed to be easy to use and fun to learn. ">
+            <meta name="description" content="With over 15 million data points spanning 100 categories, find a dataset that interests you and analyse it using a suite of interactive charts. All data is fully sourced and available for download. It's designed to be easy to use and fun to learn. ">
 
             <!-- Open Graph / Facebook -->
             <meta property="og:type" content="website">
@@ -81,7 +81,7 @@ index_string = '''
                 
                 <div class="column left" style="background-color:transparent;padding-left:25px;">
                      <!--<p>This project is now open-source on Github! Check it out <a href="https://github.com/danny-baker/atlas">here</a>.</p>-->
-                     <p>Hi from Dan (creator). This project is open source on Github <a href="https://github.com/danny-baker/atlas" target="_blank">here</a>. Most datasets are now updated to the latest available year. More on the way. Give me feedback and ideas via the <a href="https://forms.gle/CMA8CZCggfZZ4kEZA" target="_blank">2 min anonymous survey!</a></p>
+                     <p>Hi from Dan (creator). This project is open source on Github <a href="https://github.com/danny-baker/atlas" target="_blank">here</a>. Major update complete (25 Jul 2024). Upgraded server, refreshed many datasets, and improved menu. Give me feedback and ideas via the <a href="https://forms.gle/CMA8CZCggfZZ4kEZA" target="_blank">2 min anonymous survey!</a></p>
 
                     
                 </div>
