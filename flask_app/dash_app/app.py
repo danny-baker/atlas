@@ -1,4 +1,6 @@
-#Running in linux babycakes
+# This is the main python web application in Plotly Dash.
+# It has a few helper files which are imported, but the core code for the entire app is here
+# At run-time, it reads in geojson polygons (for country borders), the master statistics file (15M rows) and a master config file (which defines the menu structure and data types for each dataset)
 
 """
 Created on Sat May  2 05:38:02 2020
