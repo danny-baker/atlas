@@ -129,7 +129,7 @@ INIT_TITLE_OPACITY = 0.8                                 # title opacity
 INIT_BUTTON_OPACITY = 0.9                                # button opacity
 INIT_BTN_OUTLINE = False
 INIT_year_SLIDER_FONTSIZE = "1.5vmin"
-INIT_year_TITLE_FONTSIZE = "2vmin"
+INIT_year_TITLE_FONTSIZE = "2vmin" #2vmin
 INIT_year_SLIDER_FONTCOLOR = 'grey'
 INIT_SELECTION_H = "2.3vmin"  #was 2.3
 INIT_NAVBAR_H = "7vmin"                                # NAVBAR HEIGHT
@@ -3027,7 +3027,7 @@ def create_dash_layout_nav_footer():
                     dbc.Col([
                     #html.Div([ 
                         
-                        html.Div("year", 
+                        html.Div("year_test", 
                                  style={'fontWeight': 'bold', 'color': INIT_year_SLIDER_FONTCOLOR, 'fontSize': INIT_year_SLIDER_FONTSIZE, 'align-items': 'center', 'justify-content': 'center','display': 'none', 'marginBottom':'0.5vmin'},
                                  id='year-slider-title'), 
                         
@@ -3442,9 +3442,9 @@ def init_callbacks(dash_app):
         if len(year_slider_marks) < 2:
             navbtm_yr_style = {'display': 'none'} #hid
             navtm_yr_title_style = {'fontWeight': 'bold', 'color': INIT_year_SLIDER_FONTCOLOR, 'fontSize': INIT_year_SLIDER_FONTSIZE, 'align-items': 'center', 'justify-content': 'center','display': 'flex', 'marginBottom':'0.5vmin',}
-            navbtm_yr_title_val = "year: "+str(year)
+            navbtm_yr_title_val = "YEAR: "+str(year)
         else:
-            navbtm_yr_title_val = "year"
+            navbtm_yr_title_val = "YEAR"
         
         # set URL path to return
         root_path = states['my-url-root.data']    
