@@ -128,7 +128,7 @@ It's a Plotly Dash App encased in a proper Flask app, which is containerised and
 
 In the following sections I'll outline the core aspects of the system in the hope you might help me improve it. Please also note this has been a solo project, so I've cut lots of corners and kept it as lean as possible with minimal 3rd party tools and systems. For example, I do not use any SQL databases. Instead I use .csv files for metadata and .parquet (pyArrow) binary files to store processed data, with massive compression and read-time advantages.
 
-#### Flyover of what each file does
+#### Flyover of what each file does (needs a bit of an update)
 
 There are an annoying number of files in the project repository now. It didn't start off this way. Here is a quick guide to highlight the important stuff in the root directory. Notably, the repository contains more than just the code to build the Dash app, it also has code to describe the infrastructure to host it on AND it houses all the data used by the app. I am fully aware this is not best practice. It feels good to ignore best practice sometimes.
 
@@ -153,6 +153,8 @@ There are an annoying number of files in the project repository now. It didn't s
 * `docker-compose.yml` describes how to orchestrate the 4 containers when deploying in production environment
 
 * `requirements.txt` outlines all the Python modules, version locked
+
+Note: Update on data-lakehouse section to be inserted.
 
 #### 0. Core Systems
 
