@@ -61,9 +61,9 @@ jobs:
       - name: Inject Azure storage account key
         run: sed -i "s@AZURE_STORAGE_ACCOUNT_KEY@$AZURE_STORAGE_ACCOUNT_KEY@" ./flask_app/dash_app/app.py
         env: 
-          AZURE_STORAGE_ACCOUNT_KEY: ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}
+          AZURE_STORAGE_ACCOUNT_KEY: ${{ vars.AZURE_STORAGE_ACCOUNT_KEY }}
      
-      # Testing. Check if substituions worked
+      # Testing. Check if substitutions worked (dangerous)
       - name: Check if substitutions worked. Printing first 100 lines
         run: head -100 ./flask_app/dash_app/app.py
 
