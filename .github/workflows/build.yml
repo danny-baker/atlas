@@ -62,7 +62,7 @@ jobs:
         #run: sed -i "s/AZURE_STORAGE_ACCOUNT_KEY/$AZURE_STORAGE_ACCOUNT_KEY/" ./flask_app/dash_app/app.py
         #env: 
         #    AZURE_STORAGE_ACCOUNT_KEY: ${{ vars.AZURE_STORAGE_ACCOUNT_KEY }} #working. Wont let me bake in a key
-        run: perl -pi -e 's/getString\(R\.string\.token\)/"$ENV{TOKEN}"/' ./flask_app/dash_app/app.py
+        run: perl -pi -e 's/getString\(R\.string\.AZURE_STORAGE_ACCOUNT_KEY\)/"$ENV{TOKEN}"/' ./flask_app/dash_app/app.py
         env:
           TOKEN: ${{ vars.AZURE_STORAGE_ACCOUNT_KEY }}
         
