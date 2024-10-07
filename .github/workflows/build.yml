@@ -5,8 +5,8 @@ name: build
 on:
   
   push:
-    branches: [ "main" ]
-    tags: [ 'v*.*.*' ] # Publish server tags as releases.
+    #branches: [ "main" ]
+    #tags: [ 'v*.*.*' ] # Publish server tags as releases.
   pull_request:
     branches: [ "main" ]
 

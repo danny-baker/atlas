@@ -9,6 +9,8 @@ import time
 from PIL import ImageColor
 import os
 from . import data_paths as paths
+from datetime import datetime, timedelta
+from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions, BlobClient, ContainerClient
 
 
 def get_list_of_dataset_labels_and_raw(master_config,var_type):
@@ -40,41 +42,19 @@ def get_list_of_dataset_labels_and_raw(master_config,var_type):
     return dict_list
 
 
-def read_unique_country_list(path):
-    c =  pd.read_csv(
-       path,
-       encoding="utf-8",
-       #names=["m49_a3_country", "country", "continent", "region_un", "region_wb", "su_a3"],
-    )
-    return c
 
-def read_dataset_metadata(path):
-    
-    #read in all metadata
-    d= pd.read_csv(
-       path,
-       encoding="utf-8",
-       names=["dataset_id", "dataset_raw", "dataset_label", "source", "link", "var_type", "nav_cat", "colour", "nav_cat_nest", "tag1", "tag2", "explanatory_note"],
-    )
-    
-    #obsolete soon
-    #d = pd.read_csv(path)
-
-    # delete first 1 rows (col headers)
-    d = d.iloc[1:,] 
-
-    return d
-
-def read_master_config(path,set_key):
+def read_master_config(set_key_list, account_name, account_key, container_name, filepath):
     #The successor to read_dataset_metadata using new master_config.csv
     #Returns a dictionary of dictionaries, with a specified parent key (for rapid lookup)
-
-    # read in new file to begin hacking it
-    #master_config = pd.read_csv(path)
+  
+    #master_config = d.read_master_config("dataset_raw") #used to lookup metadata based on dataset raw (often thru the app)
+    #master_config_key_datasetid = d.read_master_config("dataset_id") #used by main callback upon user selection from navbar and key is datasetID (integer)
+    #master_config_key_nav_cat = d.read_master_config("nav_cat") #used to lookup colour when constructing nav menu
     
-    # Hardening. Ignore any new datasets or human created problems in config file  
-    master_config = pd.read_csv(os.getcwd()+path)
-    #original = master_config
+    print('Building configuration dictionaries...')
+    
+    # Read in config csv as df
+    master_config = read_blob(account_name, account_key, container_name, filepath, 'csv', 'dataframe')
     
     # Remove all rows with unprocessed configurations (i.e. pipeline has run but not updated by human yet)
     master_config = master_config[~master_config['dataset_label'].isin(["TODO"])]
@@ -91,33 +71,87 @@ def read_master_config(path,set_key):
     # convert df to list of dicts as records 
     dict_list = master_config.to_dict('records')
     
-    # now build a new dict setting keys to what we want (at this stage 'dataset_raw' as this is how we look shit up)
-    config_dict = {}
-    for i in range(len(dict_list)):        
-        
+    # now build a new dict setting keys based on the passed in list
+    config_dict1 = {}
+    for i in range(len(dict_list)):             
         # set key and values from this item on the list of dicts
-        key = dict_list[i].get(set_key) #set dataset_raw as key for parent dictionary
-        value = dict_list[i] #value is the whole dictionary
-        
+        key = dict_list[i].get(set_key_list[0]) #e.g set dataset_raw as key for parent dictionary
+        value = dict_list[i] #value is the whole dictionary     
         # insert item to dictionary (if duplicate dataset_raw in csv, it will only add 1, so this kind of filters crud)
-        config_dict[key]=value   
+        config_dict1[key]=value
+        
+    config_dict2 = {}
+    for i in range(len(dict_list)):             
+        # set key and values from this item on the list of dicts
+        key = dict_list[i].get(set_key_list[1]) #e.g set dataset_id as key for parent dictionary
+        value = dict_list[i] #value is the whole dictionary     
+        # insert item to dictionary (if duplicate dataset_raw in csv, it will only add 1, so this kind of filters crud)
+        config_dict2[key]=value
+        
+    config_dict3 = {}
+    for i in range(len(dict_list)):             
+        # set key and values from this item on the list of dicts
+        key = dict_list[i].get(set_key_list[2]) #e.g set nav_cat as key for parent dictionary
+        value = dict_list[i] #value is the whole dictionary     
+        # insert item to dictionary (if duplicate dataset_raw in csv, it will only add 1, so this kind of filters crud)
+        config_dict3[key]=value  
    
-    return config_dict
+    return config_dict1, config_dict2, config_dict3
 
 
 
-def load_geo_data_JSON(json_path):    
-    countries_json = json.load(open(os.getcwd()+json_path, 'r', encoding='utf-8'))
-    return countries_json
+def read_blob(account_name, account_key, container_name, filepath, data_format, return_format):
+    # A generic function for reading files from blob
+    print("Attempting to read file:",filepath,"from Azure blob container:",container_name)
+    
+    
+    
+    if data_format == 'json':
+        # presently all json files are returned as json
+        constr = 'DefaultEndpointsProtocol=https;AccountName=' + account_name + ';AccountKey=' + account_key + ';EndpointSuffix=core.windows.net'
+        blob_service_client = BlobServiceClient.from_connection_string(constr)
+        container_client = blob_service_client.get_container_client(container_name)
+        blob_client = container_client.get_blob_client(filepath)
+        streamdownloader = blob_client.download_blob()
+        file = json.loads(streamdownloader.readall())
+        return file
+    
+    elif data_format == 'parquet' and return_format == 'dataframe':
+        # read parquet, return dataframe
+        #generate a shared access signature for the file
+        sas_i = generate_blob_sas(account_name = account_name,
+                                     container_name = container_name,
+                                     blob_name = filepath,  # statistics/master_stats.parquet
+                                     account_key=account_key,
+                                     permission=BlobSasPermissions(read=True),
+                                     expiry=datetime.utcnow() + timedelta(hours=1))
 
-def read_master_dataset():
-    tic = time.perf_counter()
-    path = os.getcwd()+paths.MASTER_STATS_PATH
-    pop = pd.read_parquet(path)
-    toc = time.perf_counter()
-    print('Loaded master dataset from parquet in ',toc-tic,'seconds')
-    #test = pd.read_parquet(os.getcwd()+"/data_lakehouse/titanium/statistics/master_stats.parquet")
-    return pop
+        #build sas URL using new sas sig
+        sas_url = 'https://' + account_name+'.blob.core.windows.net/' + container_name + '/' + filepath + '?' + sas_i            
+        df = pd.read_parquet(sas_url)
+        return df
+    
+    elif data_format == 'csv' and return_format == 'dataframe':
+        #read csv, return parquet
+        
+        #generate a shared access signature for the file
+        sas_i = generate_blob_sas(account_name = account_name,
+                                     container_name = container_name,
+                                     blob_name = filepath,  # statistics/master_stats.parquet
+                                     account_key=account_key,
+                                     permission=BlobSasPermissions(read=True),
+                                     expiry=datetime.utcnow() + timedelta(hours=1))
+
+        #build sas URL using new sas sig
+        sas_url = 'https://' + account_name+'.blob.core.windows.net/' + container_name + '/' + filepath + '?' + sas_i
+        df = pd.read_csv(sas_url)
+        return df
+ 
+    else:
+        print('ERROR trying to open file on blob')
+        
+    
+    
 
 def create_api_lookup_dicts(master_config):
     
@@ -155,13 +189,7 @@ def create_api_lookup_dicts(master_config):
         
     return api_dict_raw_to_label, api_dict_label_to_raw
 
-def get_source(ds_lookup, series):    
-    source = ds_lookup[ds_lookup['dataset_raw']==series].iloc[0]['source']
-    return source
-  
-def get_link(ds_lookup, series):    
-    link = ds_lookup[ds_lookup['dataset_raw']==series].iloc[0]['link']
-    return link
+
         
 def check_year(pop, series, year):
            
@@ -288,6 +316,7 @@ def get_year_slider_marks(series, pop, INIT_year_SLIDER_FONTSIZE, INIT_year_SLID
     
     
     return year_slider_marks
+
 
 def get_series_and_year(df, year, series, ascending):
     #print("Get series. year %r, series %r, ascending %r", year, series, ascending)
@@ -497,8 +526,4 @@ def extractColorPositions(colorscale, val):
             return c1, c2, mix
     return   
 
-def load_3d_geo_data_JSON_cleaned(json_path):    
-    #load data    
-    gj = json.load(open(os.getcwd()+json_path, 'r', encoding='utf-8'))
-    return gj
 

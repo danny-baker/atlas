@@ -19,3 +19,4 @@ xlsxwriter==1.4.4
 pyarrow==7.0.0 
 openpyxl #not sure if this is needed. It's for opening xlsx files using pandas. Forced me.
 py7zr
+azure-storage-blob==12.23.1

@@ -41,6 +41,11 @@ import gc
 # config
 DEBUG=False
 
+# Azure storage blob config #
+container_name = AZURE_STORAGE_ACCOUNT_CONTAINER_NAME #repository var
+account_name = AZURE_STORAGE_ACCOUNT_NAME #repository var
+account_key = AZURE_STORAGE_ACCOUNT_KEY #repository secret
+
 # setup logger to console
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("atlas")
@@ -199,30 +204,28 @@ INIT_LOADER_CHART_COMPONENT_COLOR = "#3E3F3A"
 INIT_LOADER_TYPE = 'dot'
 
 
-# LOAD A BUNCH OF SHIT #
+## LOAD APP DATA ##
 
 #Load geojson 2d region data
-geojson_LOWRES = d.load_geo_data_JSON(paths.MAP_JSON_LOW_PATH_TITANIUM)
-geojson_MEDRES = d.load_geo_data_JSON(paths.MAP_JSON_MED_PATH_TITANIUM)
-geojson_HIRES = d.load_geo_data_JSON(paths.MAP_JSON_HIGH_PATH_TITANIUM)
+geojson_LOWRES = d.read_blob(account_name, account_key, container_name,'geojson/map/ne_110m.geojson', 'json', 'json')
+geojson_MEDRES = d.read_blob(account_name, account_key, container_name,'geojson/map/ne_50m.geojson', 'json', 'json')
+geojson_HIRES = d.read_blob(account_name, account_key, container_name,'geojson/map/ne_10m.geojson', 'json', 'json')
 
 #Load geojson 3d region data
-geojson_globe_land_ne50m = d.load_3d_geo_data_JSON_cleaned(paths.GLOBE_JSON_LAND_HIGH_PATH_TITANIUM) # load contries
-geojson_globe_ocean_ne50m = d.load_3d_geo_data_JSON_cleaned(paths.GLOBE_JSON_OCEAN_HIGH_PATH_TITANIUM) #load oceans
-geojson_globe_land_ne110m = d.load_3d_geo_data_JSON_cleaned(paths.GLOBE_JSON_LAND_LOW_PATH_TITANIUM) # load countries
-geojson_globe_ocean_ne110m = d.load_3d_geo_data_JSON_cleaned(paths.GLOBE_JSON_OCEAN_LOW_PATH_TITANIUM) # load oceans
+geojson_globe_land_ne50m = d.read_blob(account_name, account_key, container_name,'geojson/globe/ne_50m_land.geojson', 'json', 'json') # load contries
+geojson_globe_ocean_ne50m = d.read_blob(account_name, account_key, container_name,'geojson/globe/ne_50m_ocean.geojson', 'json', 'json') #load oceans
+geojson_globe_land_ne110m = d.read_blob(account_name, account_key, container_name,'geojson/globe/ne_110m_land_cultural.geojson', 'json', 'json') # load countries
+geojson_globe_ocean_ne110m = d.read_blob(account_name, account_key, container_name,'geojson/globe/ne_110m_ocean.geojson', 'json', 'json') # load oceans
 del(geojson_globe_ocean_ne110m['features'][0]['geometry']['coordinates'][12]) #americas, also a problem on ne50m
 
-
 # Load config (Dictionary of all datasets, their metadata and how to display them in the overhead nav menu)
-# These are dictionary of dictionaries. There are 3 because we want to index them by different keys in some circumstances
-# This is a more robust way than having a single dataframe for the config file, which was prone to keyerrors and bugs if the underlying CSV structure changed.
-master_config = d.read_master_config(paths.MASTER_CONFIG_PATH,"dataset_raw") #used to lookup metadata based on dataset raw (often thru the app)
-master_config_key_datasetid = d.read_master_config(paths.MASTER_CONFIG_PATH,"dataset_id") #used by main callback upon user selection from navbar and key is datasetID (integer)
-master_config_key_nav_cat = d.read_master_config(paths.MASTER_CONFIG_PATH,"nav_cat") #used to lookup colour when constructing nav menu
+master_config, master_config_key_datasetid, master_config_key_nav_cat = d.read_master_config(['dataset_raw', 'dataset_id', 'nav_cat'],account_name, account_key, container_name, 'meta/master_config.csv' )
 
 #Load master stats dataset
-pop = d.read_master_dataset()
+pop = d.read_blob(account_name, account_key, container_name,'statistics/master_stats.parquet', 'parquet', 'dataframe')
+
+# Load experimental datasets
+EXP_POWER_PLANTS = d.read_blob(account_name, account_key, container_name, 'geojson/global-power-stations/xp1_global_power_plant_database.parquet', 'parquet', 'dataframe')
 
 #Set global dataset size indicators (for text in search bar)
 DATASETS = len(pd.unique(pop['dataset_raw'])) 
@@ -940,11 +943,10 @@ def create_chart_globe(gj_land, gj_ocean):
 def create_chart_globe_powerstations_xp1():
     # This is dirty. But it works.    
     
-    COUNTRIES = json.load(open(os.getcwd()+paths.PWR_STN_JSON_FILEPATH, 'r', encoding='utf-8')) 
-    OCEANS = geojson_globe_ocean_ne50m     
-    POWER_PLANTS = pd.read_parquet(os.getcwd()+paths.PWR_STN_STATS_FILEPATH) 
-
-    df = POWER_PLANTS
+    LAND = geojson_globe_land_ne50m
+    OCEANS = geojson_globe_ocean_ne50m 
+    
+    df = EXP_POWER_PLANTS
 
     def color_by_fuel(fuel_type):
         if fuel_type.lower() in "nuclear": return [10, 230, 120] #green
@@ -979,7 +981,7 @@ def create_chart_globe_powerstations_xp1():
         pydeck.Layer(
             "GeoJsonLayer",
             id="base-map",
-            data=COUNTRIES,
+            data=LAND,
             stroked=False,
             filled=True,
             get_line_color=[60, 60, 60],
