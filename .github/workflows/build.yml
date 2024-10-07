@@ -57,15 +57,12 @@ jobs:
         env: 
             AZURE_STORAGE_ACCOUNT_CONTAINER_NAME: ${{ vars.AZURE_STORAGE_ACCOUNT_CONTAINER_NAME }}
 
-      # Bake in Azure blob credentials (NOT WORKING)
+      # Bake in Azure blob credentials (using @ as delimiter as key contains / which is fucking seds params)
       - name: Inject Azure storage account key
-        #run: sed -i "s/AZURE_STORAGE_ACCOUNT_KEY/$AZURE_STORAGE_ACCOUNT_KEY/" ./flask_app/dash_app/app.py
-        #env: 
-        #    AZURE_STORAGE_ACCOUNT_KEY: ${{ vars.AZURE_STORAGE_ACCOUNT_KEY }} #working. Wont let me bake in a key
-        run: perl -pi -e 's/getString\(R\.string\.AZURE_STORAGE_ACCOUNT_KEY\)/"$ENV{TOKEN}"/' ./flask_app/dash_app/app.py
-        env:
-          TOKEN: ${{ vars.AZURE_STORAGE_ACCOUNT_KEY }}
-        
+        run: sed -i "s@AZURE_STORAGE_ACCOUNT_KEY@$AZURE_STORAGE_ACCOUNT_KEY@" ./flask_app/dash_app/app.py
+        env: 
+          AZURE_STORAGE_ACCOUNT_KEY: ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}
+     
       # Testing. Check if substituions worked
       - name: Check if substitutions worked
         run: cat ./flask_app/dash_app/app.py | grep AZURE_STORAGE
