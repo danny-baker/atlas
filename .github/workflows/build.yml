@@ -62,7 +62,7 @@ jobs:
         run: sed -i "s/AZURE_STORAGE_ACCOUNT_KEY/$AZURE_STORAGE_ACCOUNT_KEY/" ./flask_app/dash_app/app.py
         env: 
             AZURE_STORAGE_ACCOUNT_KEY: ${{ vars.AZURE_STORAGE_ACCOUNT_KEY }}
-          
+        
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
       - name: Log into container registry
