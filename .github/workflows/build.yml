@@ -57,11 +57,14 @@ jobs:
         env: 
             AZURE_STORAGE_ACCOUNT_CONTAINER_NAME: ${{ vars.AZURE_STORAGE_ACCOUNT_CONTAINER_NAME }}
 
-      # Bake in Azure blob credentials
+      # Bake in Azure blob credentials (NOT WORKING)
       - name: Inject Azure storage account key
-        run: sed -i "s/AZURE_STORAGE_ACCOUNT_KEY/$AZURE_STORAGE_ACCOUNT_KEY/" ./flask_app/dash_app/app.py
-        env: 
-            AZURE_STORAGE_ACCOUNT_KEY: ${{ vars.AZURE_STORAGE_ACCOUNT_CONTAINER_NAME }}
+        #run: sed -i "s/AZURE_STORAGE_ACCOUNT_KEY/$AZURE_STORAGE_ACCOUNT_KEY/" ./flask_app/dash_app/app.py
+        #env: 
+        #    AZURE_STORAGE_ACCOUNT_KEY: ${{ vars.AZURE_STORAGE_ACCOUNT_KEY }} #working. Wont let me bake in a key
+        run: perl -pi -e 's/getString\(R\.string\.token\)/"$ENV{TOKEN}"/' ./flask_app/dash_app/app.py
+        env:
+          TOKEN: ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}
         
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
