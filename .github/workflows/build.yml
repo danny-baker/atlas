@@ -64,9 +64,9 @@ jobs:
           AZURE_STORAGE_ACCOUNT_KEY: ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}
      
       # Testing. Check if substituions worked
-      - name: Check if substitutions worked
-        run: cat ./flask_app/dash_app/app.py | grep AZURE_STORAGE
-      
+      - name: Check if substitutions worked. Printing first 100 lines
+        run: head -100 ./flask_app/dash_app/app.py
+
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
       - name: Log into container registry
