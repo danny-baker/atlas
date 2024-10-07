@@ -64,7 +64,7 @@ jobs:
         #    AZURE_STORAGE_ACCOUNT_KEY: ${{ vars.AZURE_STORAGE_ACCOUNT_KEY }} #working. Wont let me bake in a key
         run: perl -pi -e 's/getString\(R\.string\.token\)/"$ENV{TOKEN}"/' ./flask_app/dash_app/app.py
         env:
-          TOKEN: ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}
+          TOKEN: ${{ vars.AZURE_STORAGE_ACCOUNT_KEY }}
         
       # Testing. Check if substituions worked
       - name: Check if substitutions worked
