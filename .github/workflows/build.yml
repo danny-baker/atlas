@@ -47,19 +47,19 @@ jobs:
 
       # Bake in Azure blob config
       - name: Inject Azure storage account name
-        run: sed -i "s/AZURE_STORAGE_ACCOUNT_NAME/$AZURE_STORAGE_ACCOUNT_NAME/" ./flask_app/dash_app/app.py
+        run: sed -i "s/AZURE_STORAGE_ACCOUNT_NAME/'$AZURE_STORAGE_ACCOUNT_NAME'/" ./flask_app/dash_app/app.py
         env: 
             AZURE_STORAGE_ACCOUNT_NAME: ${{ vars.AZURE_STORAGE_ACCOUNT_NAME }}
 
       # Bake in Azure blob config
       - name: Inject Azure storage account container name
-        run: sed -i "s/AZURE_STORAGE_ACCOUNT_CONTAINER_NAME/$AZURE_STORAGE_ACCOUNT_CONTAINER_NAME/" ./flask_app/dash_app/app.py
+        run: sed -i "s/AZURE_STORAGE_ACCOUNT_CONTAINER_NAME/'$AZURE_STORAGE_ACCOUNT_CONTAINER_NAME'/" ./flask_app/dash_app/app.py
         env: 
             AZURE_STORAGE_ACCOUNT_CONTAINER_NAME: ${{ vars.AZURE_STORAGE_ACCOUNT_CONTAINER_NAME }}
 
       # Bake in Azure blob credentials (using @ as delimiter as key contains / which is fucking seds params)
       - name: Inject Azure storage account key
-        run: sed -i "s@AZURE_STORAGE_ACCOUNT_KEY@$AZURE_STORAGE_ACCOUNT_KEY@" ./flask_app/dash_app/app.py
+        run: sed -i "s@AZURE_STORAGE_ACCOUNT_KEY@'$AZURE_STORAGE_ACCOUNT_KEY@'" ./flask_app/dash_app/app.py
         env: 
           AZURE_STORAGE_ACCOUNT_KEY: ${{ vars.AZURE_STORAGE_ACCOUNT_KEY }}
      
