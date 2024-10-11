@@ -14,9 +14,9 @@ dash-extensions==0.0.58 #Download features
 dash-bootstrap-components==0.13.1 #this is as high as we can go before dash 2.0 breaking changes come into effect
 xlrd==1.2.0
 xlsxwriter==1.4.4
+azure-storage-blob==12.23.1
 
 #Lakehouse 
-pyarrow==7.0.0 
-openpyxl #not sure if this is needed. It's for opening xlsx files using pandas. Forced me.
-py7zr
-azure-storage-blob==12.23.1
+#pyarrow==7.0.0 
+#openpyxl #not sure if this is needed. It's for opening xlsx files using pandas. Forced me.
+#py7zr
