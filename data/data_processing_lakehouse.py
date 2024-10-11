@@ -22,6 +22,11 @@ import copy
 from py7zr import pack_7zarchive, unpack_7zarchive
 
 
+# Azure storage blob config # (reminder to update yaml to fill these vals)
+container_name = AZURE_STORAGE_ACCOUNT_CONTAINER_NAME #repository var
+account_name = AZURE_STORAGE_ACCOUNT_NAME #repository var
+account_key = AZURE_STORAGE_ACCOUNT_KEY #repository secret
+
 # Virtually run lakehouse processing tasks 
 def run_lakehouse_tasks():
     tic = time.perf_counter()
