@@ -7,8 +7,5 @@ tmp/
 .vscode/
 .~lock* #any open locked files
 venv/
-#data_lakehouse/staging/
-#data_lakehouse/copper/
-#data_lakehouse/iron/
-#data_lakehouse/titanium/
+.env
 

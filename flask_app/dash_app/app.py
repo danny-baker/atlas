@@ -31,6 +31,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objs as go
 import os
+from dotenv import load_dotenv
 from PIL import ImageColor #colour fun
 from functools import reduce #array fun for year intersects
 import time
@@ -41,10 +42,11 @@ import gc
 # config
 DEBUG=False
 
-# Azure storage blob config #
-container_name = AZURE_STORAGE_ACCOUNT_CONTAINER_NAME #repository var
-account_name = AZURE_STORAGE_ACCOUNT_NAME #repository var
-account_key = AZURE_STORAGE_ACCOUNT_KEY #repository secret
+# Azure storage blob config (access cloud data)
+load_dotenv()
+container_name  = os.getenv("AZURE_STORAGE_ACCOUNT_CONTAINER_NAME")
+account_name = os.getenv("AZURE_STORAGE_ACCOUNT_NAME")
+account_key = os.getenv("AZURE_STORAGE_ACCOUNT_KEY")
 
 # setup logger to console
 logging.basicConfig(level=logging.DEBUG)
@@ -204,7 +206,7 @@ INIT_LOADER_CHART_COMPONENT_COLOR = "#3E3F3A"
 INIT_LOADER_TYPE = 'dot'
 
 
-## LOAD APP DATA ##
+## LOAD APP DATA ## CONSIDER LOADING THESE IN PARALLEL WITH THREAD POOLING
 
 #Load geojson 2d region data
 geojson_LOWRES = d.read_blob(account_name, account_key, container_name,'geojson/map/ne_110m.geojson', 'json', 'json')
