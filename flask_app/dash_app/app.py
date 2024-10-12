@@ -52,14 +52,14 @@ logger.info("test key obtained from .env is "+test_key)
 
 # Azure storage blob config (access cloud data)
 load_dotenv()
-#container_name  = os.getenv("AZURE_STORAGE_ACCOUNT_CONTAINER_NAME")
-#account_name = os.getenv("AZURE_STORAGE_ACCOUNT_NAME")
-#account_key = os.getenv("AZURE_STORAGE_ACCOUNT_KEY")
-container_name  = AZURE_STORAGE_ACCOUNT_CONTAINER_NAME
-account_name = AZURE_STORAGE_ACCOUNT_NAME
-account_key = AZURE_STORAGE_ACCOUNT_KEY
+container_name  = os.getenv("AZURE_STORAGE_ACCOUNT_CONTAINER_NAME")
+account_name = os.getenv("AZURE_STORAGE_ACCOUNT_NAME")
+account_key = os.getenv("AZURE_STORAGE_ACCOUNT_KEY")
+#container_name  = AZURE_STORAGE_ACCOUNT_CONTAINER_NAME
+#account_name = AZURE_STORAGE_ACCOUNT_NAME
+#account_key = AZURE_STORAGE_ACCOUNT_KEY
 
-
+#sudo docker run -p 80:8050 -v /home/dan/atlas/.env:/usr/src/app/.env ghcr.io/danny-baker/atlas/atlas_app:latest
 
 
 # setup system
