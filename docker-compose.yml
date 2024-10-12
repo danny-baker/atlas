@@ -6,6 +6,9 @@ services:
    app:
      container_name: webapp
      image: ghcr.io/danny-baker/atlas/atlas_app:latest
+     volumes:
+      - /home/dan/atlas/.env:/usr/src/app/.env #untested but this is basic approach
+
      
    #nginx
    nginx:
