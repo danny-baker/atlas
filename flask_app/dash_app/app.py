@@ -42,6 +42,10 @@ import gc
 # config
 DEBUG=False
 
+# setup logger to console
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("atlas")
+
 # Azure storage blob config (access cloud data)
 load_dotenv()
 #container_name  = os.getenv("AZURE_STORAGE_ACCOUNT_CONTAINER_NAME")
@@ -53,11 +57,8 @@ account_key = AZURE_STORAGE_ACCOUNT_KEY
 
 #testing
 test_key = os.getenv("TEST_KEY")
-print("test key obtained from .env is ",test_key)
+logger.info("test key obtained from .env is ",test_key)
 
-# setup logger to console
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger("atlas")
 
 # setup system
 if not os.path.exists("tmp"): os.mkdir("tmp")  # this is used to store charts and zip files on server OS until in memory solution is found
