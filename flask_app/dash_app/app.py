@@ -46,6 +46,10 @@ DEBUG=False
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("atlas")
 
+#testing
+test_key = os.getenv("TEST_KEY")
+logger.info("test key obtained from .env is "+test_key)
+
 # Azure storage blob config (access cloud data)
 load_dotenv()
 #container_name  = os.getenv("AZURE_STORAGE_ACCOUNT_CONTAINER_NAME")
@@ -55,9 +59,7 @@ container_name  = AZURE_STORAGE_ACCOUNT_CONTAINER_NAME
 account_name = AZURE_STORAGE_ACCOUNT_NAME
 account_key = AZURE_STORAGE_ACCOUNT_KEY
 
-#testing
-test_key = os.getenv("TEST_KEY")
-logger.info("test key obtained from .env is ",test_key)
+
 
 
 # setup system
