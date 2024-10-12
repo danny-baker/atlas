@@ -47,9 +47,9 @@ DEBUG=False
 #container_name  = os.getenv("AZURE_STORAGE_ACCOUNT_CONTAINER_NAME")
 #account_name = os.getenv("AZURE_STORAGE_ACCOUNT_NAME")
 #account_key = os.getenv("AZURE_STORAGE_ACCOUNT_KEY")
-container_name  = "AZURE_STORAGE_ACCOUNT_CONTAINER_NAME"
-account_name = "AZURE_STORAGE_ACCOUNT_NAME"
-account_key = "AZURE_STORAGE_ACCOUNT_KEY"
+container_name  = AZURE_STORAGE_ACCOUNT_CONTAINER_NAME
+account_name = AZURE_STORAGE_ACCOUNT_NAME
+account_key = AZURE_STORAGE_ACCOUNT_KEY
 
 # setup logger to console
 logging.basicConfig(level=logging.DEBUG)
