@@ -81,7 +81,7 @@ index_string = '''
                 
                 <div class="column left" style="background-color:transparent;padding-left:25px;">
                      <!--<p>This project is now open-source on Github! Check it out <a href="https://github.com/danny-baker/atlas">here</a>.</p>-->
-                     <p>Hi from Dan (creator). This project is open source on Github <a href="https://github.com/danny-baker/atlas" target="_blank">here</a>. Major update complete (25 Jul 2024). Upgraded server, refreshed many datasets, and improved menu. Give me feedback and ideas via the <a href="https://forms.gle/CMA8CZCggfZZ4kEZA" target="_blank">2 min anonymous survey!</a></p>
+                     WELCOME_MSG_TOKEN_HTML
 
                     
                 </div>
