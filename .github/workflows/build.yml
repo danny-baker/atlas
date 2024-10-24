@@ -35,7 +35,7 @@ jobs:
 
       # Bake in welcome message
       - name: Injecting Welcome message
-        run: sed -i "s/WELCOME_MSG_TOKEN_HTML/$WELCOME_MSG_TOKEN_HTML/" ./flask_app/dash_app/dash_html.py     
+        run: sed -i "s@WELCOME_MSG_TOKEN_HTML@$WELCOME_MSG_TOKEN_HTML@" ./flask_app/dash_app/dash_html.py     
         env: 
           WELCOME_MSG_TOKEN_HTML: ${{ vars.WELCOME_MSG_TOKEN_HTML }}
             
