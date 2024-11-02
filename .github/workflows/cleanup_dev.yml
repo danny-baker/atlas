@@ -1,14 +1,13 @@
 # A workflow to clean up dev resources. Can be run manually.
 # i.e. 
 # migrate static ip back to staging
-# delete resource group
+# delete resource group (i.e. tear down the dev vm)
 
 name: cleanup_dev
 
 on:
-    workflow_run:
-      workflows: [deploy]
-      types: [completed]
+    workflow_dispatch:
+
 
 jobs:
  
