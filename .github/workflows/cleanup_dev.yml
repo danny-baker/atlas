@@ -19,7 +19,6 @@ jobs:
      
       # Log into Azure
       - name: Log into Azure
-        if:  vars.BUILD_INFRASTRUCTURE == 'true'
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
