@@ -1,6 +1,6 @@
 # This builds the dash app into a container and pushes it into the github container registry
-# As we have github environments now, the app container is modified based on prod/dev requirements (e.g. gunicorn threads, workers etc.)
-# In reality, we don't really need this if the dev infra is identical (but usually want to test on a b2s instead of d2)
+# If branch is 'main' will use prod environment vars/secretes, else it will use dev environment.
+# The reason for this is things like gunicorn worker/thread counts are specified in the app container so this gives control.
 
 name: build
 
@@ -23,9 +23,6 @@ jobs:
   build-dev:
 
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     environment: dev
     
     # proceed if branch not 'main'
@@ -83,9 +80,6 @@ jobs:
   build-prod:
 
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     environment: prod
     
     # proceed if branch is 'main'

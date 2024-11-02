@@ -1,4 +1,10 @@
-# Dictate how to deploy app in both dev and prod environments
+# Dictate how to deploy app in both dev and prod environments. 
+# Behaviour controlled by branch name (main or other) and environ var BUILD_INFASTRUCTURE=true/false
+# There are 4 job types:
+#   deploy-dev              BUILDS INFRASTRUCTURE
+#   deploy-dev-app-only     REPULLS LATEST APP IMAGE ON EXISTING INFRASTRUCTURE
+#   deploy-prod             BUILDS INFRASTRUCTURE
+#   deploy-prod-app-only    REPULLS LATEST APP IMAGE ON EXISTING INFRASTRUCTURE
 
 name: deploy-test
 
@@ -13,7 +19,9 @@ env:
   #BRANCH_NAME: ${{ github.head_ref || github.ref_name }} #ref_name seems to be the one. Can be different on PULL though.
 
 jobs:
-  
+ 
+##### DEVELOPMENT #######  
+
   deploy-dev:
 
     runs-on: ubuntu-latest
@@ -324,7 +332,7 @@ jobs:
             fi
       
       # Create resource group and migrate static ip from staging
-      - name: Create resource group and migrate static ip from STAGING -> DEV
+      - name: Create resource group and migrate static ip from STAGING -> PROD
         if:  vars.BUILD_INFRASTRUCTURE == 'true'
         uses: azure/CLI@v2
         env:
@@ -484,7 +492,7 @@ jobs:
             echo $GHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
             echo "Starting up NOW"
             cd ~/atlas
-            . startup-manual-certs.sh
+            . startup-generate-certs.sh
 
       # Revoke public SSH access (Access via tailscale ssh only. Troublesome: how can github runners connect? They need Tscale.)
       #- name: Revoke SSH public access (most be via tailnet)
