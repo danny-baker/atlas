@@ -275,22 +275,260 @@ jobs:
             git checkout $GITHUB_BRANCH_NAME
             docker-compose up -d
 
+##### PRODUCTION #######
 
-  
   deploy-prod:
 
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     environment: prod
-    
-    # proceed if branch is 'main'
-    if: github.ref_name == 'main'
+
+    # proceed if branch 'main'
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.ref_name == 'main' }}
 
     steps:
+     
+      # Checkout code (needed to access bicep file)
+      - name: Checkout repo
+        if:  vars.BUILD_INFRASTRUCTURE == 'true'
+        uses: actions/checkout@main
+     
+      # Log into Azure
+      - name: Log into Azure
+        if:  vars.BUILD_INFRASTRUCTURE == 'true'
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Checkout the repo
-        uses: actions/checkout@v3
-
+      # Move static IP to staging and delete resource group
+      - name: Move static IP to staging and delete resource group (if it exists)
+        if:  vars.BUILD_INFRASTRUCTURE == 'true'
+        uses: azure/CLI@v2
+        env:
+          RESOURCE_GROUP_NAME: ${{ vars.AZURE_RG }}
+          RESOURCE_GROUP_LOCATION: ${{ vars.AZURE_RG_LOCN }}
+          AZURE_STATIC_IP_STAGING_RG: ${{ vars.AZURE_STATIC_IP_STAGING_RG }}
+          AZURE_SUBSCRIPTION: ${{ vars.AZURE_SUBSCRIPTION }}
+          AZURE_VM_STATIC_IP_RESOURCE_ID: ${{ vars.AZURE_VM_STATIC_IP_RESOURCE_ID }}
+              
+        with:
+          azcliversion: latest
+          inlineScript: |
+            if [[ $(az group exists -n $RESOURCE_GROUP_NAME --output tsv) == 'true' ]]
+            then
+                echo "Resource group exists. Moving static IP from DEV -> STAGING"
+                az resource move --destination-group $AZURE_STATIC_IP_STAGING_RG --destination-subscription-id $AZURE_SUBSCRIPTION --ids "$AZURE_VM_STATIC_IP_RESOURCE_ID"
+                echo "Deleting resource group."
+                az group delete --resource-group $RESOURCE_GROUP_NAME --yes
+            else
+                echo "Resource group does not exist. Skipping delete."
+            fi
       
+      # Create resource group and migrate static ip from staging
+      - name: Create resource group and migrate static ip from STAGING -> DEV
+        if:  vars.BUILD_INFRASTRUCTURE == 'true'
+        uses: azure/CLI@v2
+        env:
+          RESOURCE_GROUP_NAME: ${{ vars.AZURE_RG }}
+          RESOURCE_GROUP_LOCATION: ${{ vars.AZURE_RG_LOCN }}
+          AZURE_STATIC_IP_STAGING_RG: ${{ vars.AZURE_STATIC_IP_STAGING_RG }}
+          AZURE_SUBSCRIPTION: ${{ vars.AZURE_SUBSCRIPTION }}
+          AZURE_VM_STATIC_IP_RESOURCE_ID: ${{ vars.AZURE_VM_STATIC_IP_RESOURCE_ID_STAGING }}
+              
+        with:
+          azcliversion: latest
+          inlineScript: |
+            echo "Creating resource group $RESOURCE_GROUP_NAME "
+            az group create --name $RESOURCE_GROUP_NAME --location $RESOURCE_GROUP_LOCATION
+            echo "Migrating static ip from STAGING -> DEV"
+            az resource move --destination-group $RESOURCE_GROUP_NAME --destination-subscription-id $AZURE_SUBSCRIPTION --ids "$AZURE_VM_STATIC_IP_RESOURCE_ID"
+
+
+      # Deploy VM via Bicep file, passing in parameters from environment vars
+      - name: Deploy VM with bicep file
+        if:  vars.BUILD_INFRASTRUCTURE == 'true'
+        uses: azure/arm-deploy@v1
+        with:
+          subscriptionId: ${{ vars.AZURE_SUBSCRIPTION }}
+          resourceGroupName: ${{ vars.AZURE_RG }}
+          template: ./infrastructure/azure-deploy/create-vm.bicep
+          parameters: adminUsername="${{ vars.AZURE_VM_USERNAME }}" adminPublicKey="${{ secrets.AZURE_VM_SSHPUBKEY }}" vmModel="${{ vars.AZURE_VM_MODEL }}" osDiskSize=${{ vars.AZURE_VM_DISK_SIZE_GB }} osDiskType="${{ vars.AZURE_VM_DISK_TYPE }}" projectName="${{ vars.AZURE_VM_PROJECT_NAME }}" ipConfig="${{ vars.AZURE_VM_IPCONFIG }}"
+          failOnStdErr: false
+
+      # Bind static ip to NIC
+      - name: Associate the static IP with the VM's NIC
+        if:  vars.BUILD_INFRASTRUCTURE == 'true'
+        uses: azure/CLI@v2
+        env:
+          RESOURCE_GROUP_NAME: ${{ vars.AZURE_RG }} 
+          VM_NIC: "${{ vars.AZURE_VM_PROJECT_NAME }}-nic"
+          VM_IPCONFIG: ${{ vars.AZURE_VM_IPCONFIG }} # this is the default ipconfig name Azure gives the nic which is "myIPconfig"
+          VM_STATIC_IP: ${{ vars.AZURE_VM_STATIC_IP }}  #this is the literal IP address resource name in Azure portal (it need not be a secret handle)
+      
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az network nic ip-config update --name $VM_IPCONFIG --nic-name $VM_NIC --resource-group $RESOURCE_GROUP_NAME --public-ip-address $VM_STATIC_IP
+
+      # Setup github and clone repo to new vm (server). Checkout feature branch.
+      - name: ssh to server, setup github keys and clone repo
+        if:  vars.BUILD_INFRASTRUCTURE == 'true'
+        uses: appleboy/ssh-action@master
+        env:
+            GITHUB_PRIVATE_KEY: ${{ secrets.GHUB_PRIVATE_KEY }}
+            GITHUB_PUBLIC_KEY: ${{ secrets.GHUB_PUBLIC_KEY }}
+            GITHUB_BRANCH_NAME: ${{ github.ref_name }}  
+        with:
+          host: ${{ vars.AZURE_VM_SSHHOST }}
+          username: ${{ vars.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_VM_SSH_PORT }}
+          envs: GITHUB_PRIVATE_KEY, GITHUB_PUBLIC_KEY, GITHUB_BRANCH_NAME
+          script: |
+            echo "$GITHUB_PRIVATE_KEY" > ~/.ssh/github
+            echo "$GITHUB_PUBLIC_KEY" > ~/.ssh/github.pub
+            chmod 600 ~/.ssh/github
+            eval "$(ssh-agent -s)"
+            ssh-add ~/.ssh/github
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
+            ssh -T git@github.com
+            cd ~
+            git clone git@github.com:danny-baker/atlas.git
+
+     
+      # Inject TLS certs (HTTPS)
+      - name: ssh to server and obtain TLS certs
+        if:  vars.BUILD_INFRASTRUCTURE == 'true'
+        uses: appleboy/ssh-action@master
+        env:
+            TLS_PRIVKEY: ${{ secrets.TLS_PRIVKEY }}
+            TLS_FULLCHAIN: ${{ secrets.TLS_FULLCHAIN }}
+        with:
+          host: ${{ vars.AZURE_VM_SSHHOST }}
+          username: ${{ vars.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_VM_SSH_PORT }}
+          envs: TLS_PRIVKEY, TLS_FULLCHAIN
+          script: |
+            echo "$TLS_PRIVKEY" > ~/atlas/infrastructure/certbot/conf/live/worldatlas.org/privkey.pem
+            echo "$TLS_FULLCHAIN" > ~/atlas/infrastructure/certbot/conf/live/worldatlas.org/fullchain.pem
+            chmod 600 ~/atlas/infrastructure/certbot/conf/live/worldatlas.org/privkey.pem
+            chmod 600 ~/atlas/infrastructure/certbot/conf/live/worldatlas.org/fullchain.pem
+
+      # Inject datadog and tailscale secrets
+      - name: ssh to server and inject datadog and tailscale keys
+        if:  vars.BUILD_INFRASTRUCTURE == 'true'
+        uses: appleboy/ssh-action@master
+        env:
+            SECRET_DATADOG_API_KEY: ${{ vars.SECRET_DATADOG_API_KEY }}
+            SECRET_EMAIL_FOR_TLS_CERT_GENERATOR: ${{ vars.SECRET_EMAIL_FOR_TLS_CERT_GENERATOR }}
+            SECRET_TAILSCALE_AUTHKEY: ${{ secrets.SECRET_TAILSCALE_AUTHKEY }}
+
+        with:
+          host: ${{ vars.AZURE_VM_SSHHOST }}
+          username: ${{ vars.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_VM_SSH_PORT }}
+          envs: SECRET_DATADOG_API_KEY, SECRET_EMAIL_FOR_TLS_CERT_GENERATOR, SECRET_TAILSCALE_AUTHKEY 
+          script: |
+            sed -i "s/SECRET_DATADOG_API_KEY/$SECRET_DATADOG_API_KEY/" ~/atlas/docker-compose.yml
+            sed -i "s/SECRET_EMAIL_FOR_TLS_CERT_GENERATOR/$SECRET_EMAIL_FOR_TLS_CERT_GENERATOR/" ~/atlas/startup-generate-certs.sh
+            sed -i "s/SECRET_TAILSCALE_AUTHKEY/$SECRET_TAILSCALE_AUTHKEY/" ~/atlas/infrastructure/azure-deploy/setup-vm.sh
+            echo "Secrets injected."
+      
+      # Install services (Docker, docker-compose, Tailscale)
+      - name: ssh to server and setup services (docker, docker-compose, tailscale)
+        if:  vars.BUILD_INFRASTRUCTURE == 'true'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ vars.AZURE_VM_SSHHOST }}
+          username: ${{ vars.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_VM_SSH_PORT }}
+          script: . ~/atlas/infrastructure/azure-deploy/setup-vm.sh
+
+      # Add Azure storage credentials to local .env file
+      - name: ssh to server and build .env file (Azure Blob Storage access)
+        if:  vars.BUILD_INFRASTRUCTURE == 'true'
+        uses: appleboy/ssh-action@master
+        env:
+            AZURE_STORAGE_ACCOUNT_NAME: ${{ vars.AZURE_STORAGE_ACCOUNT_NAME }}
+            AZURE_STORAGE_ACCOUNT_CONTAINER_NAME: ${{ vars.AZURE_STORAGE_ACCOUNT_CONTAINER_NAME }}
+            AZURE_STORAGE_ACCOUNT_KEY: ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}
+
+        with:
+          host: ${{ vars.AZURE_VM_SSHHOST }}
+          username: ${{ vars.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_VM_SSH_PORT }}
+          envs: AZURE_STORAGE_ACCOUNT_NAME, AZURE_STORAGE_ACCOUNT_CONTAINER_NAME, AZURE_STORAGE_ACCOUNT_KEY 
+          script: |
+            touch ~/atlas/.env
+            echo "AZURE_STORAGE_ACCOUNT_NAME=$AZURE_STORAGE_ACCOUNT_NAME" >> ~/atlas/.env
+            echo "AZURE_STORAGE_ACCOUNT_CONTAINER_NAME=$AZURE_STORAGE_ACCOUNT_CONTAINER_NAME" >> ~/atlas/.env
+            echo "AZURE_STORAGE_ACCOUNT_KEY=$AZURE_STORAGE_ACCOUNT_KEY" >> ~/atlas/.env
+
+      # Bring up app
+      - name: Bring up the app (deploy all containers)
+        if:  vars.BUILD_INFRASTRUCTURE == 'true'
+        uses: appleboy/ssh-action@master
+        env:
+          GHUB_TOKEN: ${{ secrets.GHUB_TOKEN }}
+        with:
+          host: ${{ vars.AZURE_VM_SSHHOST }}
+          username: ${{ vars.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_VM_SSH_PORT }}
+          envs: GHUB_TOKEN
+          script: |
+            echo "Logging into github container registry"
+            echo $GHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+            echo "Starting up NOW"
+            cd ~/atlas
+            . startup-manual-certs.sh
+
+      # Revoke public SSH access (Access via tailscale ssh only. Troublesome: how can github runners connect? They need Tscale.)
+      #- name: Revoke SSH public access (most be via tailnet)
+      #  if:  vars.BUILD_INFRASTRUCTURE == 'true'
+      #  uses: azure/CLI@v2
+      #  env:
+      #    RESOURCE_GROUP_NAME: ${{ vars.AZURE_RG }}
+      #    VM_NSG: "${{ vars.AZURE_VM_PROJECT_NAME }}-nsg"
+      #
+      #  with:
+      #    azcliversion: latest
+      #    inlineScript: |
+      #      az network nsg rule update --name SSH --nsg-name $VM_NSG --resource-group $RESOURCE_GROUP_NAME --access Deny
+ 
+
+  deploy-prod-app-only:
+
+    runs-on: ubuntu-latest
+    environment: prod
+    
+    # proceed if branch not 'main' 
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.ref_name == 'main' }}
+
+    steps:
+      
+      # Halt all containers, restart docker daemon, prune all images and re-pull
+      - name: Halt all containers, prune all images, pull images and bring up app
+        if:  vars.BUILD_INFRASTRUCTURE == 'false'
+        uses: appleboy/ssh-action@master
+        env:
+          GHUB_TOKEN: ${{ secrets.GHUB_TOKEN }}
+          GITHUB_BRANCH_NAME: ${{ github.ref_name }}  
+        with:
+          host: ${{ vars.AZURE_VM_SSHHOST }}
+          username: ${{ vars.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_VM_SSH_PORT }}
+          envs: GHUB_TOKEN
+          script: |
+            sudo docker stop $(sudo docker ps -a -q)
+            sudo systemctl restart docker
+            sudo docker system prune --all -f
+            echo "Logging into github container registry"
+            echo $GHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+            echo "Starting up NOW"
+            cd ~/atlas
+            docker-compose up -d
