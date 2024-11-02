@@ -6,8 +6,7 @@
 name: cleanup_dev
 
 on:
-    workflow_dispatch:
-
+    workflow_dispatch: #allows manual trigger from github browser
 
 jobs:
  
@@ -15,10 +14,6 @@ jobs:
 
     runs-on: ubuntu-latest
     environment: dev
-
-    # stop it from actually running. In future, it could run after deploy etc.
-    #if: ${{ github.event.workflow_run.conclusion == 'success'  }}
-    if: ${{ false }}
 
     steps:
      
