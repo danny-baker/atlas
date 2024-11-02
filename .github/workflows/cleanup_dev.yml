@@ -10,7 +10,7 @@ on:
 
 jobs:
  
-  deploy-dev:
+  clean-dev-environment:
 
     runs-on: ubuntu-latest
     environment: dev
