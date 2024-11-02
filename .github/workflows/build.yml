@@ -1,0 +1,137 @@
+# This builds the dash app into a container and pushes it into the github container registry
+# As we have github environments now, the app container is modified based on prod/dev requirements (e.g. gunicorn threads, workers etc.)
+# In reality, we don't really need this if the dev infra is identical (but usually want to test on a b2s instead of d2)
+
+name: build
+
+on:
+  
+  push:
+    #branches: [ "main" ]
+    #tags: [ 'v*.*.*' ] # Publish server tags as releases.
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  REGISTRY: ghcr.io # the github container registry
+  IMAGE_NAME: ${{ github.repository }} # github.repository as <account>/<repo> i.e. danny-baker/atlas 
+  #BRANCH_NAME: ${{ github.head_ref || github.ref_name }}  
+  #REF_NAME: ${{ github.ref}} 
+
+jobs:
+  
+  build-dev:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    environment: dev
+    
+    # proceed if branch not 'main'
+    if: github.ref_name != 'main'
+
+    steps:
+
+      # Check out repository
+      - name: Checkout the repo
+        uses: actions/checkout@v3
+        
+      - name: Display current branch (if this is main, isn't it a problem?)
+        run: git status
+
+      # Bake secrets into container before building it
+      - name: Injecting GA4 tag
+        run: sed -i "s/SECRET_GA4_TAG/$SECRET_GA4_TAG/" ./flask_app/dash_app/dash_html.py     
+        env: 
+          SECRET_GA4_TAG: ${{ vars.SECRET_GA4_TAG }}
+
+      # Bake in welcome message
+      - name: Injecting Welcome message
+        run: sed -i "s@WELCOME_MSG_TOKEN_HTML@$WELCOME_MSG_TOKEN_HTML@" ./flask_app/dash_app/dash_html.py     
+        env: 
+          WELCOME_MSG_TOKEN_HTML: ${{ vars.WELCOME_MSG_TOKEN_HTML }}
+            
+      # Set Gunicorn workers
+      - name: Set Gunicorn worker number
+        run: sed -i "s/workers 1/$GUNICORN_WORKERS/" ./Dockerfile     
+        env: 
+          GUNICORN_WORKERS: ${{ vars.GUNICORN_WORKERS }}
+
+      # Set Gunicorn threads
+      - name: Set Gunicorn thread number
+        run: sed -i "s/threads 1/$GUNICORN_THREADS/" ./Dockerfile     
+        env: 
+          GUNICORN_THREADS: ${{ vars.GUNICORN_THREADS }}
+
+      # Login against a Docker registry except on PR
+      # https://github.com/docker/login-action
+      - name: Log into container registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build the app docker image
+        run: docker build . --tag ghcr.io/$IMAGE_NAME/atlas_app
+        
+      - name: Push app image to github container registry
+        run: docker push ghcr.io/$IMAGE_NAME/atlas_app:latest
+
+  build-prod:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    environment: prod
+    
+    # proceed if branch is 'main'
+    if: github.ref_name == 'main'
+
+    steps:
+
+      - name: Checkout the repo
+        uses: actions/checkout@v3
+
+      # Bake secrets into container before building it
+      - name: Injecting GA4 tag
+        run: sed -i "s/SECRET_GA4_TAG/$SECRET_GA4_TAG/" ./flask_app/dash_app/dash_html.py     
+        env: 
+          SECRET_GA4_TAG: ${{ vars.SECRET_GA4_TAG }}
+
+      # Bake in welcome message
+      - name: Injecting Welcome message
+        run: sed -i "s@WELCOME_MSG_TOKEN_HTML@$WELCOME_MSG_TOKEN_HTML@" ./flask_app/dash_app/dash_html.py     
+        env: 
+          WELCOME_MSG_TOKEN_HTML: ${{ vars.WELCOME_MSG_TOKEN_HTML }}
+            
+      # Set Gunicorn workers
+      - name: Set Gunicorn worker number
+        run: sed -i "s/workers 1/$GUNICORN_WORKERS/" ./Dockerfile     
+        env: 
+          GUNICORN_WORKERS: ${{ vars.GUNICORN_WORKERS }}
+
+      # Set Gunicorn threads
+      - name: Set Gunicorn thread number
+        run: sed -i "s/threads 1/$GUNICORN_THREADS/" ./Dockerfile     
+        env: 
+          GUNICORN_THREADS: ${{ vars.GUNICORN_THREADS }}
+
+      # Login against a Docker registry except on PR
+      # https://github.com/docker/login-action
+      - name: Log into container registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build the app docker image
+        run: docker build . --tag ghcr.io/$IMAGE_NAME/atlas_app
+        
+      - name: Push app image to github container registry
+        run: docker push ghcr.io/$IMAGE_NAME/atlas_app:latest

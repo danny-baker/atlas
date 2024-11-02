@@ -1,0 +1,111 @@
+/* Provides some custom fonts that are downloaded are run-time by client browser */
+
+
+@font-face {
+    font-family: "allstar";
+    src: url("/fonts/All_Star_Resort.ttf") format("truetype");  
+    }   
+
+
+@font-face {
+    font-family: "ca";
+    src: url("/fonts/ca.ttf") format("truetype");
+
+    }
+
+@font-face {
+    font-family: "bal";
+    src: url("/fonts/Bal-Astaral-Normal.ttf") format("truetype");
+    }
+    
+
+@font-face {
+    font-family: "bank";
+    src: url("/fonts/bankdesign-regular.ttf") format("truetype");
+    }
+    
+
+@font-face {
+    font-family: "capt1";
+    src: url("/fonts/Capture_it.ttf") format("truetype");
+    }
+    
+@font-face {
+    font-family: "capt2";       
+    src: url("/fonts/Capture_it_2.ttf") format("truetype");
+}
+
+@font-face {
+font-family: "commodore";
+    src: url("/fonts/CommodoreServer.ttf") format("truetype");
+}
+
+@font-face {
+font-family: "const";
+    src: url("/fonts/constructivist-square.ttf") format("truetype");
+}
+
+@font-face {
+font-family: "game";
+    src: url("/fonts/Game_Commands.ttf") format("truetype");
+}
+
+@font-face {
+font-family: "lady";
+    src: url("/fonts/Lady_Radical 2.ttf") format("truetype");
+}
+
+@font-face {
+font-family: "miss";
+    src: url("/fonts/Miss_Ellen.ttf") format("truetype");
+}
+
+@font-face {
+font-family: "nill";
+    src: url("/fonts/Nilland-SmallCaps.ttf") format("truetype");
+}
+
+@font-face {
+font-family: "prometheus";
+    src: url("/fonts/prometheus.ttf") format("truetype");
+}
+
+@font-face {
+font-family: "mario";
+    src: url("/fonts/Super_Mario_Bros_2.ttf") format("truetype");
+}
+
+@font-face {
+font-family: "aad";
+    src: url("/fonts/Aadhunik.ttf") format("truetype");
+}
+
+@font-face {
+font-family: "amnestia";
+    src: url("/fonts/Amnestia.ttf") format("truetype");
+}
+
+@font-face {
+font-family: "betel";
+    src: url("/fonts/Betelguesse.ttf") format("truetype");
+}
+
+@font-face {
+font-family: "bord";
+    src: url("/fonts/Bord.ttf") format("truetype");
+}
+
+@font-face {
+font-family: "emy";
+    src: url("/fonts/EMYRLAdemo.ttf") format("truetype");
+}
+
+@font-face {
+font-family: "reduza";
+    src: url("/fonts/Reduza_infinity.ttf") format("truetype");
+}
+
+@font-face {
+font-family: "maizen";
+    src: url("/fonts/Super Maizen.ttf") format("truetype");
+}

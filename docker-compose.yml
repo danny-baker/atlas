@@ -1,0 +1,62 @@
+version: '3.9'
+
+services:
+
+   # webapp
+   app:
+     container_name: webapp
+     image: ghcr.io/danny-baker/atlas/atlas_app:latest
+     volumes:
+      - /home/dan/atlas/.env:/usr/src/app/.env #mount env file on local machine into container workingdir.
+
+     
+   #nginx
+   nginx:
+      container_name: nginx
+      image: "nginx:alpine"             
+      ports:
+       - 80:80
+       - 443:443      
+      volumes:
+       - ./infrastructure/nginx:/etc/nginx
+       - ./infrastructure/certbot/conf:/etc/letsencrypt
+       - ./infrastructure/certbot/www:/var/www/certbot
+       - /mnt:/mnt  
+      labels:
+       com.datadoghq.ad.check_names: '["nginx"]'
+       com.datadoghq.ad.init_configs: '[{}]'
+       com.datadoghq.ad.instances: '[{"nginx_status_url": "http://%%host%%:81/nginx_status/"}]'
+      depends_on:
+       - app       
+      command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+    
+   # certbot
+   certbot:
+    container_name: certbot
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+       - ./infrastructure/certbot/conf:/etc/letsencrypt
+       - ./infrastructure/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+   # datadog
+   agent:
+        container_name: datadog-agent
+        environment:
+            - DD_API_KEY=SECRET_DATADOG_API_KEY
+            - DD_LOGS_ENABLED=true
+            - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+            - DD_CONTAINER_EXCLUDE_LOGS=name:datadog-agent
+            - DD_SITE=datadoghq.eu
+        volumes:
+            - '/var/run/docker.sock:/var/run/docker.sock:ro'
+            - '/proc/:/host/proc/:ro'
+            - '/opt/datadog-agent/run:/opt/datadog-agent/run:rw'
+            - '/sys/fs/cgroup/:/host/sys/fs/cgroup:ro'
+        network_mode: atlas_default
+        image: 'datadog/agent:latest'
+        
+
+
+
