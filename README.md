@@ -12,12 +12,22 @@ I hope you find something useful here.
 
 Dan Baker :heart:
 
+# Latest Updates (Nov 2024)
+* The app now accesses all data from a cloud store at run-time (data lake in Azure blob)
+* Previously all data was static and stored in the repo and I'd periodically update it and run a data pipeline on local disk to reprocess it.
+* The new cloud-based data architecture is a vast improvement as it  allows massive parallel processing of files during pipeline builds, and facilitates adding new datasets much more easily. Potentially also automatic data updates.
+* The drawback with the new architecture means the app needs to connect to a private Azure Blob storage account (requiring credentials). This adds complexity, and I inject these secrets during the app deployment.
+* This means you can no longer easily get a version of the app running on your local machine. 
+* The app now requires a .env in the project root directory which contains credentials to connect to an Azure Storage Account.
+* For anyone who wants to spin the full project up on their own machine, I've snapshotted a previous branch where all the data was static and housed in the repo itself, which is called `main_static_data`. This has a data pipeline that can be run locally on disk and is a complete self-contained version of the project. It also contains the processed data so it is ready to go. It's a good option if you are just wanting to get the whole thing running on your local machine. 
+* To run the version containing a full snapshot dataset in the repo itself, clone the whole repo and checkout the `main_static_data` branch. I.e. `git checkout main_static_data`. Then you can use the quickstart guides below to spin it up directly or via docker.
+
 
 # Quick Start
 
 * The following sections will outline how to spin up the app on your local machine.
 * Note this is a Dash-Python app wrapped in a Flask App
-* The two key Python files where the magic happen are `/flask_app/dash_app/app.py` and `/flask_app/dash_app/data_processing.py`
+* The functional code (python files) for the app itself are housed in `/flask_app/dash_app/` and the core app logic is in `/flask_app/dash_app/app.py`
 * Everything else is largely supporting stuff for deployment in production, and you can disregard.
 * System requirements: ~4GB memory (RAM) on your local machine.
 
@@ -32,6 +42,8 @@ Recommend using [Github Desktop](https://desktop.github.com/) or Git command lin
 `git clone https://github.com/danny-baker/atlas.git` (using https)
 
 `git clone git@github.com:danny-baker/atlas.git` (requires ssh keys)
+
+`git checkout main_static_data` 
 
 #### 2. Setup virtual environment 
 
@@ -59,26 +71,7 @@ This is the app entry point. The above command should start everything happening
 
 <br>
 
-## Run from a local machine *with* Docker (pull image)
 
-This is the most reliable method to run the app as a stand-alone container on your local machine, which we pull down from the github container registry. This is how the app is deployed on the production environment. You will need to have Docker installed. If you are unfamiliar with Docker, now is the time to learn. The cool thing about this: no faffing about with virtual python environments and installing requirements.txt. All that is abstracted away and happens when the Docker image is created. However, note that if you plan to modify the code and do a pull-request you will need to be able to build the container image yourself (next section) or at least run the app directly from your local Python webserver (previous step). This is more for sight seeing.
-
-#### 1. Install Docker to your local machine
-
-Follow the relevant pathway for your operating system, on their website [here](https://docs.docker.com/get-docker/).
-
-#### 2. Pull docker image and run
-
-The following command will pull (download) the pre-built Docker image of the app. This is stored in the github container registry. Once the image is pulled, docker will spin it up binding it to your HTTP port 80, so it can be viewed in a browser.
-
-`docker run -dp 80:8050 ghcr.io/danny-baker/atlas/atlas_app:latest`
-
-New way to run, requires azure storage key to be store local .env file, and mounts it so container can access
-`sudo docker run -p 80:8050 -v /home/dan/atlas/.env:/usr/src/app/.env ghcr.io/danny-baker/atlas/atlas_app:latest`
-
-Once the container is running, you can open a browser and go to `localhost` or `http:0.0.0.0:80` or similar and voilla, you will have the app running directly from your local machine.
-
-<br>
 
 ## Run from a local machine *with* Docker (build image)
 
@@ -93,6 +86,10 @@ Follow the relevant pathway for your operating system, on their website [here](h
 Recommend using [Github Desktop](https://desktop.github.com/) or Git command line interface (CLI) in a terminal
 
 `git clone git@github.com:danny-baker/atlas.git`
+
+Checkout the branch containing static data (older branch)
+
+`git checkout main_static_data`
 
 #### 3. Build the Docker image
 
