@@ -2,13 +2,8 @@
 # It has a few helper files which are imported, but the core code for the entire app is here
 # At run-time, it reads in geojson polygons (for country borders), the master statistics file (15M rows) and a master config file (which defines the menu structure and data types for each dataset)
 
-"""
-Created on Sat May  2 05:38:02 2020
-@author: Dan Baker
-"""
-
 from . import data_processing_runtime as d  # run-time processing
-from . import data_paths as paths
+#from . import data_paths as paths
 from . import dash_html #index page
 from . import hovertip_text
 from . import modal_text
@@ -25,7 +20,6 @@ from dash.exceptions import PreventUpdate #for raising exception to break out of
 import pydeck
 import json
 import copy
-#from flask_caching import Cache
 import numpy as np
 import pandas as pd
 import plotly.express as px

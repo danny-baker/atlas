@@ -8,7 +8,6 @@ import copy
 import time
 from PIL import ImageColor
 import os
-from . import data_paths as paths
 from datetime import datetime, timedelta
 from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions, BlobClient, ContainerClient
 
