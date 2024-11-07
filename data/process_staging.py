@@ -359,13 +359,15 @@ def create_account_sas(account_name: str, account_key: str):
     return sas_token
 
 
-def list_blobs_flat(blob_service_client: BlobServiceClient, container_name):
+def get_blobs(blob_service_client: BlobServiceClient, container_name):
     container_client = blob_service_client.get_container_client(container=container_name)
-
     blob_list = container_client.list_blobs()
-
+    
+    blob_lst=[]
     for blob in blob_list:
-        print(f"Name: {blob.name}")
+        blob_lst.append(blob.name)
+    
+    return blob_lst
 
 
 def convert_folder_csv_to_parquet_blob():
@@ -393,7 +395,7 @@ def convert_folder_csv_to_parquet_blob():
 sas_token = create_account_sas(account_name, account_key)
 
 # build URL version in the proper format
-account_sas_url = sas_url = 'https://' + account_name+'.blob.core.windows.net/' + '?' + sas_token  
+account_sas_url = 'https://' + account_name+'.blob.core.windows.net/' + '?' + sas_token  
 print(account_sas_url)
 
 # create BlobServiceClient object
@@ -405,7 +407,12 @@ for container in containers:
         print(container['name'])
 
 # list blobs in a container
-list_blobs_flat(blob_service_client, 'staging')
+l = get_blobs(blob_service_client, 'staging')
+
+# walk the container? or at least open a folder from path
+# e.g. list blobs in /staging/statistics/gapminder-fast-track/
+# walk blob and name_starts_with might be the above type thing.
+# https://learn.microsoft.com/en-us/python/api/azure-storage-blob/azure.storage.blob.containerclient?view=azure-python#azure-storage-blob-containerclient-walk-blobs
 
 
 #convert_folder_csv_to_parquet_blob()
