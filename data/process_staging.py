@@ -1,6 +1,7 @@
 # Process data in staging -> copper
 # step 1: run sequentially (old way)
 # step 2: run in parallel (magic way)
+    # https://learn.microsoft.com/en-us/python/api/overview/azure/storage-file-datalake-readme?view=azure-python
 
 from dotenv import load_dotenv
 #from . import data_paths as paths
@@ -340,12 +341,11 @@ def create_account_sas(account_name: str, account_key: str):
     start_time = datetime.datetime.now(datetime.timezone.utc)
     expiry_time = start_time + datetime.timedelta(days=1)
 
-    # Define the SAS token permissions
-    sas_permissions=AccountSasPermissions(read=True)
+    # Define the SAS token permissions (root)
+    sas_permissions=AccountSasPermissions(read=True, write=True, delete=True, list=True, add=True, create=True, update=True, process=True, delete_previous_version=True)
 
-    # Define the SAS token resource types
-    # For this example, we grant access to service-level APIs
-    sas_resource_types=ResourceTypes(service=True)
+    # Define the SAS token resource types (root)
+    sas_resource_types=ResourceTypes(service=True, container=True, object=True)
 
     sas_token = generate_account_sas(
         account_name=account_name,
@@ -357,6 +357,15 @@ def create_account_sas(account_name: str, account_key: str):
     )
 
     return sas_token
+
+
+def list_blobs_flat(blob_service_client: BlobServiceClient, container_name):
+    container_client = blob_service_client.get_container_client(container=container_name)
+
+    blob_list = container_client.list_blobs()
+
+    for blob in blob_list:
+        print(f"Name: {blob.name}")
 
 
 def convert_folder_csv_to_parquet_blob():
@@ -373,31 +382,43 @@ def convert_folder_csv_to_parquet_blob():
     destination_container_name = 'copper'
     destination_path = 'copper/gapminder_fast-track/'
     encoding = 'latin-1'
+
+
     
 
-    
-
-    # list files in origin container
-    
-
-
-    """
-    sas_i = generate_blob_sas(account_name = account_name,
-                                     container_name = container_name,
-                                     blob_name = filepath,  # statistics/master_stats.parquet
-                                     account_key=account_key,
-                                     permission=BlobSasPermissions(read=True),
-                                     expiry=datetime.utcnow() + timedelta(hours=1))
-
-        #build sas URL using new sas sig
-        sas_url = 'https://' + account_name+'.blob.core.windows.net/' + container_name + '/' + filepath + '?' + sas_i            
-        df = pd.read_parquet(sas_url)
-        """
 
 ### RUN ###
 
 # create account SAS (should have full access to all containers)
 sas_token = create_account_sas(account_name, account_key)
-print(sas_token)
+
+# build URL version in the proper format
+account_sas_url = sas_url = 'https://' + account_name+'.blob.core.windows.net/' + '?' + sas_token  
+print(account_sas_url)
+
+# create BlobServiceClient object
+blob_service_client = BlobServiceClient(account_url=account_sas_url)
+
+# list blob containers
+containers = blob_service_client.list_containers(include_metadata=True)
+for container in containers:
+        print(container['name'])
+
+# list blobs in a container
+list_blobs_flat(blob_service_client, 'staging')
+
 
 #convert_folder_csv_to_parquet_blob()
+
+
+
+
+
+
+
+
+
+
+
+
+
