@@ -104,7 +104,9 @@ The above command will build the main Python web application into a Docker image
 `docker run -dp 80:8050 atlas_app`
 
 For developer contributors (on main branch):
-`sudo docker run -p 80:8050 -v /home/dan/atlas/.env:/usr/src/app/.env atlas_app`
+
+`sudo docker run -p 80:8050 -v /home/dan/atlas/.env:/usr/src/app/.env ghcr.io/danny-baker/atlas/atlas_app:latest`
+
 The above command can be used to spin up the current production app locally as a single container and mounts to .env file to allow connection to Azure blob
 
 Once the image is built, you can bring it up and view it on your local machine's web browser with the above command. The default TCP port for the app is `8050` so in the snippet above, we are simply binding the container's  port (8050) to your local machine's port 80 (http web traffic) so we can view the running app via a browser.

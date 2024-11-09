@@ -359,7 +359,7 @@ def create_account_sas(account_name: str, account_key: str):
     return sas_token
 
 
-def get_blobs(blob_service_client: BlobServiceClient, container_name: str): 
+def get_blobs(blob_service_client: BlobServiceClient, container_name: str): -> object 
     container_client = blob_service_client.get_container_client(container=container_name)
     blob_list = container_client.list_blobs()
     
