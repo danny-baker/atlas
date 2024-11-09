@@ -1,22 +1,31 @@
-#latest @ Feb 2022
+# latest @ Nov 2024
+# Note updating to Python 3.12.7 has caused multiple wheel failures. Have done some fixes.
+
+# WORKING
 dash==1.18.1 #Dash 2.0 problematic and unneeded. Still problematic on firefox on linux.
-Werkzeug==2.0.0 #needed for Heroku due to runtime error ImportError: cannot import name 'get_current_traceback' from 'werkzeug.debug.tbtools' (StackOverflow)
-pandas==1.4.1
-flask==2.0.3
-python-dotenv==0.19.2
+flask==2.0.3 # Note Flask 3 is out now
+Werkzeug==2.0.0 # needed due to weird flask error
 kaleido==0.2.1 #pdf export
-Pillow==9.0.1
 dash-deck==0.0.1
 pydeck==0.4.1 #Had to lock this as updates are breaking. Might be cool new features though.
-matplotlib==3.5.1
 gunicorn==20.0.4
 dash-extensions==0.0.58 #Download features
 dash-bootstrap-components==0.13.1 #this is as high as we can go before dash 2.0 breaking changes come into effect
 xlrd==1.2.0
 xlsxwriter==1.4.4
-azure-storage-blob==12.23.1
-pyarrow==7.0.0 
 
-#Lakehouse 
+# UPDATED
+pandas==2.2.3
+pillow==11.0.0
+matplotlib==3.9.2
+pyarrow==18.0.0
+azure-storage-blob==12.23.1
+python-dotenv==0.19.2
+
+# LAKEHOUSE
 #openpyxl #not sure if this is needed. It's for opening xlsx files using pandas. Forced me.
 #py7zr
+
+# SPYDER
+spyder-kernels==3.0.1
+

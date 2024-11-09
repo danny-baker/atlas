@@ -171,11 +171,11 @@ def create_api_lookup_dicts(master_config):
     df.columns=['dataset_raw', 'dataset_label', 'api_label']       
     
     # make api labels URL path friendly
-    df['api_label'] = df.api_label.str.replace(' ','-', regex=True)
-    df['api_label'] = df.api_label.str.replace('%','percent', regex=True)
-    df['api_label'] = df.api_label.str.replace('?','-', regex=True)
-    df['api_label'] = df.api_label.str.replace('+','-', regex=True)
-    df['api_label'] = df.api_label.str.replace(',','-', regex=True)
+    df['api_label'] = df['api_label'].str.replace(' ','-', regex=True)
+    df['api_label'] = df['api_label'].str.replace('%','percent', regex=True)
+    df['api_label'] = df['api_label'].str.replace('?','-', regex=False) 
+    df['api_label'] = df['api_label'].str.replace('+','-', regex=False) 
+    df['api_label'] = df['api_label'].str.replace(',','-', regex=False)
     
     # declare new global dicts
     api_dict_raw_to_label={}

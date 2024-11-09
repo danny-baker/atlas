@@ -359,7 +359,7 @@ def create_account_sas(account_name: str, account_key: str):
     return sas_token
 
 
-def get_blobs(blob_service_client: BlobServiceClient, container_name):
+def get_blobs(blob_service_client: BlobServiceClient, container_name: str): 
     container_client = blob_service_client.get_container_client(container=container_name)
     blob_list = container_client.list_blobs()
     
@@ -368,6 +368,8 @@ def get_blobs(blob_service_client: BlobServiceClient, container_name):
         blob_lst.append(blob.name)
     
     return blob_lst
+
+
 
 
 def convert_folder_csv_to_parquet_blob():
@@ -408,6 +410,11 @@ for container in containers:
 
 # list blobs in a container
 l = get_blobs(blob_service_client, 'staging')
+
+# list blobs in a blob-directory
+# e.g. list blobs in /staging/statistics/gapminder-fast-track/
+# use the starts_with thingy and just try to return a filtered list of blobs.names similar to the get_blobs function
+
 
 # walk the container? or at least open a folder from path
 # e.g. list blobs in /staging/statistics/gapminder-fast-track/
