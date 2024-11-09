@@ -1,4 +1,4 @@
-# Process data in staging -> copper
+# Process data in staging -> copper (Azure Blob Data lake)
 # step 1: run sequentially (old way)
 # step 2: run in parallel (magic way)
     # https://learn.microsoft.com/en-us/python/api/overview/azure/storage-file-datalake-readme?view=azure-python
@@ -16,7 +16,7 @@ import time
 import datetime
 import matplotlib.pyplot as plt
 import copy
-#from azure.storage.blob import BlobServiceClient, BlobPrefix
+from io import BytesIO
 
 from azure.storage.blob import (
     BlobServiceClient,
@@ -37,7 +37,7 @@ from azure.storage.blob import (
 
 # Azure storage blob config (access cloud data)
 load_dotenv()
-container_name  = os.getenv("AZURE_STORAGE_ACCOUNT_CONTAINER_NAME")
+#container_name  = os.getenv("AZURE_STORAGE_ACCOUNT_CONTAINER_NAME")
 account_name = os.getenv("AZURE_STORAGE_ACCOUNT_NAME")
 account_key = os.getenv("AZURE_STORAGE_ACCOUNT_KEY")
 
@@ -359,9 +359,24 @@ def create_account_sas(account_name: str, account_key: str):
     return sas_token
 
 
-def get_blobs(blob_service_client: BlobServiceClient, container_name: str): -> object 
+def get_blobs(blob_service_client: BlobServiceClient, container_name: str) -> list: 
+    # list all filenames (blob.name) in a given container
+    
     container_client = blob_service_client.get_container_client(container=container_name)
     blob_list = container_client.list_blobs()
+    
+    blob_lst=[]
+    for blob in blob_list:
+        blob_lst.append(blob.name)
+    
+    return blob_lst
+
+def walk_blobs(blob_service_client: BlobServiceClient, container_name: str, folder_name: str) -> list: 
+    # effectively the equivalent of list contents in a directory on a file system
+    # list the names of all blobs in a given blob-directory
+    
+    container_client = blob_service_client.get_container_client(container=container_name)
+    blob_list = container_client.walk_blobs(folder_name)
     
     blob_lst=[]
     for blob in blob_list:
@@ -408,18 +423,51 @@ containers = blob_service_client.list_containers(include_metadata=True)
 for container in containers:
         print(container['name'])
 
-# list blobs in a container
-l = get_blobs(blob_service_client, 'staging')
+# list blobs in a container (WORKING)
+all_blobs_lst = get_blobs(blob_service_client, 'staging')
 
-# list blobs in a blob-directory
-# e.g. list blobs in /staging/statistics/gapminder-fast-track/
-# use the starts_with thingy and just try to return a filtered list of blobs.names similar to the get_blobs function
+# list blobs in a blob-directory (WORKING). Note can repurpose data_paths.
+my_blobs_lst = walk_blobs(blob_service_client, 'staging', 'statistics/gapminder-fast-track/')
+
+# do an operation. i.e. process everything in a blob-dir to another blob-dir
+
+#build sas URL using existing token to a blob (i.e. first blob in list)
+container_name_origin = 'staging'
+sas_url_blob_origin = 'https://' + account_name+'.blob.core.windows.net/' + container_name_origin + '/' + my_blobs_lst[1] + '?' + sas_token          
+print(sas_url_blob_origin)
+df = pd.read_csv(sas_url_blob_origin)
+
+# write to copper
+container_name_destination = 'copper'
+
+#trim filename .csv -> .parquet
+blob_name = my_blobs_lst[1][:-3]+'parquet'
+
+# build new blob sas URL
+sas_url_blob_destination = 'https://' + account_name+'.blob.core.windows.net/' + container_name_destination + '/' + my_blobs_lst[1][:-3]+'parquet' + '?' + sas_token  
+print(sas_url_blob_destination)
+
+# write to parquet in copper ERROR: The specifified blob does not exist)
+#df.to_parquet(sas_url_blob_destination, engine='pyarrow', index=False)
+
+#apparently you can do it this way (WORKING!!!)
+stream = BytesIO() #initialise a stream
+df.to_parquet(stream, engine='pyarrow') #write the parquet to the stream
+stream.seek(0) #put pointer back to start of stream
+blob_client = blob_service_client.get_blob_client(container=container_name_destination, blob="sample-blob.parquet")
+blob_client.upload_blob(data=stream, overwrite=True, blob_type="BlockBlob")
+
+#get the above cleaned up. See if you can write the file structure directly or if that needs to be constructed. (i.e. statistics blob-folder etc)
+
+    
 
 
-# walk the container? or at least open a folder from path
-# e.g. list blobs in /staging/statistics/gapminder-fast-track/
-# walk blob and name_starts_with might be the above type thing.
-# https://learn.microsoft.com/en-us/python/api/azure-storage-blob/azure.storage.blob.containerclient?view=azure-python#azure-storage-blob-containerclient-walk-blobs
+
+
+
+# refactor everything into functions etc.
+
+
 
 
 #convert_folder_csv_to_parquet_blob()
