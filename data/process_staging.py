@@ -43,7 +43,7 @@ def process_staging(blob_service_client, container_name_origin, container_name_d
     ##coppersmith_sdgindicators_new()
     #coppersmith_map_json()
     #coppersmith_globe_json()
-    #coppersmith_world_standards(paths.WS_PATH_STAGING, paths.WS_PATH_COPPER, 'latin-1')
+    
     #coppersmith_global_power_stations() #special data   
     #coppersmith_bigmac(paths.BIG_MAC_PATH_STAGING, paths.BIG_MAC_PATH_COPPER)
     
@@ -52,7 +52,8 @@ def process_staging(blob_service_client, container_name_origin, container_name_d
     print('Process staging...')
     #coppersmith_gapminder_fast_track(blob_service_client, container_name_origin, container_name_destination, paths.FASTTRACK_PATH_STAGING, 'latin-1', sas_token)
     #coppersmith_gapminder_systema_globalis(blob_service_client, container_name_origin, container_name_destination, paths.SYSTEMAGLOBALIS_PATH_STAGING,'latin-1', sas_token)
-    coppersmith_gapminder_world_dev_indicators(blob_service_client, container_name_origin, container_name_destination, paths.WDINDICATORS_PATH_STAGING, 'latin-1', sas_token)
+    #coppersmith_gapminder_world_dev_indicators(blob_service_client, container_name_origin, container_name_destination, paths.WDINDICATORS_PATH_STAGING, 'latin-1', sas_token)
+    #coppersmith_world_standards(blob_service_client, container_name_origin, container_name_destination, paths.WS_PATH_STAGING, 'latin-1', sas_token)
 
     return
 
@@ -284,15 +285,11 @@ def coppersmith_global_power_stations():
     print("Processing time: ",toc-tic," seconds")
     return
 
-def coppersmith_world_standards(origin, destination, encoding):
+def coppersmith_world_standards(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_folder_origin: str, encoding: str, sas_token: str):
     #simply recursively convert all csvs to parquet and dump them in an equivalent folder in COPPER (create if needed)
-    tic = time.perf_counter()
-    
-    #origin = "/data_lakehouse/staging/statistics/world-standards-unofficial-website/"
-    #destination = "/data_lakehouse/copper/statistics/world-standards-unofficial-website/"
-    
+    tic = time.perf_counter()    
     print("Processing world standards STAGING > COPPER")    
-    convert_folder_csv_to_parquet_disk(origin, destination, encoding)
+    convert_folder_csv_to_parquet_blob(blob_service_client, container_name_origin, container_name_destination, blob_folder_origin, encoding, sas_token)
     toc = time.perf_counter()
     print("Processing time: ",toc-tic," seconds")
         
@@ -407,8 +404,9 @@ def convert_folder_csv_to_parquet_blob(blob_service_client: object, container_na
         sas_url_blob = 'https://' + account_name+'.blob.core.windows.net/' + container_name_origin + '/' + blob + '?' + sas_token  
         #print(sas_url_blob)
         
-        # read in blob as datafame
-        df = pd.read_csv(sas_url_blob)
+        # read in blob as datafame     
+        df = pd.read_csv(sas_url_blob, encoding=encoding)
+        #print(df)
         
         # prepare destination blob path
         blob_path_destination = blob[:-3] + 'parquet'

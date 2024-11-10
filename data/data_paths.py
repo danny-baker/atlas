@@ -1,4 +1,5 @@
-# OBSOLETE? OR REPURPOSE FOR BLOB
+# REPURPOSE FOR BLOB
+# Consider dictionary as alternate structure
 
 # A centralised location for all relative data paths, to assist in data lakehouse architecture
 
@@ -6,6 +7,7 @@
 FASTTRACK_PATH_STAGING = "statistics/gapminder-fast-track/"
 SYSTEMAGLOBALIS_PATH_STAGING = "statistics/gapminder-systema-globalis/"
 WDINDICATORS_PATH_STAGING = "statistics/world-development-indicators/"
+WS_PATH_STAGING = "statistics/world-standards-unofficial-website/"
 
 
 COUNTRY_LOOKUP_PATH_STAGING = "/data_lakehouse/staging/meta/country_lookup.csv"
@@ -18,7 +20,6 @@ GLOBE_JSON_LAND_HIGH_PATH_STAGING = "/data_lakehouse/staging/geojson/natural_ear
 GLOBE_JSON_OCEAN_HIGH_PATH_STAGING = "/data_lakehouse/staging/geojson/natural_earth/globe/working/ne_50m_ocean.geojson"
 GLOBE_JSON_LAND_LOW_PATH_STAGING = "/data_lakehouse/staging/geojson/natural_earth/globe/working/ne_110m_land_cultural.geojson"
 GLOBE_JSON_OCEAN_LOW_PATH_STAGING = "/data_lakehouse/staging/geojson/natural_earth/globe/working/ne_110m_ocean.geojson"
-WS_PATH_STAGING = "/data_lakehouse/staging/statistics/world-standards-unofficial-website/"
 PWR_STN_PATH_STAGING = "/data_lakehouse/staging/geojson/global-power-stations/"
 BIG_MAC_PATH_STAGING = "/data_lakehouse/staging/statistics/big-mac-index/big-mac-adjusted-index.csv"
 
