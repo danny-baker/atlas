@@ -39,9 +39,6 @@ from azure.storage.blob import (
 def process_staging(blob_service_client, container_name_origin, container_name_destination, sas_token):
     # process STAGING => COPPER
     #create_unique_country_list(paths.COUNTRY_LOOKUP_PATH_STAGING,paths.COUNTRY_LOOKUP_PATH_COPPER) #make this parquet?
-   
-   
-    #coppersmith_gapminder_world_dev_indicators(paths.WDINDICATORS_PATH_STAGING, paths.WDINDICATORS_PATH_COPPER, 'latin-1')
     #coppersmith_sdgindicators(paths.SDG_PATH_STAGING, paths.SDG_PATH_COPPER) #Slow due to excel reader
     ##coppersmith_sdgindicators_new()
     #coppersmith_map_json()
@@ -50,9 +47,12 @@ def process_staging(blob_service_client, container_name_origin, container_name_d
     #coppersmith_global_power_stations() #special data   
     #coppersmith_bigmac(paths.BIG_MAC_PATH_STAGING, paths.BIG_MAC_PATH_COPPER)
     
+    #WORKING
+    
     print('Process staging...')
     #coppersmith_gapminder_fast_track(blob_service_client, container_name_origin, container_name_destination, paths.FASTTRACK_PATH_STAGING, 'latin-1', sas_token)
-    coppersmith_gapminder_systema_globalis(blob_service_client, container_name_origin, container_name_destination, paths.SYSTEMAGLOBALIS_PATH_STAGING,'latin-1', sas_token)
+    #coppersmith_gapminder_systema_globalis(blob_service_client, container_name_origin, container_name_destination, paths.SYSTEMAGLOBALIS_PATH_STAGING,'latin-1', sas_token)
+    coppersmith_gapminder_world_dev_indicators(blob_service_client, container_name_origin, container_name_destination, paths.WDINDICATORS_PATH_STAGING, 'latin-1', sas_token)
 
     return
 
@@ -109,14 +109,14 @@ def coppersmith_gapminder_systema_globalis(blob_service_client: object, containe
     print("Processing time: ",toc-tic," seconds")
     return
 
-def coppersmith_gapminder_world_dev_indicators(origin, destination, encoding):
+def coppersmith_gapminder_world_dev_indicators(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_folder_origin: str, encoding: str, sas_token: str):
     # origin
     # https://github.com/open-numbers/ddf--open_numbers--world_development_indicators
     
     #simply recursively convert all csvs to parquet and dump them in an equivalent folder in COPPER (create if needed)
     tic = time.perf_counter()
     print("Processing gapminder world dev indicators STAGING > COPPER")    
-    convert_folder_csv_to_parquet_disk(origin, destination, encoding)
+    convert_folder_csv_to_parquet_blob(blob_service_client, container_name_origin, container_name_destination, blob_folder_origin, encoding, sas_token)
     toc = time.perf_counter()
     print("Processing time: ",toc-tic," seconds")
     return
@@ -482,10 +482,10 @@ blob_service_client = BlobServiceClient(account_url=account_sas_url)
 #        print(container['name'])
 
 # list all blobs in a given container (WORKING)
-all_blobs_lst = get_blobs(blob_service_client, 'staging')
+#all_blobs_lst = get_blobs(blob_service_client, 'staging')
 
 # list blobs in a given blob-directory (WORKING). Note can repurpose data_paths.
-my_blobs_lst = walk_blobs(blob_service_client, 'staging', 'statistics/gapminder-fast-track/')
+#my_blobs_lst = walk_blobs(blob_service_client, 'staging', 'statistics/gapminder-fast-track/')
 
 
 process_staging(blob_service_client, 'staging', 'copper', sas_token)

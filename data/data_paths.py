@@ -5,10 +5,10 @@
 # STAGING
 FASTTRACK_PATH_STAGING = "statistics/gapminder-fast-track/"
 SYSTEMAGLOBALIS_PATH_STAGING = "statistics/gapminder-systema-globalis/"
+WDINDICATORS_PATH_STAGING = "statistics/world-development-indicators/"
 
 
 COUNTRY_LOOKUP_PATH_STAGING = "/data_lakehouse/staging/meta/country_lookup.csv"
-WDINDICATORS_PATH_STAGING = "/data_lakehouse/staging/statistics/world-development-indicators/"
 UNDATA_PATH_STAGING = "/data_lakehouse/staging/statistics/undata/"
 SDG_PATH_STAGING = "/data_lakehouse/staging/statistics/sdgindicators/"
 MAP_JSON_LOW_PATH_STAGING = "/data_lakehouse/staging/geojson/natural_earth/map/ne_110m.geojson" #not sure if I ever needed to process this
@@ -24,8 +24,6 @@ BIG_MAC_PATH_STAGING = "/data_lakehouse/staging/statistics/big-mac-index/big-mac
 
 # COPPER
 COUNTRY_LOOKUP_PATH_COPPER = "/data_lakehouse/copper/meta/country_lookup.csv"
-
-WDINDICATORS_PATH_COPPER = "/data_lakehouse/copper/statistics/world-development-indicators/"
 UNDATA_PATH_COPPER = "/data_lakehouse/copper/statistics/undata/"
 SDG_PATH_COPPER ="/data_lakehouse/copper/statistics/sdgindicators/"
 WS_PATH_COPPER = "/data_lakehouse/copper/statistics/world-standards-unofficial-website/"
