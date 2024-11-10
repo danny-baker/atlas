@@ -38,12 +38,11 @@ from azure.storage.blob import (
 
 def process_staging(blob_service_client, container_name_origin, container_name_destination, sas_token):
     # process STAGING => COPPER
-    #create_unique_country_list(paths.COUNTRY_LOOKUP_PATH_STAGING,paths.COUNTRY_LOOKUP_PATH_COPPER) #make this parquet?
+    
     #coppersmith_sdgindicators(paths.SDG_PATH_STAGING, paths.SDG_PATH_COPPER) #Slow due to excel reader
     ##coppersmith_sdgindicators_new()
     #coppersmith_map_json()
-    #coppersmith_globe_json()
-    
+    #coppersmith_globe_json()    
     #coppersmith_global_power_stations() #special data   
     #coppersmith_bigmac(paths.BIG_MAC_PATH_STAGING, paths.BIG_MAC_PATH_COPPER)
     
@@ -54,34 +53,40 @@ def process_staging(blob_service_client, container_name_origin, container_name_d
     #coppersmith_gapminder_systema_globalis(blob_service_client, container_name_origin, container_name_destination, paths.SYSTEMAGLOBALIS_PATH_STAGING,'latin-1', sas_token)
     #coppersmith_gapminder_world_dev_indicators(blob_service_client, container_name_origin, container_name_destination, paths.WDINDICATORS_PATH_STAGING, 'latin-1', sas_token)
     #coppersmith_world_standards(blob_service_client, container_name_origin, container_name_destination, paths.WS_PATH_STAGING, 'latin-1', sas_token)
+    #create_unique_country_list(blob_service_client, container_name_origin, container_name_destination, paths.COUNTRY_LOOKUP_PATH_STAGING,paths.COUNTRY_LOOKUP_PATH_COPPER, 'utf-8', sas_token) 
 
     return
 
 
-# Process country list (origin from UN?) to zero pad integers and store
-def create_unique_country_list(path_origin, path_destination):     
+
+def create_unique_country_list(blob_service_client, container_name_origin, container_name_destination, path_origin, path_destination, encoding, sas_token): 
+    # Process country list (origin from UN?) to zero pad integers and store  (this is a single file that is important for later processing)  
     
-    path_origin = os.getcwd()+path_origin
-    path_destination = os.getcwd()+path_destination
+    print('Processing metadata for country lookup')
     
-    #read in m49 codes from csv
-    c =  pd.read_csv(
-       path_origin,
-       encoding="utf-8",
-       names=["m49_a3_country", "country", "continent", "region_un", "region_wb", "su_a3"],
-    )
+    # build sas URL to the blob (so we can read it)
+    sas_url_blob = 'https://' + account_name+'.blob.core.windows.net/' + container_name_origin + '/' + path_origin + '?' + sas_token 
+    
+    # read blob into df
+    df = pd.read_csv(sas_url_blob, encoding=encoding, names=["m49_a3_country", "country", "continent", "region_un", "region_wb", "su_a3"])
     
     #cast to string
-    c["m49_a3_country"] = c["m49_a3_country"].astype(str) 
+    df["m49_a3_country"] = df["m49_a3_country"].astype(str) 
     
     #pad the 3 digit m49 country integer with zeros if it less than 100 (i.e. "3" will become "003")
-    c['m49_a3_country'] = c['m49_a3_country'].str.zfill(3)  
+    df['m49_a3_country'] = df['m49_a3_country'].str.zfill(3)  
     
     # delete first row (column headings)
-    c = c.iloc[1:,]
+    df = df.iloc[1:,]
     
-    #write csv to file (overwrite by default)
-    c.to_csv(path_destination,index=False)
+    # write df to csv stream
+    stream = BytesIO() #initialise a stream
+    df.to_csv(stream, index=False) #write the csv to the stream
+    stream.seek(0) #put pointer back to start of stream
+    
+    # write the stream to blob
+    blob_client = blob_service_client.get_blob_client(container=container_name_destination, blob=path_destination)
+    blob_client.upload_blob(data=stream, overwrite=True, blob_type="BlockBlob")
 
     return
 

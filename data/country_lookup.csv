@@ -1,0 +1,239 @@
+m49_a3_country,country,continent,region_un,region_wb,su_a3
+004,Afghanistan,Asia,Asia,South Asia,AFG
+008,Albania,Europe,Europe,Europe & Central Asia,ALB
+012,Algeria,Africa,Africa,Middle East & North Africa,DZA
+016,American Samoa,Oceania,No region,No subregion,ASM
+020,Andorra,Europe,No region,No subregion,AND
+024,Angola,Africa,Africa,Sub-Saharan Africa,AGO
+660,Anguilla,South America,No region,No subregion,AIA
+028,Antigua and Barbuda,South America,No region,No subregion,ATG
+032,Argentina,South America,Americas,Latin America & Caribbean,ARG
+051,Armenia,Asia,Asia,Europe & Central Asia,ARM
+533,Aruba,South America,No region,No subregion,ABW
+036,Australia,Oceania,Oceania,East Asia & Pacific,AUS
+040,Austria,Europe,Europe,Europe & Central Asia,AUT
+031,Azerbaijan,Asia,Asia,Europe & Central Asia,AZE
+044,Bahamas,North America,Americas,Latin America & Caribbean,BHS
+048,Bahrain,Asia,No region,No subregion,BHR
+050,Bangladesh,Asia,Asia,South Asia,BGD
+052,Barbados,North America,No region,No subregion,BRB
+112,Belarus,Europe,Europe,Europe & Central Asia,BLR
+056,Belgium,Europe,Europe,Europe & Central Asia,BEL
+084,Belize,North America,Americas,Latin America & Caribbean,BLZ
+204,Benin,Africa,Africa,Sub-Saharan Africa,BEN
+060,Bermuda,No continent,No region,No subregion,BMU
+064,Bhutan,Asia,Asia,South Asia,BTN
+068,Bolivia (Plurin. State of),South America,Americas,Latin America & Caribbean,BOL
+535,"Bonaire, St. Eustatius & Saba",No continent,No region,No subregion,BES
+070,Bosnia and Herzegovina,Europe,Europe,Europe & Central Asia,BIH
+072,Botswana,Africa,Africa,Sub-Saharan Africa,BWA
+076,Brazil,South America,Americas,Latin America & Caribbean,BRA
+092,British Virgin Islands,No continent,No region,No subregion,VGB
+096,Brunei Darussalam,Asia,Asia,East Asia & Pacific,BRN
+100,Bulgaria,Europe,Europe,Europe & Central Asia,BGR
+854,Burkina Faso,Africa,Africa,Sub-Saharan Africa,BFA
+108,Burundi,Africa,Africa,Sub-Saharan Africa,BDI
+132,Cabo Verde,No continent,No region,No subregion,CPV
+116,Cambodia,Asia,Asia,East Asia & Pacific,KHM
+120,Cameroon,Africa,Africa,Sub-Saharan Africa,CMR
+124,Canada,North America,Americas,North America,CAN
+136,Cayman Islands,No continent,No region,No subregion,CYM
+140,Central African Republic,Africa,Africa,Sub-Saharan Africa,CAF
+148,Chad,Africa,Africa,Sub-Saharan Africa,TCD
+830,Channel Islands,No continent,No region,No subregion,
+152,Chile,South America,Americas,Latin America & Caribbean,CHL
+156,China,Asia,Asia,East Asia & Pacific,CHN
+344,"China, Hong Kong SAR",Asia,No region,No subregion,HKG
+446,"China, Macao SAR",Asia,No region,No subregion,MAC
+170,Colombia,South America,Americas,Latin America & Caribbean,COL
+174,Comoros,Africa,No region,No subregion,COM
+178,Congo,Africa,Africa,Sub-Saharan Africa,COG
+184,Cook Islands,Oceania,No region,No subregion,COK
+188,Costa Rica,North America,Americas,Latin America & Caribbean,CRI
+191,Croatia,Europe,Europe,Europe & Central Asia,HRV
+192,Cuba,North America,Americas,Latin America & Caribbean,CUB
+531,Curaçao,No continent,No region,No subregion,CUW
+196,Cyprus,Asia,Asia,Europe & Central Asia,CYP
+203,Czechia,Europe,Europe,Europe & Central Asia,CZE
+384,Côte dIvoire,Africa,Africa,Sub-Saharan Africa,CIV
+408,Dem. People's Rep. Korea,Asia,Asia,East Asia & Pacific,PRK
+180,Dem. Rep. of the Congo,Africa,Africa,Sub-Saharan Africa,COD
+208,Denmark,Europe,Europe,Europe & Central Asia,DNK
+262,Djibouti,Africa,Africa,Middle East & North Africa,DJI
+212,Dominica,No continent,No region,No subregion,DMA
+214,Dominican Republic,North America,Americas,Latin America & Caribbean,DOM
+218,Ecuador,South America,Americas,Latin America & Caribbean,ECU
+818,Egypt,Africa,Africa,Middle East & North Africa,EGY
+222,El Salvador,North America,Americas,Latin America & Caribbean,SLV
+226,Equatorial Guinea,Africa,Africa,Sub-Saharan Africa,GNQ
+232,Eritrea,Africa,Africa,Sub-Saharan Africa,ERI
+233,Estonia,Europe,Europe,Europe & Central Asia,EST
+748,Eswatini,Africa,Africa,Sub-Saharan Africa,SWZ
+231,Ethiopia,Africa,Africa,Sub-Saharan Africa,ETH
+238,Falkland Islands (Malvinas),South America,Americas,Latin America & Caribbean,FLK
+234,Faroe Islands,No continent,No region,No subregion,FRO
+242,Fiji,Oceania,Oceania,East Asia & Pacific,FJI
+246,Finland,Europe,Europe,Europe & Central Asia,FIN
+250,France,Europe,Europe,Europe & Central Asia,FRA
+254,French Guiana,No continent,No region,No subregion,GUF
+258,French Polynesia,No continent,No region,No subregion,PYF
+266,Gabon,Africa,Africa,Sub-Saharan Africa,GAB
+270,Gambia,Africa,Africa,Sub-Saharan Africa,GMB
+268,Georgia,Asia,Asia,Europe & Central Asia,GEO
+276,Germany,Europe,Europe,Europe & Central Asia,DEU
+288,Ghana,Africa,Africa,Sub-Saharan Africa,GHA
+292,Gibraltar,No continent,No region,No subregion,GIB
+300,Greece,Europe,Europe,Europe & Central Asia,GRC
+304,Greenland,North America,Americas,Europe & Central Asia,GRL
+308,Grenada,No continent,No region,No subregion,GRD
+312,Guadeloupe,No continent,No region,No subregion,GLP
+316,Guam,No continent,No region,No subregion,GUM
+320,Guatemala,North America,Americas,Latin America & Caribbean,GTM
+324,Guinea,Africa,Africa,Sub-Saharan Africa,GIN
+624,Guinea-Bissau,Africa,Africa,Sub-Saharan Africa,GNB
+328,Guyana,South America,Americas,Latin America & Caribbean,GUY
+332,Haiti,North America,Americas,Latin America & Caribbean,HTI
+336,Holy See,No continent,No region,No subregion,VAT
+340,Honduras,North America,Americas,Latin America & Caribbean,HND
+348,Hungary,Europe,Europe,Europe & Central Asia,HUN
+352,Iceland,Europe,Europe,Europe & Central Asia,ISL
+356,India,Asia,Asia,South Asia,IND
+360,Indonesia,Asia,Asia,East Asia & Pacific,IDN
+364,Iran (Islamic Republic of),Asia,Asia,Middle East & North Africa,IRN
+368,Iraq,Asia,Asia,Middle East & North Africa,IRQ
+372,Ireland,Europe,Europe,Europe & Central Asia,IRL
+833,Isle of Man,No continent,No region,No subregion,IMN
+376,Israel,Asia,Asia,Middle East & North Africa,ISR
+380,Italy,Europe,Europe,Europe & Central Asia,ITA
+388,Jamaica,North America,Americas,Latin America & Caribbean,JAM
+392,Japan,Asia,Asia,East Asia & Pacific,JPN
+400,Jordan,Asia,Asia,Middle East & North Africa,JOR
+398,Kazakhstan,Asia,Asia,Europe & Central Asia,KAZ
+404,Kenya,Africa,Africa,Sub-Saharan Africa,KEN
+296,Kiribati,No continent,No region,No subregion,KIR
+414,Kuwait,Asia,Asia,Middle East & North Africa,KWT
+417,Kyrgyzstan,Asia,Asia,Europe & Central Asia,KGZ
+418,Lao People's Dem. Rep.,Asia,Asia,East Asia & Pacific,LAO
+428,Latvia,Europe,Europe,Europe & Central Asia,LVA
+422,Lebanon,Asia,Asia,Middle East & North Africa,LBN
+426,Lesotho,Africa,Africa,Sub-Saharan Africa,LSO
+430,Liberia,Africa,Africa,Sub-Saharan Africa,LBR
+434,Libya,Africa,Africa,Middle East & North Africa,LBY
+438,Liechtenstein,No continent,No region,No subregion,LIE
+440,Lithuania,Europe,Europe,Europe & Central Asia,LTU
+442,Luxembourg,Europe,Europe,Europe & Central Asia,LUX
+450,Madagascar,Africa,Africa,Sub-Saharan Africa,MDG
+454,Malawi,Africa,Africa,Sub-Saharan Africa,MWI
+458,Malaysia,Asia,Asia,East Asia & Pacific,MYS
+462,Maldives,No continent,No region,No subregion,MDV
+466,Mali,Africa,Africa,Sub-Saharan Africa,MLI
+470,Malta,No continent,No region,No subregion,MLT
+584,Marshall Islands,No continent,No region,No subregion,MHL
+474,Martinique,No continent,No region,No subregion,MTQ
+478,Mauritania,Africa,Africa,Sub-Saharan Africa,MRT
+480,Mauritius,No continent,No region,No subregion,MUS
+175,Mayotte,No continent,No region,No subregion,MYT
+054,Melanesia,No continent,No region,No subregion,
+484,Mexico,North America,Americas,Latin America & Caribbean,MEX
+057,Micronesia,No continent,No region,No subregion,
+583,Micronesia (Fed. States of),No continent,No region,No subregion,FSM
+492,Monaco,No continent,No region,No subregion,MCO
+496,Mongolia,Asia,Asia,East Asia & Pacific,MNG
+499,Montenegro,Europe,Europe,Europe & Central Asia,MNE
+500,Montserrat,No continent,No region,No subregion,MSR
+504,Morocco,Africa,Africa,Middle East & North Africa,MAR
+508,Mozambique,Africa,Africa,Sub-Saharan Africa,MOZ
+104,Myanmar,Asia,Asia,East Asia & Pacific,MMR
+516,Namibia,Africa,Africa,Sub-Saharan Africa,NAM
+520,Nauru,No continent,No region,No subregion,NRU
+524,Nepal,Asia,Asia,South Asia,NPL
+528,Netherlands,Europe,Europe,Europe & Central Asia,NLD
+540,New Caledonia,Oceania,Oceania,East Asia & Pacific,NCL
+554,New Zealand,Oceania,Oceania,East Asia & Pacific,NZL
+558,Nicaragua,North America,Americas,Latin America & Caribbean,NIC
+562,Niger,Africa,Africa,Sub-Saharan Africa,NER
+566,Nigeria,Africa,Africa,Sub-Saharan Africa,NGA
+570,Niue,No continent,No region,No subregion,NIU
+807,North Macedonia,Europe,Europe,Europe & Central Asia,MKD
+580,Northern Mariana Islands,No continent,No region,No subregion,MNP
+578,Norway,Europe,Europe,Europe & Central Asia,NOR
+512,Oman,Asia,Asia,Middle East & North Africa,OMN
+586,Pakistan,Asia,Asia,South Asia,PAK
+585,Palau,No continent,No region,No subregion,PLW
+591,Panama,North America,Americas,Latin America & Caribbean,PAN
+598,Papua New Guinea,Oceania,Oceania,East Asia & Pacific,PN1
+600,Paraguay,South America,Americas,Latin America & Caribbean,PRY
+604,Peru,South America,Americas,Latin America & Caribbean,PER
+608,Philippines,Asia,Asia,East Asia & Pacific,PHL
+616,Poland,Europe,Europe,Europe & Central Asia,POL
+061,Polynesia,No continent,No region,No subregion,
+620,Portugal,Europe,Europe,Europe & Central Asia,PRT
+630,Puerto Rico,North America,Americas,Latin America & Caribbean,PRI
+634,Qatar,Asia,Asia,Middle East & North Africa,QAT
+410,Republic of Korea,Asia,Asia,East Asia & Pacific,KOR
+498,Republic of Moldova,Europe,Europe,Europe & Central Asia,MDA
+642,Romania,Europe,Europe,Europe & Central Asia,ROU
+643,Russian Federation,Europe,Europe,Europe & Central Asia,RUS
+646,Rwanda,Africa,Africa,Sub-Saharan Africa,RWA
+638,Réunion,No continent,No region,No subregion,REU
+652,Saint Barthélemy,No continent,No region,No subregion,BLM
+654,Saint Helena,No continent,No region,No subregion,SHN
+659,Saint Kitts and Nevis,No continent,No region,No subregion,KNA
+662,Saint Lucia,No continent,No region,No subregion,LCA
+663,Saint Martin (French part),No continent,No region,No subregion,MAF
+666,Saint Pierre and Miquelon,No continent,No region,No subregion,SPM
+670,Saint Vincent & Grenadines,No continent,No region,No subregion,VCT
+882,Samoa,No continent,No region,No subregion,WSM
+674,San Marino,No continent,No region,No subregion,SMR
+678,Sao Tome and Principe,No continent,No region,No subregion,STP
+682,Saudi Arabia,Asia,Asia,Middle East & North Africa,SAU
+686,Senegal,Africa,Africa,Sub-Saharan Africa,SEN
+688,Serbia,Europe,Europe,Europe & Central Asia,SRB
+690,Seychelles,No continent,No region,No subregion,SYC
+694,Sierra Leone,Africa,Africa,Sub-Saharan Africa,SLE
+702,Singapore,Asia,No region,No subregion,SGP
+534,Sint Maarten (Dutch part),No continent,No region,No subregion,SXM
+703,Slovakia,Europe,Europe,Europe & Central Asia,SVK
+705,Slovenia,Europe,Europe,Europe & Central Asia,SVN
+090,Solomon Islands,Oceania,Oceania,East Asia & Pacific,SLB
+706,Somalia,Africa,Africa,Sub-Saharan Africa,SOM
+710,South Africa,Africa,Africa,Sub-Saharan Africa,ZAF
+728,South Sudan,Africa,Africa,Sub-Saharan Africa,SDS
+724,Spain,Europe,Europe,Europe & Central Asia,ESP
+144,Sri Lanka,Asia,Asia,South Asia,LKA
+275,State of Palestine,Asia,Asia,Middle East & North Africa,PSX
+729,Sudan,Africa,Africa,Sub-Saharan Africa,SDN
+740,Suriname,South America,Americas,Latin America & Caribbean,SUR
+752,Sweden,Europe,Europe,Europe & Central Asia,SWE
+756,Switzerland,Europe,Europe,Europe & Central Asia,CHE
+760,Syrian Arab Republic,Asia,Asia,Middle East & North Africa,SYR
+762,Tajikistan,Asia,Asia,Europe & Central Asia,TJK
+764,Thailand,Asia,Asia,East Asia & Pacific,THA
+626,Timor-Leste,Asia,Asia,East Asia & Pacific,TLS
+768,Togo,Africa,Africa,Sub-Saharan Africa,TGO
+772,Tokelau,No continent,No region,No subregion,TKL
+776,Tonga,Oceania,No region,No subregion,TON
+780,Trinidad and Tobago,North America,Americas,Latin America & Caribbean,TTO
+788,Tunisia,Africa,Africa,Middle East & North Africa,TUN
+792,Turkey,Asia,Asia,Europe & Central Asia,TUR
+795,Turkmenistan,Asia,Asia,Europe & Central Asia,TKM
+796,Turks and Caicos Islands,No continent,No region,No subregion,TCA
+798,Tuvalu,Oceania,No region,No subregion,TUV
+800,Uganda,Africa,Africa,Sub-Saharan Africa,UGA
+804,Ukraine,Europe,Europe,Europe & Central Asia,UKR
+784,United Arab Emirates,Asia,Asia,Middle East & North Africa,ARE
+826,United Kingdom,Europe,Europe,Europe & Central Asia,GBR
+834,United Rep. of Tanzania,Africa,Africa,Sub-Saharan Africa,TZA
+850,United States Virgin Islands,No continent,No region,No subregion,VIR
+840,United States of America,North America,Americas,North America,USA
+858,Uruguay,South America,Americas,Latin America & Caribbean,URY
+860,Uzbekistan,Asia,Asia,Europe & Central Asia,UZB
+548,Vanuatu,Oceania,Oceania,East Asia & Pacific,VUT
+862,Venezuela (Boliv. Rep. of),South America,Americas,Latin America & Caribbean,VEN
+704,Viet Nam,Asia,Asia,East Asia & Pacific,VNM
+876,Wallis and Futuna Islands,No continent,No region,No subregion,WLF
+887,Yemen,Asia,Asia,Middle East & North Africa,YEM
+894,Zambia,Africa,Africa,Sub-Saharan Africa,ZMB
+716,Zimbabwe,Africa,Africa,Sub-Saharan Africa,ZWE
+732,Western Sahara,Africa,Africa,Middle East & North Africa,SAH
+010,Antarctica,Antarctica,No Region,No subregion,ATA
