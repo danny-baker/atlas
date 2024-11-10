@@ -4,7 +4,7 @@
     # https://learn.microsoft.com/en-us/python/api/overview/azure/storage-file-datalake-readme?view=azure-python
 
 from dotenv import load_dotenv
-#from . import data_paths as paths
+import data_paths as paths
 import json
 import pandas as pd
 import numpy as np
@@ -32,29 +32,26 @@ from azure.storage.blob import (
     generate_container_sas,
     generate_blob_sas
 )
-#from py7zr import pack_7zarchive, unpack_7zarchive
 
 
-# Azure storage blob config (access cloud data)
-load_dotenv()
-#container_name  = os.getenv("AZURE_STORAGE_ACCOUNT_CONTAINER_NAME")
-account_name = os.getenv("AZURE_STORAGE_ACCOUNT_NAME")
-account_key = os.getenv("AZURE_STORAGE_ACCOUNT_KEY")
 
 
-def process_STAGING():
+def process_staging(blob_service_client, container_name_origin, container_name_destination):
     # process STAGING => COPPER
-    create_unique_country_list(paths.COUNTRY_LOOKUP_PATH_STAGING,paths.COUNTRY_LOOKUP_PATH_COPPER) #make this parquet?
-    coppersmith_gapminder_fast_track(paths.FASTTRACK_PATH_STAGING, paths.FASTTRACK_PATH_COPPER, 'latin-1')
-    coppersmith_gapminder_systema_globalis(paths.SYSTEMAGLOBALIS_PATH_STAGING, paths.SYSTEMAGLOBALIS_PATH_COPPER, 'latin-1')
-    coppersmith_gapminder_world_dev_indicators(paths.WDINDICATORS_PATH_STAGING, paths.WDINDICATORS_PATH_COPPER, 'latin-1')
-    coppersmith_sdgindicators(paths.SDG_PATH_STAGING, paths.SDG_PATH_COPPER) #Slow due to excel reader
+    #create_unique_country_list(paths.COUNTRY_LOOKUP_PATH_STAGING,paths.COUNTRY_LOOKUP_PATH_COPPER) #make this parquet?
+   
+    #coppersmith_gapminder_systema_globalis(paths.SYSTEMAGLOBALIS_PATH_STAGING, paths.SYSTEMAGLOBALIS_PATH_COPPER, 'latin-1')
+    #coppersmith_gapminder_world_dev_indicators(paths.WDINDICATORS_PATH_STAGING, paths.WDINDICATORS_PATH_COPPER, 'latin-1')
+    #coppersmith_sdgindicators(paths.SDG_PATH_STAGING, paths.SDG_PATH_COPPER) #Slow due to excel reader
     ##coppersmith_sdgindicators_new()
-    coppersmith_map_json()
-    coppersmith_globe_json()
-    coppersmith_world_standards(paths.WS_PATH_STAGING, paths.WS_PATH_COPPER, 'latin-1')
-    coppersmith_global_power_stations() #special data   
-    coppersmith_bigmac(paths.BIG_MAC_PATH_STAGING, paths.BIG_MAC_PATH_COPPER)
+    #coppersmith_map_json()
+    #coppersmith_globe_json()
+    #coppersmith_world_standards(paths.WS_PATH_STAGING, paths.WS_PATH_COPPER, 'latin-1')
+    #coppersmith_global_power_stations() #special data   
+    #coppersmith_bigmac(paths.BIG_MAC_PATH_STAGING, paths.BIG_MAC_PATH_COPPER)
+    
+    print('Process staging...')
+    coppersmith_gapminder_fast_track(blob_service_client, container_name_origin, container_name_destination, paths.FASTTRACK_PATH_STAGING, paths.FASTTRACK_PATH_COPPER, 'latin-1')
 
     return
 
@@ -86,14 +83,14 @@ def create_unique_country_list(path_origin, path_destination):
 
     return
 
-def coppersmith_gapminder_fast_track(origin, destination, encoding):
+def coppersmith_gapminder_fast_track(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_folder_origin: str, blob_folder_destination: str, encoding: str):
     # origin
     # https://github.com/open-numbers/ddf--gapminder--fasttrack
     
-    #simply recursively convert all csvs to parquet and dump them in an equivalent folder in COPPER (create if needed)      
+    #recursively convert all csvs to parquet and dump them in a folder    
     tic = time.perf_counter()
     print("Processing gapminder fast track STAGING > COPPER")    
-    convert_folder_csv_to_parquet_disk(origin, destination, encoding)
+    convert_folder_csv_to_parquet_blob(blob_service_client, container_name_origin, container_name_destination, blob_folder_origin, blob_folder_destination, encoding)
     toc = time.perf_counter()
     print("Processing time: ",toc-tic," seconds")
     return
@@ -387,20 +384,17 @@ def walk_blobs(blob_service_client: BlobServiceClient, container_name: str, fold
 
 
 
-def convert_folder_csv_to_parquet_blob():
+def convert_folder_csv_to_parquet_blob(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_folder_origin: str, blob_folder_destination: str, encoding: str):
     #blob version of disk version 
-
-    print('Convert folder csv -> parquet in blob')
-    #print('container name: ',container_name)
-    print('storage account: ',account_name)
-    #print('account key: ',account_key)
-
-    # paths    
-    origin_container_name = 'staging'
-    origin_path = 'statistics/gapminder_fast-track/'
-    destination_container_name = 'copper'
-    destination_path = 'copper/gapminder_fast-track/'
-    encoding = 'latin-1'
+    
+    print('blob client ', blob_service_client)
+    print('origin container ',container_name_origin)
+    print('destination container ',container_name_destination)
+    print('origin folder ',blob_folder_origin)
+    print('destination folder ', blob_folder_destination)
+    print('encoding ',encoding)
+  
+    
 
 
     
@@ -408,28 +402,38 @@ def convert_folder_csv_to_parquet_blob():
 
 ### RUN ###
 
-# create account SAS (should have full access to all containers)
+# Azure storage blob config (credentials)
+load_dotenv()
+account_name = os.getenv("AZURE_STORAGE_ACCOUNT_NAME")
+account_key = os.getenv("AZURE_STORAGE_ACCOUNT_KEY")
+
+# create account SAS (should have root access to all containers)
 sas_token = create_account_sas(account_name, account_key)
 
 # build URL version in the proper format
 account_sas_url = 'https://' + account_name+'.blob.core.windows.net/' + '?' + sas_token  
-print(account_sas_url)
+#print(account_sas_url)
 
-# create BlobServiceClient object
+# create BlobServiceClient object (we now have the power to do all the admin tasks)
 blob_service_client = BlobServiceClient(account_url=account_sas_url)
 
-# list blob containers
-containers = blob_service_client.list_containers(include_metadata=True)
-for container in containers:
-        print(container['name'])
+# list blob containers (WORKING)
+#containers = blob_service_client.list_containers(include_metadata=True)
+#for container in containers:
+#        print(container['name'])
 
-# list blobs in a container (WORKING)
+# list all blobs in a given container (WORKING)
 all_blobs_lst = get_blobs(blob_service_client, 'staging')
 
-# list blobs in a blob-directory (WORKING). Note can repurpose data_paths.
+# list blobs in a given blob-directory (WORKING). Note can repurpose data_paths.
 my_blobs_lst = walk_blobs(blob_service_client, 'staging', 'statistics/gapminder-fast-track/')
 
-# do an operation. i.e. process everything in a blob-dir to another blob-dir
+
+process_staging(blob_service_client, 'staging', 'copper')
+
+
+
+"""
 
 #build sas URL using existing token to a blob (i.e. first blob in list)
 container_name_origin = 'staging'
@@ -447,32 +451,19 @@ blob_name = my_blobs_lst[1][:-3]+'parquet'
 sas_url_blob_destination = 'https://' + account_name+'.blob.core.windows.net/' + container_name_destination + '/' + my_blobs_lst[1][:-3]+'parquet' + '?' + sas_token  
 print(sas_url_blob_destination)
 
-# write to parquet in copper ERROR: The specifified blob does not exist)
-#df.to_parquet(sas_url_blob_destination, engine='pyarrow', index=False)
-
-#apparently you can do it this way (WORKING!!!)
+# write df to parquet stream (WORKING!!!)
 stream = BytesIO() #initialise a stream
 df.to_parquet(stream, engine='pyarrow') #write the parquet to the stream
 stream.seek(0) #put pointer back to start of stream
-blob_client = blob_service_client.get_blob_client(container=container_name_destination, blob="sample-blob.parquet")
+blob_client = blob_service_client.get_blob_client(container=container_name_destination, blob="statistics/sample-blob.parquet")
 blob_client.upload_blob(data=stream, overwrite=True, blob_type="BlockBlob")
 
-#get the above cleaned up. See if you can write the file structure directly or if that needs to be constructed. (i.e. statistics blob-folder etc)
+# confirmed can write folder structure into blob
 
-    
-
-
+# TODO: start functionalising shit to churn through the statistics...basically get process_staging working completely. 1 step at a time.
 
 
-
-# refactor everything into functions etc.
-
-
-
-
-#convert_folder_csv_to_parquet_blob()
-
-
+"""
 
 
 

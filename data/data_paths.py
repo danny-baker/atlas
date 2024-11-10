@@ -3,11 +3,9 @@
 # A centralised location for all relative data paths, to assist in data lakehouse architecture
 
 # STAGING
+FASTTRACK_PATH_STAGING = "statistics/gapminder-fast-track/"
+
 COUNTRY_LOOKUP_PATH_STAGING = "/data_lakehouse/staging/meta/country_lookup.csv"
-
-FASTTRACK_PATH_STAGING = "/data_lakehouse/staging/statistics/gapminder-fast-track/"
-
-
 SYSTEMAGLOBALIS_PATH_STAGING = "/data_lakehouse/staging/statistics/gapminder-systema-globalis/"
 WDINDICATORS_PATH_STAGING = "/data_lakehouse/staging/statistics/world-development-indicators/"
 UNDATA_PATH_STAGING = "/data_lakehouse/staging/statistics/undata/"
@@ -24,11 +22,9 @@ PWR_STN_PATH_STAGING = "/data_lakehouse/staging/geojson/global-power-stations/"
 BIG_MAC_PATH_STAGING = "/data_lakehouse/staging/statistics/big-mac-index/big-mac-adjusted-index.csv"
 
 # COPPER
+FASTTRACK_PATH_COPPER = "statistics/gapminder-fast-track/"
+
 COUNTRY_LOOKUP_PATH_COPPER = "/data_lakehouse/copper/meta/country_lookup.csv"
-
-FASTTRACK_PATH_COPPER = "/data_lakehouse/copper/statistics/gapminder-fast-track/"
-
-
 SYSTEMAGLOBALIS_PATH_COPPER = "/data_lakehouse/copper/statistics/gapminder-systema-globalis/"
 WDINDICATORS_PATH_COPPER = "/data_lakehouse/copper/statistics/world-development-indicators/"
 UNDATA_PATH_COPPER = "/data_lakehouse/copper/statistics/undata/"
