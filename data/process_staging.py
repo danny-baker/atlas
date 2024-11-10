@@ -36,11 +36,11 @@ from azure.storage.blob import (
 
 
 
-def process_staging(blob_service_client, container_name_origin, container_name_destination):
+def process_staging(blob_service_client, container_name_origin, container_name_destination, sas_token):
     # process STAGING => COPPER
     #create_unique_country_list(paths.COUNTRY_LOOKUP_PATH_STAGING,paths.COUNTRY_LOOKUP_PATH_COPPER) #make this parquet?
    
-    #coppersmith_gapminder_systema_globalis(paths.SYSTEMAGLOBALIS_PATH_STAGING, paths.SYSTEMAGLOBALIS_PATH_COPPER, 'latin-1')
+   
     #coppersmith_gapminder_world_dev_indicators(paths.WDINDICATORS_PATH_STAGING, paths.WDINDICATORS_PATH_COPPER, 'latin-1')
     #coppersmith_sdgindicators(paths.SDG_PATH_STAGING, paths.SDG_PATH_COPPER) #Slow due to excel reader
     ##coppersmith_sdgindicators_new()
@@ -51,7 +51,8 @@ def process_staging(blob_service_client, container_name_origin, container_name_d
     #coppersmith_bigmac(paths.BIG_MAC_PATH_STAGING, paths.BIG_MAC_PATH_COPPER)
     
     print('Process staging...')
-    coppersmith_gapminder_fast_track(blob_service_client, container_name_origin, container_name_destination, paths.FASTTRACK_PATH_STAGING, paths.FASTTRACK_PATH_COPPER, 'latin-1')
+    #coppersmith_gapminder_fast_track(blob_service_client, container_name_origin, container_name_destination, paths.FASTTRACK_PATH_STAGING, 'latin-1', sas_token)
+    coppersmith_gapminder_systema_globalis(blob_service_client, container_name_origin, container_name_destination, paths.SYSTEMAGLOBALIS_PATH_STAGING,'latin-1', sas_token)
 
     return
 
@@ -83,27 +84,27 @@ def create_unique_country_list(path_origin, path_destination):
 
     return
 
-def coppersmith_gapminder_fast_track(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_folder_origin: str, blob_folder_destination: str, encoding: str):
+def coppersmith_gapminder_fast_track(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_folder_origin: str, encoding: str, sas_token: str):
     # origin
     # https://github.com/open-numbers/ddf--gapminder--fasttrack
     
     #recursively convert all csvs to parquet and dump them in a folder    
     tic = time.perf_counter()
     print("Processing gapminder fast track STAGING > COPPER")    
-    convert_folder_csv_to_parquet_blob(blob_service_client, container_name_origin, container_name_destination, blob_folder_origin, blob_folder_destination, encoding)
+    convert_folder_csv_to_parquet_blob(blob_service_client, container_name_origin, container_name_destination, blob_folder_origin, encoding, sas_token)
     toc = time.perf_counter()
     print("Processing time: ",toc-tic," seconds")
     return
 
 
-def coppersmith_gapminder_systema_globalis(origin, destination, encoding):
+def coppersmith_gapminder_systema_globalis(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_folder_origin: str, encoding: str, sas_token: str):
     # origin
     # https://github.com/open-numbers/ddf--gapminder--systema_globalis
     
-    #simply recursively convert all csvs to parquet and dump them in an equivalent folder in COPPER (create if needed)
+    #simply recursively convert all csvs to parquet and dump in a folder
     tic = time.perf_counter()
     print("Processing gapminder systema globalis STAGING > COPPER")    
-    convert_folder_csv_to_parquet_disk(origin, destination, encoding)
+    convert_folder_csv_to_parquet_blob(blob_service_client, container_name_origin, container_name_destination, blob_folder_origin, encoding, sas_token)
     toc = time.perf_counter()
     print("Processing time: ",toc-tic," seconds")
     return
@@ -384,17 +385,75 @@ def walk_blobs(blob_service_client: BlobServiceClient, container_name: str, fold
 
 
 
-def convert_folder_csv_to_parquet_blob(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_folder_origin: str, blob_folder_destination: str, encoding: str):
+def convert_folder_csv_to_parquet_blob(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_folder_origin: str, encoding: str, sas_token: str):
     #blob version of disk version 
     
     print('blob client ', blob_service_client)
     print('origin container ',container_name_origin)
     print('destination container ',container_name_destination)
     print('origin folder ',blob_folder_origin)
-    print('destination folder ', blob_folder_destination)
     print('encoding ',encoding)
-  
+    print('sas_token ',sas_token)
     
+    # build list of blob names for this blob-folder
+    blob_list = walk_blobs(blob_service_client, container_name_origin, blob_folder_origin)
+    print(len(blob_list))
+    
+    # iterate the list read in each blob as df and write out to parquet stream to destination blob
+    for blob in blob_list:
+        print('Processing ', blob)
+        
+        # build sas URL to the blob (so we can read it)
+        sas_url_blob = 'https://' + account_name+'.blob.core.windows.net/' + container_name_origin + '/' + blob + '?' + sas_token  
+        #print(sas_url_blob)
+        
+        # read in blob as datafame
+        df = pd.read_csv(sas_url_blob)
+        
+        # prepare destination blob path
+        blob_path_destination = blob[:-3] + 'parquet'
+        print(blob_path_destination)
+        
+        # write df to parquet stream
+        stream = BytesIO() #initialise a stream
+        df.to_parquet(stream, engine='pyarrow') #write the parquet to the stream
+        stream.seek(0) #put pointer back to start of stream
+        
+        # write the stream to blob
+        blob_client = blob_service_client.get_blob_client(container=container_name_destination, blob=blob_path_destination)
+        blob_client.upload_blob(data=stream, overwrite=True, blob_type="BlockBlob")
+    
+    """
+    
+    #build sas URL using existing token to a blob (i.e. first blob in list)
+    container_name_origin = 'staging'
+    sas_url_blob_origin = 'https://' + account_name+'.blob.core.windows.net/' + container_name_origin + '/' + my_blobs_lst[1] + '?' + sas_token          
+    print(sas_url_blob_origin)
+    df = pd.read_csv(sas_url_blob_origin)
+    
+    # write to copper
+    container_name_destination = 'copper'
+    
+    #trim filename .csv -> .parquet
+    blob_name = my_blobs_lst[1][:-3]+'parquet'
+    
+    # build new blob sas URL
+    sas_url_blob_destination = 'https://' + account_name+'.blob.core.windows.net/' + container_name_destination + '/' + my_blobs_lst[1][:-3]+'parquet' + '?' + sas_token  
+    print(sas_url_blob_destination)
+    
+    # write df to parquet stream (WORKING!!!)
+    stream = BytesIO() #initialise a stream
+    df.to_parquet(stream, engine='pyarrow') #write the parquet to the stream
+    stream.seek(0) #put pointer back to start of stream
+    blob_client = blob_service_client.get_blob_client(container=container_name_destination, blob="statistics/sample-blob.parquet")
+    blob_client.upload_blob(data=stream, overwrite=True, blob_type="BlockBlob")
+    
+    # confirmed can write folder structure into blob
+    
+    # TODO: start functionalising shit to churn through the statistics...basically get process_staging working completely. 1 step at a time.
+    
+    
+    """
 
 
     
@@ -429,41 +488,10 @@ all_blobs_lst = get_blobs(blob_service_client, 'staging')
 my_blobs_lst = walk_blobs(blob_service_client, 'staging', 'statistics/gapminder-fast-track/')
 
 
-process_staging(blob_service_client, 'staging', 'copper')
+process_staging(blob_service_client, 'staging', 'copper', sas_token)
 
 
 
-"""
-
-#build sas URL using existing token to a blob (i.e. first blob in list)
-container_name_origin = 'staging'
-sas_url_blob_origin = 'https://' + account_name+'.blob.core.windows.net/' + container_name_origin + '/' + my_blobs_lst[1] + '?' + sas_token          
-print(sas_url_blob_origin)
-df = pd.read_csv(sas_url_blob_origin)
-
-# write to copper
-container_name_destination = 'copper'
-
-#trim filename .csv -> .parquet
-blob_name = my_blobs_lst[1][:-3]+'parquet'
-
-# build new blob sas URL
-sas_url_blob_destination = 'https://' + account_name+'.blob.core.windows.net/' + container_name_destination + '/' + my_blobs_lst[1][:-3]+'parquet' + '?' + sas_token  
-print(sas_url_blob_destination)
-
-# write df to parquet stream (WORKING!!!)
-stream = BytesIO() #initialise a stream
-df.to_parquet(stream, engine='pyarrow') #write the parquet to the stream
-stream.seek(0) #put pointer back to start of stream
-blob_client = blob_service_client.get_blob_client(container=container_name_destination, blob="statistics/sample-blob.parquet")
-blob_client.upload_blob(data=stream, overwrite=True, blob_type="BlockBlob")
-
-# confirmed can write folder structure into blob
-
-# TODO: start functionalising shit to churn through the statistics...basically get process_staging working completely. 1 step at a time.
-
-
-"""
 
 
 
