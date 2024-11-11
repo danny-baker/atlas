@@ -15,18 +15,13 @@ SDG_PATH_STAGING = "statistics/sdgindicators/"
 MAP_JSON_LOW_PATH_STAGING = "geojson/natural_earth/map/ne_110m.geojson" 
 MAP_JSON_MED_PATH_STAGING = "geojson/natural_earth/map/ne_50m.geojson" 
 MAP_JSON_HIGH_PATH_STAGING = "geojson/natural_earth/map/ne_10m.geojson"
-
 GLOBE_JSON_LAND_HIGH_PATH_STAGING = "geojson/natural_earth/globe/working/ne_50m_land.geojson"
 GLOBE_JSON_OCEAN_HIGH_PATH_STAGING = "geojson/natural_earth/globe/working/ne_50m_ocean.geojson"
 GLOBE_JSON_LAND_LOW_PATH_STAGING = "geojson/natural_earth/globe/working/ne_110m_land_cultural.geojson"
 GLOBE_JSON_OCEAN_LOW_PATH_STAGING = "geojson/natural_earth/globe/working/ne_110m_ocean.geojson"
 
 
-
-
-
-
-#IRON
+#IRON (TODO)
 
 FASTTRACK_PATH_IRON = "/data_lakehouse/iron/statistics/gapminder-fast-track/"
 SYSTEMAGLOBALIS_PATH_IRON = "/data_lakehouse/iron/statistics/gapminder-systema-globalis/"
@@ -42,7 +37,6 @@ PWR_STN_PATH_TITANIUM = "geojson/global-power-stations/xp1_global_power_plant_da
 MAP_JSON_LOW_PATH_TITANIUM = "geojson/map/ne_110m.geojson" 
 MAP_JSON_MED_PATH_TITANIUM = "geojson/map/ne_50m.geojson" 
 MAP_JSON_HIGH_PATH_TITANIUM = "geojson/map/ne_10m.geojson"
-
 GLOBE_JSON_LAND_HIGH_PATH_TITANIUM = "geojson/globe/ne_50m_land.geojson"
 GLOBE_JSON_OCEAN_HIGH_PATH_TITANIUM = "geojson/globe/ne_50m_ocean.geojson"
 GLOBE_JSON_LAND_LOW_PATH_TITANIUM = "geojson/globe/ne_110m_land_cultural.geojson"

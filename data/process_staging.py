@@ -14,7 +14,6 @@ import sys
 import shutil
 import time
 import datetime
-#import matplotlib.pyplot as plt
 import copy
 from io import BytesIO
 
@@ -36,32 +35,30 @@ from azure.storage.blob import (
 
 
 
-def process_staging(blob_service_client: object, container_name_origin: str, container_name_destination: str, sas_token: str):
-    # process STAGING > COPPER
+def process_staging(container_name_origin: str, container_name_destination: str):
+    # process data from STAGING > COPPER 
     
-    print('Process staging...')
-    #coppersmith_gapminder_fast_track(blob_service_client, container_name_origin, container_name_destination, paths.FASTTRACK_PATH_STAGING, 'latin-1', sas_token)
-    #coppersmith_gapminder_systema_globalis(blob_service_client, container_name_origin, container_name_destination, paths.SYSTEMAGLOBALIS_PATH_STAGING,'latin-1', sas_token)
-    #coppersmith_gapminder_world_dev_indicators(blob_service_client, container_name_origin, container_name_destination, paths.WDINDICATORS_PATH_STAGING, 'latin-1', sas_token)
-    #coppersmith_world_standards(blob_service_client, container_name_origin, container_name_destination, paths.WS_PATH_STAGING, 'latin-1', sas_token)
-    #create_unique_country_list(blob_service_client, container_name_origin, container_name_destination, paths.COUNTRY_LOOKUP_PATH_STAGING, 'utf-8', sas_token)
-    #coppersmith_bigmac(blob_service_client, container_name_origin, container_name_destination, paths.BIG_MAC_PATH_STAGING, 'utf-8', sas_token)    
-    #coppersmith_sdgindicators(blob_service_client, container_name_origin, container_name_destination, paths.SDG_PATH_STAGING, 'latin-1', sas_token) #Slow due to excel reader
+    print('Process staging data ...')
     
-    # DO AT LATER STAGE?
-    # These just need to be copied to the titanium location from staging. They are unchanged, no unzipping or anything. Simple operation for now.
-    # I feel like design wise, nothing at this stage should be put into titanium (as it could cause breaking changes.)
-    # Perhaps when Iron is processed, which is known to push stuff to titanium, that's when we pull over the json data etc > titanium 
+    # PROCESS STATISTICAL DATA
+    #coppersmith_gapminder_fast_track(container_name_origin, container_name_destination, paths.FASTTRACK_PATH_STAGING, 'latin-1')
+    #coppersmith_gapminder_systema_globalis(container_name_origin, container_name_destination, paths.SYSTEMAGLOBALIS_PATH_STAGING,'latin-1')
+    #coppersmith_gapminder_world_dev_indicators(container_name_origin, container_name_destination, paths.WDINDICATORS_PATH_STAGING, 'latin-1')
+    #coppersmith_world_standards(container_name_origin, container_name_destination, paths.WS_PATH_STAGING, 'latin-1')
+    #create_unique_country_list(container_name_origin, container_name_destination, paths.COUNTRY_LOOKUP_PATH_STAGING, 'utf-8')
+    #coppersmith_bigmac(container_name_origin, container_name_destination, paths.BIG_MAC_PATH_STAGING, 'utf-8')    
+    #coppersmith_sdgindicators(container_name_origin, container_name_destination, paths.SDG_PATH_STAGING, 'latin-1') 
     
-    #coppersmith_map_json(blob_service_client, container_name_origin, 'titanium', sas_token)
-    #coppersmith_globe_json(blob_service_client, container_name_origin, 'titanium', sas_token)
-    #coppersmith_global_power_stations(blob_service_client, container_name_origin, 'titanium', paths.PWR_STN_PATH_STAGING, paths.PWR_STN_PATH_TITANIUM, 'utf-8', sas_token) #tested and ready.     
+    # PROCESS JSON (AND SPECIAL) DATA
+    #coppersmith_map_json(container_name_origin, 'titanium')
+    #coppersmith_globe_json(container_name_origin, 'titanium')
+    #coppersmith_global_power_stations(container_name_origin, 'titanium', paths.PWR_STN_PATH_STAGING, paths.PWR_STN_PATH_TITANIUM, 'utf-8')    
     
     return
 
 
 
-def create_unique_country_list(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_path: str, encoding: str, sas_token: str): 
+def create_unique_country_list(container_name_origin: str, container_name_destination: str, blob_path: str, encoding: str): 
     # Process country list (origin from UN?) to zero pad integers and store  (this is a single file that is important for later processing)  
     
     print('Processing metadata for country lookup')
@@ -92,49 +89,49 @@ def create_unique_country_list(blob_service_client: object, container_name_origi
 
     return
 
-def coppersmith_gapminder_fast_track(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_folder_origin: str, encoding: str, sas_token: str):
+def coppersmith_gapminder_fast_track(container_name_origin: str, container_name_destination: str, blob_folder_origin: str, encoding: str):
     # origin
     # https://github.com/open-numbers/ddf--gapminder--fasttrack
     
     #recursively convert all csvs to parquet and dump them in a folder    
     tic = time.perf_counter()
     print("Processing gapminder fast track STAGING > COPPER")    
-    convert_folder_csv_to_parquet_blob(blob_service_client, container_name_origin, container_name_destination, blob_folder_origin, encoding, sas_token)
+    convert_folder_csv_to_parquet_blob(container_name_origin, container_name_destination, blob_folder_origin, encoding)
     toc = time.perf_counter()
     print("Processing time: ",toc-tic," seconds")
     return
 
 
-def coppersmith_gapminder_systema_globalis(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_folder_origin: str, encoding: str, sas_token: str):
+def coppersmith_gapminder_systema_globalis(container_name_origin: str, container_name_destination: str, blob_folder_origin: str, encoding: str):
     # origin
     # https://github.com/open-numbers/ddf--gapminder--systema_globalis
     
     #simply recursively convert all csvs to parquet and dump in a folder
     tic = time.perf_counter()
     print("Processing gapminder systema globalis STAGING > COPPER")    
-    convert_folder_csv_to_parquet_blob(blob_service_client, container_name_origin, container_name_destination, blob_folder_origin, encoding, sas_token)
+    convert_folder_csv_to_parquet_blob(container_name_origin, container_name_destination, blob_folder_origin, encoding)
     toc = time.perf_counter()
     print("Processing time: ",toc-tic," seconds")
     return
 
-def coppersmith_gapminder_world_dev_indicators(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_folder_origin: str, encoding: str, sas_token: str):
+def coppersmith_gapminder_world_dev_indicators(container_name_origin: str, container_name_destination: str, blob_folder_origin: str, encoding: str):
     # origin
     # https://github.com/open-numbers/ddf--open_numbers--world_development_indicators
     
     #simply recursively convert all csvs to parquet and dump them in an equivalent folder in COPPER (create if needed)
     tic = time.perf_counter()
     print("Processing gapminder world dev indicators STAGING > COPPER")    
-    convert_folder_csv_to_parquet_blob(blob_service_client, container_name_origin, container_name_destination, blob_folder_origin, encoding, sas_token)
+    convert_folder_csv_to_parquet_blob(container_name_origin, container_name_destination, blob_folder_origin, encoding)
     toc = time.perf_counter()
     print("Processing time: ",toc-tic," seconds")
     return
 
 
-def coppersmith_sdgindicators(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_folder_origin: str, encoding: str, sas_token: str):
+def coppersmith_sdgindicators(container_name_origin: str, container_name_destination: str, blob_folder_origin: str, encoding: str):
     #simply recursively convert all xlsx files to parquet and dump them in an equivalent folder in COPPER (create if needed)
     tic = time.perf_counter()
     print("Processing sdg indicators STAGING > COPPER")   
-    convert_folder_xlsx_to_parquet_blob(blob_service_client, container_name_origin, container_name_destination, blob_folder_origin, encoding, sas_token)
+    convert_folder_xlsx_to_parquet_blob(container_name_origin, container_name_destination, blob_folder_origin, encoding)
     toc = time.perf_counter()
     print("Processing time: ",toc-tic," seconds")
     return
@@ -191,7 +188,7 @@ def coppersmith_sdgindicators_new():
     
 
 
-def coppersmith_map_json(blob_service_client, container_name_origin, container_name_destination, sas_token):
+def coppersmith_map_json(container_name_origin: str, container_name_destination: str):
     #The map json (from memory) was unprocessed, sourced from Natural Earth
     # Move map json data from STAGING > TITANIUM
     # https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blob-copy-python
@@ -217,7 +214,7 @@ def copy_blob(blob_service_client, container_name_origin, container_name_destina
     
     return
 
-def coppersmith_globe_json(blob_service_client, container_name_origin, container_name_destination, sas_token):
+def coppersmith_globe_json(container_name_origin: str, container_name_destination: str):
     # Attempt to process raw 3d json data for globe visualisation. FAIL.
     # This is really tricky, and some preprocessing was clearly done to prepare data for the cleaner functions. I never saved it.
     # In the interests of time, just storing processed data in staging to conform to the lakehouse architecture, if it ever needs to be processed.
@@ -227,12 +224,10 @@ def coppersmith_globe_json(blob_service_client, container_name_origin, container
     copy_blob(blob_service_client, container_name_origin, container_name_destination, paths.GLOBE_JSON_OCEAN_HIGH_PATH_STAGING, paths.GLOBE_JSON_OCEAN_HIGH_PATH_TITANIUM, sas_token)
     copy_blob(blob_service_client, container_name_origin, container_name_destination, paths.GLOBE_JSON_LAND_LOW_PATH_STAGING, paths.GLOBE_JSON_LAND_LOW_PATH_TITANIUM, sas_token)
     copy_blob(blob_service_client, container_name_origin, container_name_destination, paths.GLOBE_JSON_OCEAN_LOW_PATH_STAGING, paths.GLOBE_JSON_OCEAN_LOW_PATH_TITANIUM, sas_token)
-    
- 
-    
+
     return
 
-def coppersmith_global_power_stations(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_path_origin: str, blob_path_destination: str, encoding: str, sas_token: str):
+def coppersmith_global_power_stations(container_name_origin: str, container_name_destination: str, blob_path_origin: str, blob_path_destination: str, encoding: str):
     # process the experimental globe powerstation dataset csv to parquet directly from STAGING > TITANIUM
     
     tic = time.perf_counter()
@@ -257,17 +252,17 @@ def coppersmith_global_power_stations(blob_service_client: object, container_nam
     print("Processing time: ",toc-tic," seconds")
     return
 
-def coppersmith_world_standards(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_folder_origin: str, encoding: str, sas_token: str):
+def coppersmith_world_standards(container_name_origin: str, container_name_destination: str, blob_folder_origin: str, encoding: str):
     #simply recursively convert all csvs to parquet and dump them in an equivalent folder in COPPER (create if needed)
     tic = time.perf_counter()    
     print("Processing world standards STAGING > COPPER")    
-    convert_folder_csv_to_parquet_blob(blob_service_client, container_name_origin, container_name_destination, blob_folder_origin, encoding, sas_token)
+    convert_folder_csv_to_parquet_blob(container_name_origin, container_name_destination, blob_folder_origin, encoding)
     toc = time.perf_counter()
     print("Processing time: ",toc-tic," seconds")
         
     return
 
-def coppersmith_bigmac(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_path: str, encoding: str, sas_token: str):
+def coppersmith_bigmac(container_name_origin: str, container_name_destination: str, blob_path: str, encoding: str):
     # https://github.com/TheEconomist/big-mac-data
     # https://github.com/theeconomist/big-mac-data/releases/tag/2024-01
     
@@ -344,21 +339,12 @@ def walk_blobs(blob_service_client: object, container_name: str, folder_name: st
     return blob_lst
 
 
-
-
-def convert_folder_csv_to_parquet_blob(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_folder_origin: str, encoding: str, sas_token: str):
-    #blob version of disk version 
-    
-    print('blob client ', blob_service_client)
-    print('origin container ',container_name_origin)
-    print('destination container ',container_name_destination)
-    print('origin folder ',blob_folder_origin)
-    print('encoding ',encoding)
-    print('sas_token ',sas_token)
+def convert_folder_csv_to_parquet_blob(container_name_origin: str, container_name_destination: str, blob_folder_origin: str, encoding: str):
+    # Transform a blob-folder of csvs in one container to parquet files in a target container
     
     # build list of blob names for this blob-folder
     blob_list = walk_blobs(blob_service_client, container_name_origin, blob_folder_origin)
-    print(len(blob_list))
+    print('Converting ',len(blob_list),'files')
     
     # iterate the list read in each blob as df and write out to parquet stream to destination blob
     for blob in blob_list:
@@ -386,15 +372,8 @@ def convert_folder_csv_to_parquet_blob(blob_service_client: object, container_na
         blob_client.upload_blob(data=stream, overwrite=True, blob_type="BlockBlob")
     return
 
-def convert_folder_xlsx_to_parquet_blob(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_folder_origin: str, encoding: str, sas_token: str):
+def convert_folder_xlsx_to_parquet_blob(container_name_origin: str, container_name_destination: str, blob_folder_origin: str, encoding: str):
     #Helper function to convert a whole folder of .xlsx files to .parquet with same names in the destination
-    
-    print('blob client ', blob_service_client)
-    print('origin container ',container_name_origin)
-    print('destination container ',container_name_destination)
-    print('origin folder ',blob_folder_origin)
-    print('encoding ',encoding)
-    print('sas_token ',sas_token)
     
     # build list of blob names for this blob-folder
     blob_list = walk_blobs(blob_service_client, container_name_origin, blob_folder_origin)
@@ -446,26 +425,20 @@ sas_token = create_account_sas(account_name, account_key)
 account_sas_url = 'https://' + account_name+'.blob.core.windows.net/' + '?' + sas_token  
 #print(account_sas_url)
 
-# create BlobServiceClient object (we now have the power to do all the admin tasks)
+# create BlobServiceClient object (we now have the jedi power to do all the admin tasks)
 blob_service_client = BlobServiceClient(account_url=account_sas_url)
 
-# list blob containers (WORKING)
-#containers = blob_service_client.list_containers(include_metadata=True)
-#for container in containers:
-#        print(container['name'])
-
-# list all blobs in a given container (WORKING)
-#all_blobs_lst = get_blobs(blob_service_client, 'staging')
-
-# list blobs in a given blob-directory (WORKING). Note can repurpose data_paths.
-#my_blobs_lst = walk_blobs(blob_service_client, 'staging', 'statistics/gapminder-fast-track/')
+# trigger the main operation
+process_staging('staging', 'copper')
 
 
-process_staging(blob_service_client, 'staging', 'copper', sas_token)
-
-
-
-
+# TODO
+# refactor and simplify. i.e don't need to pass blob_service_client as it should be global var
+# clean up 
+# harden: use try/catch statements in case of error. i.e. catch error and return false for function, so it can be rerun.
+# try to catch errors at the file level (in the for loop) so can just repull the file rather than rerun the entire function (1000s of datafiles)#
+# parallelise using laptop compute
+# operationalise in cloud (custom VM) spin up with yaml, and run, spin down)
 
 
 
