@@ -37,14 +37,13 @@ from azure.storage.blob import (
 
 
 def process_staging(blob_service_client, container_name_origin, container_name_destination, sas_token):
-    # process STAGING => COPPER
+    # process STAGING > COPPER
     
     #coppersmith_sdgindicators(paths.SDG_PATH_STAGING, paths.SDG_PATH_COPPER) #Slow due to excel reader
-    ##coppersmith_sdgindicators_new()
     #coppersmith_map_json()
     #coppersmith_globe_json()    
     #coppersmith_global_power_stations() #special data   
-    #coppersmith_bigmac(paths.BIG_MAC_PATH_STAGING, paths.BIG_MAC_PATH_COPPER)
+    
     
     #WORKING
     
@@ -53,19 +52,21 @@ def process_staging(blob_service_client, container_name_origin, container_name_d
     #coppersmith_gapminder_systema_globalis(blob_service_client, container_name_origin, container_name_destination, paths.SYSTEMAGLOBALIS_PATH_STAGING,'latin-1', sas_token)
     #coppersmith_gapminder_world_dev_indicators(blob_service_client, container_name_origin, container_name_destination, paths.WDINDICATORS_PATH_STAGING, 'latin-1', sas_token)
     #coppersmith_world_standards(blob_service_client, container_name_origin, container_name_destination, paths.WS_PATH_STAGING, 'latin-1', sas_token)
-    #create_unique_country_list(blob_service_client, container_name_origin, container_name_destination, paths.COUNTRY_LOOKUP_PATH_STAGING,paths.COUNTRY_LOOKUP_PATH_COPPER, 'utf-8', sas_token) 
+    #create_unique_country_list(blob_service_client, container_name_origin, container_name_destination, paths.COUNTRY_LOOKUP_PATH_STAGING, 'utf-8', sas_token)
+    #coppersmith_bigmac(blob_service_client, container_name_origin, container_name_destination, paths.BIG_MAC_PATH_STAGING, 'utf-8', sas_token)
+    
 
     return
 
 
 
-def create_unique_country_list(blob_service_client, container_name_origin, container_name_destination, path_origin, path_destination, encoding, sas_token): 
+def create_unique_country_list(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_path: str, encoding: str, sas_token: str): 
     # Process country list (origin from UN?) to zero pad integers and store  (this is a single file that is important for later processing)  
     
     print('Processing metadata for country lookup')
     
     # build sas URL to the blob (so we can read it)
-    sas_url_blob = 'https://' + account_name+'.blob.core.windows.net/' + container_name_origin + '/' + path_origin + '?' + sas_token 
+    sas_url_blob = 'https://' + account_name+'.blob.core.windows.net/' + container_name_origin + '/' + blob_path + '?' + sas_token 
     
     # read blob into df
     df = pd.read_csv(sas_url_blob, encoding=encoding, names=["m49_a3_country", "country", "continent", "region_un", "region_wb", "su_a3"])
@@ -85,7 +86,7 @@ def create_unique_country_list(blob_service_client, container_name_origin, conta
     stream.seek(0) #put pointer back to start of stream
     
     # write the stream to blob
-    blob_client = blob_service_client.get_blob_client(container=container_name_destination, blob=path_destination)
+    blob_client = blob_service_client.get_blob_client(container=container_name_destination, blob=blob_path)
     blob_client.upload_blob(data=stream, overwrite=True, blob_type="BlockBlob")
 
     return
@@ -268,8 +269,8 @@ def coppersmith_globe_json():
     return
 
 def coppersmith_global_power_stations():
-    # process the experimental globe powerstation dataset. Special treatment here as there are 2 files. One json and one CSV
-    # We will process csv to parquet and dump both json and parquet directly into titanium (special data)
+    # process the experimental globe powerstation dataset. Special treatment here as there are 2 files. One json and one CSV (update now just 1 file. geojson was same as what already had)
+    # We will process csv to parquet and dump directly into titanium (special data)
     
     tic = time.perf_counter()
     print("Processing global power station data STAGING > TITANIUIM (special)") 
@@ -300,23 +301,30 @@ def coppersmith_world_standards(blob_service_client: object, container_name_orig
         
     return
 
-def coppersmith_bigmac(origin, destination):
-    # origin
+def coppersmith_bigmac(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_path: str, encoding: str, sas_token: str):
     # https://github.com/TheEconomist/big-mac-data
     # https://github.com/theeconomist/big-mac-data/releases/tag/2024-01
     
-    origin_filepath = os.getcwd()+origin
-    destination_path = os.getcwd()+destination
-    destination_filepath = destination_path+'big-mac-index.parquet'
+    print('Processing BigMac index')
     
-    # Read the index
-    df = pd.read_csv(origin_filepath)    
-
-    #Check if destination folder exists. If not, create it.
-    if not os.path.exists(destination_path): os.mkdir(destination_path)  
+    # build sas URL to the blob (so we can read it)
+    sas_url_blob = 'https://' + account_name+'.blob.core.windows.net/' + container_name_origin + '/' + blob_path + '?' + sas_token 
     
-    # Write parquet to disk
-    df.to_parquet(destination_filepath, engine='pyarrow', index=False)   
+    # read blob into df
+    df = pd.read_csv(sas_url_blob, encoding=encoding)
+    
+    # prepare destination blob path
+    blob_path_destination = blob_path[:-3] + 'parquet'
+    print(blob_path_destination)
+    
+    # write df to csv stream
+    stream = BytesIO() #initialise a stream
+    df.to_parquet(stream, engine='pyarrow', index=False) #write the csv to the stream
+    stream.seek(0) #put pointer back to start of stream
+    
+    # write the stream to blob
+    blob_client = blob_service_client.get_blob_client(container=container_name_destination, blob=blob_path_destination)
+    blob_client.upload_blob(data=stream, overwrite=True, blob_type="BlockBlob")
     
     return
 

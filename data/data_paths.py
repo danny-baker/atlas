@@ -9,6 +9,7 @@ SYSTEMAGLOBALIS_PATH_STAGING = "statistics/gapminder-systema-globalis/"
 WDINDICATORS_PATH_STAGING = "statistics/world-development-indicators/"
 WS_PATH_STAGING = "statistics/world-standards-unofficial-website/"
 COUNTRY_LOOKUP_PATH_STAGING = "meta/country_lookup.csv"
+BIG_MAC_PATH_STAGING = "statistics/big-mac-index/big-mac-adjusted-index.csv"
 
 
 UNDATA_PATH_STAGING = "/data_lakehouse/staging/statistics/undata/"
@@ -21,15 +22,13 @@ GLOBE_JSON_OCEAN_HIGH_PATH_STAGING = "/data_lakehouse/staging/geojson/natural_ea
 GLOBE_JSON_LAND_LOW_PATH_STAGING = "/data_lakehouse/staging/geojson/natural_earth/globe/working/ne_110m_land_cultural.geojson"
 GLOBE_JSON_OCEAN_LOW_PATH_STAGING = "/data_lakehouse/staging/geojson/natural_earth/globe/working/ne_110m_ocean.geojson"
 PWR_STN_PATH_STAGING = "/data_lakehouse/staging/geojson/global-power-stations/"
-BIG_MAC_PATH_STAGING = "/data_lakehouse/staging/statistics/big-mac-index/big-mac-adjusted-index.csv"
+
 
 # COPPER
-COUNTRY_LOOKUP_PATH_COPPER = "meta/country_lookup.csv"
 
-UNDATA_PATH_COPPER = "/data_lakehouse/copper/statistics/undata/"
-SDG_PATH_COPPER ="/data_lakehouse/copper/statistics/sdgindicators/"
-WS_PATH_COPPER = "/data_lakehouse/copper/statistics/world-standards-unofficial-website/"
-BIG_MAC_PATH_COPPER = "/data_lakehouse/copper/statistics/big-mac-index/"
+
+
+
 
 #IRON
 
