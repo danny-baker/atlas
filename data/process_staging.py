@@ -36,15 +36,8 @@ from azure.storage.blob import (
 
 
 
-def process_staging(blob_service_client, container_name_origin, container_name_destination, sas_token):
+def process_staging(blob_service_client: object, container_name_origin: str, container_name_destination: str, sas_token: str):
     # process STAGING > COPPER
-    
-    
-    #coppersmith_map_json()
-    #coppersmith_globe_json()    
-    
-
-    #WORKING
     
     print('Process staging...')
     #coppersmith_gapminder_fast_track(blob_service_client, container_name_origin, container_name_destination, paths.FASTTRACK_PATH_STAGING, 'latin-1', sas_token)
@@ -52,9 +45,17 @@ def process_staging(blob_service_client, container_name_origin, container_name_d
     #coppersmith_gapminder_world_dev_indicators(blob_service_client, container_name_origin, container_name_destination, paths.WDINDICATORS_PATH_STAGING, 'latin-1', sas_token)
     #coppersmith_world_standards(blob_service_client, container_name_origin, container_name_destination, paths.WS_PATH_STAGING, 'latin-1', sas_token)
     #create_unique_country_list(blob_service_client, container_name_origin, container_name_destination, paths.COUNTRY_LOOKUP_PATH_STAGING, 'utf-8', sas_token)
-    #coppersmith_bigmac(blob_service_client, container_name_origin, container_name_destination, paths.BIG_MAC_PATH_STAGING, 'utf-8', sas_token)
-    #coppersmith_global_power_stations(blob_service_client, container_name_origin, 'titanium', paths.PWR_STN_PATH_STAGING, paths.PWR_STN_PATH_TITANIUM, 'utf-8', sas_token) #special data   
+    #coppersmith_bigmac(blob_service_client, container_name_origin, container_name_destination, paths.BIG_MAC_PATH_STAGING, 'utf-8', sas_token)    
     #coppersmith_sdgindicators(blob_service_client, container_name_origin, container_name_destination, paths.SDG_PATH_STAGING, 'latin-1', sas_token) #Slow due to excel reader
+    
+    # DO AT LATER STAGE
+    # These just need to be copied to the titanium location from staging. They are unchanged, no unzipping or anything. Simple operation for now.
+    # I feel like design wise, nothing at this stage should be put into titanium (as it could cause breaking changes.)
+    # Perhaps when Iron is processed, which is known to push stuff to titanium, that's when we pull over the json data etc > titanium 
+    
+    coppersmith_map_json(blob_service_client, container_name_origin, container_name_destination, sas_token)
+    #coppersmith_globe_json()
+    #coppersmith_global_power_stations(blob_service_client, container_name_origin, 'titanium', paths.PWR_STN_PATH_STAGING, paths.PWR_STN_PATH_TITANIUM, 'utf-8', sas_token) #tested and ready.     
     
     return
 
@@ -138,6 +139,7 @@ def coppersmith_sdgindicators(blob_service_client: object, container_name_origin
     print("Processing time: ",toc-tic," seconds")
     return
 
+"""
 def coppersmith_sdgindicators_new():
     # source
     # https://unstats.un.org/sdgs/indicators/database/archive
@@ -185,32 +187,36 @@ def coppersmith_sdgindicators_new():
     df1.to_parquet(destination_filepath, engine='pyarrow', index=False)
     
     return
-    
+"""  
     
 
 
-def coppersmith_map_json():
+def coppersmith_map_json(blob_service_client, container_name_origin, container_name_destination, sas_token):
     #The map json (from memory) was unprocessed, sourced from Natural Earth
-    # As it will be zipped up in STAGING, basically we just need to unzip it and move it to titanium during pipeline run 
-        
-    #Check if destination folder exists. If not, create it.
-    if not os.path.exists(os.getcwd()+paths.MAP_JSON_PATH): os.mkdir(os.getcwd()+paths.MAP_JSON_PATH)  
+    # Move map json data from STAGING > TITANIUM
+    # https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blob-copy-python
     
-    low_res_filepath_origin = os.getcwd()+paths.MAP_JSON_LOW_PATH_STAGING
-    med_res_filepath_origin = os.getcwd()+paths.MAP_JSON_MED_PATH_STAGING
-    high_res_filepath_origin = os.getcwd()+paths.MAP_JSON_HIGH_PATH_STAGING
-    low_res_filepath_destination = os.getcwd()+paths.MAP_JSON_LOW_PATH_TITANIUM
-    med_res_filepath_destination = os.getcwd()+paths.MAP_JSON_MED_PATH_TITANIUM
-    high_res_filepath_destination = os.getcwd()+paths.MAP_JSON_HIGH_PATH_TITANIUM
+    # test method (WORKING)
+    copy_blob(blob_service_client, container_name_origin, 'titanium', paths.MAP_JSON_LOW_PATH_STAGING, paths.MAP_JSON_LOW_PATH_TITANIUM, sas_token)
     
-    #unzip (in future)
+    #repeat for  3 map files.
+
+
     
-    # do any processing (in future)
+    return
+
+def copy_blob(blob_service_client, container_name_origin, container_name_destination, blob_origin, blob_destination, sas_token):
+    # copy blob from one location to another
+    print('Copying ', blob_origin, ' to ', blob_destination)
+
     
-    # copy to titanium (assume folder structure undamaged)
-    shutil.copyfile(low_res_filepath_origin, low_res_filepath_destination)
-    shutil.copyfile(med_res_filepath_origin, med_res_filepath_destination)
-    shutil.copyfile(high_res_filepath_origin, high_res_filepath_destination)
+    # build sas URL to the blob (so we can read it)
+    sas_url_blob = 'https://' + account_name+'.blob.core.windows.net/' + container_name_origin + '/' + blob_origin + '?' + sas_token 
+    
+    # call the copy blob method
+    target_blob = blob_service_client.get_blob_client(container_name_destination, blob_destination)
+    target_blob.start_copy_from_url(sas_url_blob)
+
     
     return
 
@@ -260,7 +266,7 @@ def coppersmith_globe_json():
     
     return
 
-def coppersmith_global_power_stations(blob_service_client, container_name_origin, container_name_destination, blob_path_origin, blob_path_destination, encoding, sas_token):
+def coppersmith_global_power_stations(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_path_origin: str, blob_path_destination: str, encoding: str, sas_token: str):
     # process the experimental globe powerstation dataset csv to parquet directly from STAGING > TITANIUM
     
     tic = time.perf_counter()
@@ -346,7 +352,7 @@ def create_account_sas(account_name: str, account_key: str):
     return sas_token
 
 
-def get_blobs(blob_service_client: BlobServiceClient, container_name: str) -> list: 
+def get_blobs(blob_service_client: object, container_name: str) -> list: 
     # list all filenames (blob.name) in a given container
     
     container_client = blob_service_client.get_container_client(container=container_name)
@@ -358,7 +364,7 @@ def get_blobs(blob_service_client: BlobServiceClient, container_name: str) -> li
     
     return blob_lst
 
-def walk_blobs(blob_service_client: BlobServiceClient, container_name: str, folder_name: str) -> list: 
+def walk_blobs(blob_service_client: object, container_name: str, folder_name: str) -> list: 
     # effectively the equivalent of list contents in a directory on a file system
     # list the names of all blobs in a given blob-directory
     
