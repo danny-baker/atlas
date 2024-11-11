@@ -14,7 +14,7 @@ import sys
 import shutil
 import time
 import datetime
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import copy
 from io import BytesIO
 
@@ -39,7 +39,7 @@ from azure.storage.blob import (
 def process_staging(blob_service_client, container_name_origin, container_name_destination, sas_token):
     # process STAGING > COPPER
     
-    #coppersmith_sdgindicators(paths.SDG_PATH_STAGING, paths.SDG_PATH_COPPER) #Slow due to excel reader
+    
     #coppersmith_map_json()
     #coppersmith_globe_json()    
     
@@ -54,7 +54,8 @@ def process_staging(blob_service_client, container_name_origin, container_name_d
     #create_unique_country_list(blob_service_client, container_name_origin, container_name_destination, paths.COUNTRY_LOOKUP_PATH_STAGING, 'utf-8', sas_token)
     #coppersmith_bigmac(blob_service_client, container_name_origin, container_name_destination, paths.BIG_MAC_PATH_STAGING, 'utf-8', sas_token)
     #coppersmith_global_power_stations(blob_service_client, container_name_origin, 'titanium', paths.PWR_STN_PATH_STAGING, paths.PWR_STN_PATH_TITANIUM, 'utf-8', sas_token) #special data   
-
+    #coppersmith_sdgindicators(blob_service_client, container_name_origin, container_name_destination, paths.SDG_PATH_STAGING, 'latin-1', sas_token) #Slow due to excel reader
+    
     return
 
 
@@ -127,20 +128,12 @@ def coppersmith_gapminder_world_dev_indicators(blob_service_client: object, cont
     print("Processing time: ",toc-tic," seconds")
     return
 
-def coppersmith_undata(origin, destination, encoding):
-    #simply recursively convert all csvs to parquet and dump them in an equivalent folder in COPPER (create if needed)
-    tic = time.perf_counter()
-    print("Processing gapminder UN data indicators STAGING > COPPER")
-    convert_folder_csv_to_parquet_disk(origin, destination, encoding)    
-    toc = time.perf_counter()
-    print("Processing time: ",toc-tic," seconds")
-    return
 
-def coppersmith_sdgindicators(origin, destination):
+def coppersmith_sdgindicators(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_folder_origin: str, encoding: str, sas_token: str):
     #simply recursively convert all xlsx files to parquet and dump them in an equivalent folder in COPPER (create if needed)
     tic = time.perf_counter()
     print("Processing sdg indicators STAGING > COPPER")   
-    convert_folder_xlsx_to_parquet(origin, destination)
+    convert_folder_xlsx_to_parquet_blob(blob_service_client, container_name_origin, container_name_destination, blob_folder_origin, encoding, sas_token)
     toc = time.perf_counter()
     print("Processing time: ",toc-tic," seconds")
     return
@@ -329,21 +322,6 @@ def coppersmith_bigmac(blob_service_client: object, container_name_origin: str, 
     
     return
 
-def convert_folder_csv_to_parquet_disk(origin_path, destination_path, encoding):
-    #Helper function to convert a whole folder of .csv files to .parquet with same names in the destination
-     
-    origin_path = os.getcwd()+origin_path 
-    destination_path = os.getcwd()+destination_path
-  
-    #Check if destination folder exists. If not, create it.
-    if not os.path.exists(destination_path): os.mkdir(destination_path)  
-
-    for filepath in glob.iglob(origin_path+'*.csv'):
-        print(filepath)
-        convert_csv_to_parquet(filepath, destination_path, encoding)
-    
-    return
-
 
 def create_account_sas(account_name: str, account_key: str):
     # Create an account SAS that's valid for one day
@@ -428,12 +406,56 @@ def convert_folder_csv_to_parquet_blob(blob_service_client: object, container_na
         
         # write df to parquet stream
         stream = BytesIO() #initialise a stream
-        df.to_parquet(stream, engine='pyarrow') #write the parquet to the stream
+        df.to_parquet(stream, engine='pyarrow', index=False) #write the parquet to the stream
         stream.seek(0) #put pointer back to start of stream
         
         # write the stream to blob
         blob_client = blob_service_client.get_blob_client(container=container_name_destination, blob=blob_path_destination)
         blob_client.upload_blob(data=stream, overwrite=True, blob_type="BlockBlob")
+    return
+
+def convert_folder_xlsx_to_parquet_blob(blob_service_client: object, container_name_origin: str, container_name_destination: str, blob_folder_origin: str, encoding: str, sas_token: str):
+    #Helper function to convert a whole folder of .xlsx files to .parquet with same names in the destination
+    
+    print('blob client ', blob_service_client)
+    print('origin container ',container_name_origin)
+    print('destination container ',container_name_destination)
+    print('origin folder ',blob_folder_origin)
+    print('encoding ',encoding)
+    print('sas_token ',sas_token)
+    
+    # build list of blob names for this blob-folder
+    blob_list = walk_blobs(blob_service_client, container_name_origin, blob_folder_origin)
+    print(len(blob_list))
+    
+    # iterate the list read in each blob as df and write out to parquet stream to destination blob
+    for blob in blob_list:
+        print('Processing ', blob)
+        
+        # build sas URL to the blob (so we can read it)
+        sas_url_blob = 'https://' + account_name+'.blob.core.windows.net/' + container_name_origin + '/' + blob + '?' + sas_token  
+        #print(sas_url_blob)
+        
+        # read in blob as datafame     
+        df = pd.read_excel(sas_url_blob)
+        
+        # prepare destination blob path
+        blob_path_destination = blob[:-4] + 'parquet'
+        print(blob_path_destination)
+        
+        # write df to parquet stream
+        stream = BytesIO() #initialise a stream
+        df.to_parquet(stream, engine='pyarrow', index=False) #write the parquet to the stream
+        stream.seek(0) #put pointer back to start of stream
+        
+        # write the stream to blob
+        blob_client = blob_service_client.get_blob_client(container=container_name_destination, blob=blob_path_destination)
+        blob_client.upload_blob(data=stream, overwrite=True, blob_type="BlockBlob")
+
+    return
+ 
+
+    
     
 
 

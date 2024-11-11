@@ -23,8 +23,7 @@ azure-storage-blob==12.23.1
 python-dotenv==0.19.2
 
 # LAKEHOUSE
-#openpyxl #not sure if this is needed. It's for opening xlsx files using pandas. Forced me.
-#py7zr
+openpyxl==3.1.5 #Needed for opening xlsx files using pandas. 
 
 # SPYDER
 spyder-kernels==3.0.1

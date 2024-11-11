@@ -11,10 +11,9 @@ WS_PATH_STAGING = "statistics/world-standards-unofficial-website/"
 COUNTRY_LOOKUP_PATH_STAGING = "meta/country_lookup.csv"
 BIG_MAC_PATH_STAGING = "statistics/big-mac-index/big-mac-adjusted-index.csv"
 PWR_STN_PATH_STAGING = "geojson/global-power-stations/xp1_global_power_plant_database.csv"
+SDG_PATH_STAGING = "statistics/sdgindicators/"
 
 
-UNDATA_PATH_STAGING = "/data_lakehouse/staging/statistics/undata/"
-SDG_PATH_STAGING = "/data_lakehouse/staging/statistics/sdgindicators/"
 MAP_JSON_LOW_PATH_STAGING = "/data_lakehouse/staging/geojson/natural_earth/map/ne_110m.geojson" #not sure if I ever needed to process this
 MAP_JSON_MED_PATH_STAGING = "/data_lakehouse/staging/geojson/natural_earth/map/ne_50m.geojson" #sourced from natural earth
 MAP_JSON_HIGH_PATH_STAGING = "/data_lakehouse/staging/geojson/natural_earth/map/ne_10m.geojson"
