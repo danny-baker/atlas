@@ -42,9 +42,8 @@ def process_staging(blob_service_client, container_name_origin, container_name_d
     #coppersmith_sdgindicators(paths.SDG_PATH_STAGING, paths.SDG_PATH_COPPER) #Slow due to excel reader
     #coppersmith_map_json()
     #coppersmith_globe_json()    
-    #coppersmith_global_power_stations() #special data   
     
-    
+
     #WORKING
     
     print('Process staging...')
@@ -54,7 +53,7 @@ def process_staging(blob_service_client, container_name_origin, container_name_d
     #coppersmith_world_standards(blob_service_client, container_name_origin, container_name_destination, paths.WS_PATH_STAGING, 'latin-1', sas_token)
     #create_unique_country_list(blob_service_client, container_name_origin, container_name_destination, paths.COUNTRY_LOOKUP_PATH_STAGING, 'utf-8', sas_token)
     #coppersmith_bigmac(blob_service_client, container_name_origin, container_name_destination, paths.BIG_MAC_PATH_STAGING, 'utf-8', sas_token)
-    
+    #coppersmith_global_power_stations(blob_service_client, container_name_origin, 'titanium', paths.PWR_STN_PATH_STAGING, paths.PWR_STN_PATH_TITANIUM, 'utf-8', sas_token) #special data   
 
     return
 
@@ -268,24 +267,26 @@ def coppersmith_globe_json():
     
     return
 
-def coppersmith_global_power_stations():
-    # process the experimental globe powerstation dataset. Special treatment here as there are 2 files. One json and one CSV (update now just 1 file. geojson was same as what already had)
-    # We will process csv to parquet and dump directly into titanium (special data)
+def coppersmith_global_power_stations(blob_service_client, container_name_origin, container_name_destination, blob_path_origin, blob_path_destination, encoding, sas_token):
+    # process the experimental globe powerstation dataset csv to parquet directly from STAGING > TITANIUM
     
     tic = time.perf_counter()
     print("Processing global power station data STAGING > TITANIUIM (special)") 
     
-    origin = paths.PWR_STN_PATH_STAGING
-    destination = paths.PWR_STN_PATH_TITANIUM
-    encoding = 'utf-8'
-    filepath_json_origin = os.getcwd()+origin+"xp1_countries.geojson"
-    filepath_json_destination = os.getcwd()+destination+"xp1_countries.geojson"
+    # build sas URL to the blob (so we can read it)
+    sas_url_blob = 'https://' + account_name+'.blob.core.windows.net/' + container_name_origin + '/' + blob_path_origin + '?' + sas_token 
     
-    #First convert csv to parquet and dump in titanium       
-    convert_folder_csv_to_parquet_disk(origin, destination, encoding)
+    # read blob into df
+    df = pd.read_csv(sas_url_blob, encoding=encoding)
     
-    #Next copy the geojson into same folder (so they stay together)
-    shutil.copyfile(filepath_json_origin, filepath_json_destination)      
+    # write df to csv stream
+    stream = BytesIO() #initialise a stream
+    df.to_parquet(stream, engine='pyarrow', index=False) #write the csv to the stream
+    stream.seek(0) #put pointer back to start of stream
+    
+    # write the stream to blob
+    blob_client = blob_service_client.get_blob_client(container=container_name_destination, blob=blob_path_destination)
+    blob_client.upload_blob(data=stream, overwrite=True, blob_type="BlockBlob")
     
     toc = time.perf_counter()
     print("Processing time: ",toc-tic," seconds")
@@ -434,40 +435,7 @@ def convert_folder_csv_to_parquet_blob(blob_service_client: object, container_na
         blob_client = blob_service_client.get_blob_client(container=container_name_destination, blob=blob_path_destination)
         blob_client.upload_blob(data=stream, overwrite=True, blob_type="BlockBlob")
     
-    """
-    
-    #build sas URL using existing token to a blob (i.e. first blob in list)
-    container_name_origin = 'staging'
-    sas_url_blob_origin = 'https://' + account_name+'.blob.core.windows.net/' + container_name_origin + '/' + my_blobs_lst[1] + '?' + sas_token          
-    print(sas_url_blob_origin)
-    df = pd.read_csv(sas_url_blob_origin)
-    
-    # write to copper
-    container_name_destination = 'copper'
-    
-    #trim filename .csv -> .parquet
-    blob_name = my_blobs_lst[1][:-3]+'parquet'
-    
-    # build new blob sas URL
-    sas_url_blob_destination = 'https://' + account_name+'.blob.core.windows.net/' + container_name_destination + '/' + my_blobs_lst[1][:-3]+'parquet' + '?' + sas_token  
-    print(sas_url_blob_destination)
-    
-    # write df to parquet stream (WORKING!!!)
-    stream = BytesIO() #initialise a stream
-    df.to_parquet(stream, engine='pyarrow') #write the parquet to the stream
-    stream.seek(0) #put pointer back to start of stream
-    blob_client = blob_service_client.get_blob_client(container=container_name_destination, blob="statistics/sample-blob.parquet")
-    blob_client.upload_blob(data=stream, overwrite=True, blob_type="BlockBlob")
-    
-    # confirmed can write folder structure into blob
-    
-    # TODO: start functionalising shit to churn through the statistics...basically get process_staging working completely. 1 step at a time.
-    
-    
-    """
 
-
-    
 
 
 ### RUN ###
