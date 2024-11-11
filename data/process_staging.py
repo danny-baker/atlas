@@ -48,13 +48,13 @@ def process_staging(blob_service_client: object, container_name_origin: str, con
     #coppersmith_bigmac(blob_service_client, container_name_origin, container_name_destination, paths.BIG_MAC_PATH_STAGING, 'utf-8', sas_token)    
     #coppersmith_sdgindicators(blob_service_client, container_name_origin, container_name_destination, paths.SDG_PATH_STAGING, 'latin-1', sas_token) #Slow due to excel reader
     
-    # DO AT LATER STAGE
+    # DO AT LATER STAGE?
     # These just need to be copied to the titanium location from staging. They are unchanged, no unzipping or anything. Simple operation for now.
     # I feel like design wise, nothing at this stage should be put into titanium (as it could cause breaking changes.)
     # Perhaps when Iron is processed, which is known to push stuff to titanium, that's when we pull over the json data etc > titanium 
     
-    coppersmith_map_json(blob_service_client, container_name_origin, container_name_destination, sas_token)
-    #coppersmith_globe_json()
+    #coppersmith_map_json(blob_service_client, container_name_origin, 'titanium', sas_token)
+    #coppersmith_globe_json(blob_service_client, container_name_origin, 'titanium', sas_token)
     #coppersmith_global_power_stations(blob_service_client, container_name_origin, 'titanium', paths.PWR_STN_PATH_STAGING, paths.PWR_STN_PATH_TITANIUM, 'utf-8', sas_token) #tested and ready.     
     
     return
@@ -196,73 +196,39 @@ def coppersmith_map_json(blob_service_client, container_name_origin, container_n
     # Move map json data from STAGING > TITANIUM
     # https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blob-copy-python
     
-    # test method (WORKING)
-    copy_blob(blob_service_client, container_name_origin, 'titanium', paths.MAP_JSON_LOW_PATH_STAGING, paths.MAP_JSON_LOW_PATH_TITANIUM, sas_token)
-    
-    #repeat for  3 map files.
-
-
-    
+    # Copy map json data blobs
+    copy_blob(blob_service_client, container_name_origin, container_name_destination, paths.MAP_JSON_LOW_PATH_STAGING, paths.MAP_JSON_LOW_PATH_TITANIUM, sas_token)
+    copy_blob(blob_service_client, container_name_origin, container_name_destination, paths.MAP_JSON_MED_PATH_STAGING, paths.MAP_JSON_MED_PATH_TITANIUM, sas_token)
+    copy_blob(blob_service_client, container_name_origin, container_name_destination, paths.MAP_JSON_HIGH_PATH_STAGING, paths.MAP_JSON_HIGH_PATH_TITANIUM, sas_token)
+        
     return
 
 def copy_blob(blob_service_client, container_name_origin, container_name_destination, blob_origin, blob_destination, sas_token):
     # copy blob from one location to another
     print('Copying ', blob_origin, ' to ', blob_destination)
 
-    
     # build sas URL to the blob (so we can read it)
     sas_url_blob = 'https://' + account_name+'.blob.core.windows.net/' + container_name_origin + '/' + blob_origin + '?' + sas_token 
     
-    # call the copy blob method
+    # copy the blob to target location
     target_blob = blob_service_client.get_blob_client(container_name_destination, blob_destination)
     target_blob.start_copy_from_url(sas_url_blob)
 
     
     return
 
-def coppersmith_globe_json():
+def coppersmith_globe_json(blob_service_client, container_name_origin, container_name_destination, sas_token):
     # Attempt to process raw 3d json data for globe visualisation. FAIL.
     # This is really tricky, and some preprocessing was clearly done to prepare data for the cleaner functions. I never saved it.
     # In the interests of time, just storing processed data in staging to conform to the lakehouse architecture, if it ever needs to be processed.
     
-    # This requires the titanium/globe folder to exist.
+    # Copy map json data blobs
+    copy_blob(blob_service_client, container_name_origin, container_name_destination, paths.GLOBE_JSON_LAND_HIGH_PATH_STAGING, paths.GLOBE_JSON_LAND_HIGH_PATH_TITANIUM, sas_token)
+    copy_blob(blob_service_client, container_name_origin, container_name_destination, paths.GLOBE_JSON_OCEAN_HIGH_PATH_STAGING, paths.GLOBE_JSON_OCEAN_HIGH_PATH_TITANIUM, sas_token)
+    copy_blob(blob_service_client, container_name_origin, container_name_destination, paths.GLOBE_JSON_LAND_LOW_PATH_STAGING, paths.GLOBE_JSON_LAND_LOW_PATH_TITANIUM, sas_token)
+    copy_blob(blob_service_client, container_name_origin, container_name_destination, paths.GLOBE_JSON_OCEAN_LOW_PATH_STAGING, paths.GLOBE_JSON_OCEAN_LOW_PATH_TITANIUM, sas_token)
     
-    #Check if destination folder exists. If not, create it.
-    if not os.path.exists(os.getcwd()+paths.GLOBE_JSON_PATH): os.mkdir(os.getcwd()+paths.GLOBE_JSON_PATH) 
-    
-    # origin paths
-    land_low_res_filepath_origin = os.getcwd()+paths.GLOBE_JSON_LAND_LOW_PATH_STAGING
-    ocean_low_res_filepath_origin = os.getcwd()+paths.GLOBE_JSON_OCEAN_LOW_PATH_STAGING
-    land_high_res_filepath_origin = os.getcwd()+paths.GLOBE_JSON_LAND_HIGH_PATH_STAGING
-    ocean_high_res_filepath_origin = os.getcwd()+paths.GLOBE_JSON_OCEAN_HIGH_PATH_STAGING
-    
-    # destination paths
-    land_low_res_filepath_destination = os.getcwd()+paths.GLOBE_JSON_LAND_LOW_PATH_TITANIUM
-    ocean_low_res_filepath_destination = os.getcwd()+paths.GLOBE_JSON_OCEAN_LOW_PATH_TITANIUM
-    land_high_res_filepath_destination = os.getcwd()+paths.GLOBE_JSON_LAND_HIGH_PATH_TITANIUM
-    ocean_high_res_filepath_destination = os.getcwd()+paths.GLOBE_JSON_OCEAN_HIGH_PATH_TITANIUM
-        
-    #unzip (in future)
-    
-    # do any processing (in future)
-    
-    # copy to titanium (assume folder structure undamaged)
-    shutil.copyfile(land_low_res_filepath_origin, land_low_res_filepath_destination)
-    shutil.copyfile(ocean_low_res_filepath_origin, ocean_low_res_filepath_destination)
-    shutil.copyfile(land_high_res_filepath_origin,land_high_res_filepath_destination )
-    shutil.copyfile(ocean_high_res_filepath_origin, ocean_high_res_filepath_destination)
-    
-    # Some testing
-    # Most need the countries list (for scraping suA3)
-    #countries = get_unique_country_list()
-    
-    # start with land ne_50m FAIL
-    #origin_filepath = os.getcwd()+"/data_lakehouse/staging/geojson/natural_earth/globe/land/ne_50m/ne_50m.geojson"
-    #destination_filepath = os.getcwd()+"/data_lakehouse/titanium/geojson/globe/ne_50m.geojson"
-    #lean_3d_land_data_JSON_ne50m(origin_filepath, countries, destination_filepath)
-    
-    #geojson_globe_countries_ne50m = d.clean_3d_land_data_JSON_ne50m("data/geojson/globe/ne_50m_land.geojson", country_lookup) #helper: this file has been modified to add in un_a3 integer identifiers. 
-    #geojson_globe_land_cultural_ne110m = d.clean_3d_land_data_JSON_ne110m("data/geojson/globe/ne_110m_land_cultural.geojson") #helper function to clean and prepare
+ 
     
     return
 
