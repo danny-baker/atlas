@@ -1,21 +1,15 @@
 # Process data in staging -> copper (Azure Blob Data lake)
-# step 1: run sequentially (old way)
+# step 1: run sequentially (old way) WORKING
 # step 2: run in parallel (magic way)
     # https://learn.microsoft.com/en-us/python/api/overview/azure/storage-file-datalake-readme?view=azure-python
 
 from dotenv import load_dotenv
 import data_paths as paths
-import json
 import pandas as pd
-import numpy as np
-import glob
-import os
-import sys
-import shutil
-import time
-import datetime
-import copy
-from io import BytesIO
+import os #get env vars
+import time #tic-toc
+import datetime #sas token
+from io import BytesIO #stream df > blob
 
 from azure.storage.blob import (
     BlobServiceClient,
@@ -34,25 +28,24 @@ from azure.storage.blob import (
 
 
 
-
 def process_staging(container_name_origin: str, container_name_destination: str):
     # process data from STAGING > COPPER 
     
     print('Process staging data ...')
     
     # PROCESS STATISTICAL DATA
-    #coppersmith_gapminder_fast_track(container_name_origin, container_name_destination, paths.FASTTRACK_PATH_STAGING, 'latin-1')
-    #coppersmith_gapminder_systema_globalis(container_name_origin, container_name_destination, paths.SYSTEMAGLOBALIS_PATH_STAGING,'latin-1')
-    #coppersmith_gapminder_world_dev_indicators(container_name_origin, container_name_destination, paths.WDINDICATORS_PATH_STAGING, 'latin-1')
-    #coppersmith_world_standards(container_name_origin, container_name_destination, paths.WS_PATH_STAGING, 'latin-1')
-    #create_unique_country_list(container_name_origin, container_name_destination, paths.COUNTRY_LOOKUP_PATH_STAGING, 'utf-8')
-    #coppersmith_bigmac(container_name_origin, container_name_destination, paths.BIG_MAC_PATH_STAGING, 'utf-8')    
-    #coppersmith_sdgindicators(container_name_origin, container_name_destination, paths.SDG_PATH_STAGING, 'latin-1') 
+    coppersmith_gapminder_fast_track(container_name_origin, container_name_destination, paths.FASTTRACK_PATH_STAGING, 'latin-1')
+    coppersmith_gapminder_systema_globalis(container_name_origin, container_name_destination, paths.SYSTEMAGLOBALIS_PATH_STAGING,'latin-1')
+    coppersmith_gapminder_world_dev_indicators(container_name_origin, container_name_destination, paths.WDINDICATORS_PATH_STAGING, 'latin-1')
+    coppersmith_world_standards(container_name_origin, container_name_destination, paths.WS_PATH_STAGING, 'latin-1')
+    create_unique_country_list(container_name_origin, container_name_destination, paths.COUNTRY_LOOKUP_PATH_STAGING, 'utf-8')
+    coppersmith_bigmac(container_name_origin, container_name_destination, paths.BIG_MAC_PATH_STAGING, 'utf-8')    
+    coppersmith_sdgindicators(container_name_origin, container_name_destination, paths.SDG_PATH_STAGING, 'latin-1') 
     
     # PROCESS JSON (AND SPECIAL) DATA
-    #coppersmith_map_json(container_name_origin, 'titanium')
-    #coppersmith_globe_json(container_name_origin, 'titanium')
-    #coppersmith_global_power_stations(container_name_origin, 'titanium', paths.PWR_STN_PATH_STAGING, paths.PWR_STN_PATH_TITANIUM, 'utf-8')    
+    coppersmith_map_json(container_name_origin, 'titanium')
+    coppersmith_globe_json(container_name_origin, 'titanium')
+    coppersmith_global_power_stations(container_name_origin, 'titanium', paths.PWR_STN_PATH_STAGING, paths.PWR_STN_PATH_TITANIUM, 'utf-8')    
     
     return
 

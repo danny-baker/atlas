@@ -60,12 +60,12 @@ def process_STAGING():
 
 def process_COPPER():
     # process COPPER => IRON
+    
     ironsmith_gapminder_fast_track(paths.FASTTRACK_PATH_COPPER, paths.FASTTRACK_PATH_IRON)   
+    
     ironsmith_gapminder_systema_globalis(paths.SYSTEMAGLOBALIS_PATH_COPPER, paths.SYSTEMAGLOBALIS_PATH_IRON)     
     ironsmith_gapminder_world_dev_indicators(paths.WDINDICATORS_PATH_COPPER, paths.WDINDICATORS_PATH_IRON)   
-    #ironsmith_undata(paths.UNDATA_PATH_COPPER, paths.UNDATA_PATH_IRON)
     ironsmith_sdgindicators(paths.SDG_PATH_COPPER, paths.SDG_PATH_IRON)
-    #ironsmith_sdgindicators_new()
     ironsmith_world_standards(paths.WS_PATH_COPPER, paths.WS_PATH_IRON)
     ironsmith_bigmac(paths.BIG_MAC_PATH_COPPER, paths.BIG_MAC_PATH_IRON)
     return
