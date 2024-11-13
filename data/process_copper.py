@@ -4,12 +4,9 @@ from dotenv import load_dotenv
 import data_paths as paths
 import json
 import pandas as pd
-#import numpy as np
 import os
-import sys
 import time
 import datetime
-import copy
 from io import BytesIO
 
 from azure.storage.blob import (
@@ -31,9 +28,9 @@ from azure.storage.blob import (
 def process_copper(container_name_origin: str, container_name_destination: str):
     # process COPPER > IRON
     
-    ironsmith_gapminder_fast_track('copper', paths.FASTTRACK_PATH_COPPER, paths.FASTTRACK_PATH_IRON)   #WORKING
+    #ironsmith_gapminder_fast_track('copper', paths.FASTTRACK_PATH_COPPER, paths.FASTTRACK_PATH_IRON)   #WORKING
     
-    #ironsmith_gapminder_systema_globalis(paths.SYSTEMAGLOBALIS_PATH_COPPER, paths.SYSTEMAGLOBALIS_PATH_IRON)     
+    ironsmith_gapminder_systema_globalis('copper', paths.SYSTEMAGLOBALIS_PATH_COPPER, paths.SYSTEMAGLOBALIS_PATH_IRON)     
     #ironsmith_gapminder_world_dev_indicators(paths.WDINDICATORS_PATH_COPPER, paths.WDINDICATORS_PATH_IRON)   
     #ironsmith_sdgindicators(paths.SDG_PATH_COPPER, paths.SDG_PATH_IRON)
     #ironsmith_world_standards(paths.WS_PATH_COPPER, paths.WS_PATH_IRON)
@@ -67,7 +64,7 @@ def walk_blobs(blob_service_client: object, container_name: str, folder_name: st
     return blob_lst
 
 
-def ironsmith_gapminder_fast_track(container_name, origin_blob_folder, destination_blob_path):   
+def ironsmith_gapminder_fast_track(container_name: str, origin_blob_folder: str, destination_blob_path: str):   
     # clean the copper version of these parquets (as was previously done) and place a single consolidated parquet in IRON
     # Goal of this function is to process each dataset into the master format and spit out a summary
     # 20x performance enhancement using pandas merge rather than FOR loop to set m49s etc.
@@ -172,40 +169,42 @@ def ironsmith_gapminder_fast_track(container_name, origin_blob_folder, destinati
     toc = time.perf_counter()    
     print("Processed series: ",len(pd.unique(pop['dataset_raw']))," in ",(toc-tic)/60," minutes")
         
-                
-             
-     
+    return
+
+
+def ironsmith_gapminder_systema_globalis(container_name: str, origin_blob_folder: str, destination_blob_path: str):
+    # clean the copper version of these parquets (as was previously done) and place a single consolidated parquet in IRON
+    # Goal of this function is to process each dataset into the master format and spit out a summary
     
+    tic = time.perf_counter()
+    print("Processing systema globalis COPPER > IRON")
     
+    # read in unique country list from COPPER location
+    countries = get_country_lookup_df('copper', paths.COUNTRY_LOOKUP_PATH_COPPER, 'utf-8')
     
+    # read in metadata
+    sas_url_blob = 'https://' + account_name+'.blob.core.windows.net/' + container_name + '/' + paths.SYSTEMAGLOBALIS_META_COPPER + '?' + sas_token 
+    lookup = pd.read_parquet(sas_url_blob).fillna("Not available")
     
-    """
-    # set paths  
-    destination_path = os.getcwd()+destination
-    destination_filepath = os.getcwd()+destination+"gapminder_fast_track.parquet"
-    origin_path = os.getcwd()+origin    
-    metapath = origin_path+"ddf--concepts.parquet"
-         
-    # read in metatdata file (should be about 110 datasets)
-    lookup = pd.read_parquet(metapath).fillna("Not available")   
+    # get file-blob list
+    files = walk_blobs(blob_service_client, container_name, origin_blob_folder)
     
-    #declare empty dataframes    
-    pop = pd.DataFrame()         
-       
-    # For each parquet, check if it's in the concepts (metadata) and if so, assemble to a dataframe chunk and append    
-    for filepath in glob.iglob(origin_path+'*.parquet'):
+    #declare empty dataframe (which we'll append to)   
+    pop = pd.DataFrame() 
+    
+    for file in files:
+        if file == paths.SYSTEMAGLOBALIS_META_COPPER : continue # skip metadata file
         
-        if filepath == metapath: continue
+        print('Importing', file)
         
-        print("Importing",filepath)
-        
-        # read in df
-        df = pd.read_parquet(filepath)
+        # read file into df
+        sas_url_blob = 'https://' + account_name+'.blob.core.windows.net/' + container_name + '/' + file + '?' + sas_token
+        df = pd.read_parquet(sas_url_blob)
         
         # extract concept unique series id e.g. "mmr_who" (which can be queried from the concepts)
         concept = df.columns[2]
         
-        # attempt to find series meta data in the concepts
+        # attempt to find details in lookup
         try:
             query = lookup[lookup['concept']==concept]            
         
@@ -218,36 +217,36 @@ def ironsmith_gapminder_fast_track(container_name, origin_blob_folder, destinati
             continue                
         
         # break if no year ("time") is in the dataset (sometimes categoricals are like this)
-        if "time" not in df.columns: continue #skip to next dataset
+        if "time" not in df.columns: continue #skip dataset
         
-        # Add details from concept query              
+        # at this point we are good and ready to start building the pop structure               
         df['dataset_raw'] = query['name'].iloc[0]
-        df['source'] = "Gapminder Fastrack Indicators." + " Updated " + query['updated'].iloc[0]
+        #query['description'] = query['description'].fillna('')  #warning here
+        query = query.fillna('') #for description sometimes being empty
+        df['source'] = "Gapminder Systema Globalis Indicators."
         df['link'] = query['source_url'].iloc[0]
-        df['note'] =query['description'].iloc[0]               
         
-        # Could add metadata if available such as format % etc. There is some good stuff in these which will help later.
-        # NOTE FOR LATER
-        
+        # add explanatory notes
+        if query['description_long'].iloc[0] != None: df['note'] = query['description'].iloc[0] + " " + query['description_long'].iloc[0]
+        else: df['note'] = query['description'].iloc[0] 
+                
         #convert country codes to uppercase (and rename to match dataset lookup)
-        df.columns.values[0] = 'su_a3'        
-        df['su_a3'] = df['su_a3'].str.upper() #this is su_a3 e.g. AUD
-        #df = df.rename(columns={'country':'su_a3'})
+        df['geo'] = df['geo'].str.upper() #this is su_a3 e.g. AUD
+        df = df.rename(columns={'geo':'su_a3'})
         
         # add m49 integers and country name from the master country list
         df = df.merge(countries, on='su_a3', how='left')
-        
+
         # reorganise cols and subset
-        df = df.rename(columns={"time":"year", concept:'value', "m49_a3_country":"m49_un_a3"})
+        df = df.rename(columns={"time":"year", concept:'value', "country":"country", "m49_a3_country":"m49_un_a3"})
         df = df[['m49_un_a3', 'country', 'year', 'dataset_raw', 'value', 'continent','region_un', 'region_wb', 'source', 'link', 'note' ]]
-        
+             
         #strip out any non-country regions from the dataset, based on countries shortlist
-        df = df[df['m49_un_a3'].isin(countries['m49_a3_country'])]   
-        
+        df = df[df['m49_un_a3'].isin(countries['m49_a3_country'])]        
+                
         # append to clean pop dataframe
         pop = pd.concat([pop,df])
-      
-        
+    
     # data typing 
     pop = pop.astype({'m49_un_a3': 'category', 
                     'country':'category', 
@@ -261,18 +260,25 @@ def ironsmith_gapminder_fast_track(container_name, origin_blob_folder, destinati
                     'link':'str',
                     'note':'str',
                     })
+   
+     
+    # write dataset to parquet-blob
+    # write df to stream
+    stream = BytesIO() #initialise a stream
+    pop.to_parquet(stream, engine='pyarrow', index=False) #write the csv to the stream
+    stream.seek(0) #put pointer back to start of stream
     
-    # write to parquet file
-    if not os.path.exists(destination_path): os.mkdir(destination_path) 
-    pop.to_parquet(destination_filepath, engine='pyarrow', index=False)    
-    #pop.to_parquet(destination_filepath, engine='fastparquet', compression='gzip', index=False) #this didn't remove index either.
-    
+    # write the stream to blob
+    blob_client = blob_service_client.get_blob_client(container='iron', blob=destination_blob_path)
+    blob_client.upload_blob(data=stream, overwrite=True, blob_type="BlockBlob")
+     
     # summary
     toc = time.perf_counter()    
-    print("Processed series: ",len(pd.unique(pop['dataset_raw']))," in ",toc-tic," seconds")
-    """
+    print("Processed series: ",len(pd.unique(pop['dataset_raw']))," in ",(toc-tic)/60," minutes")
     
+
     return
+
 
 def create_account_sas(account_name: str, account_key: str):
     # Create an account SAS that's valid for one day

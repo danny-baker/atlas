@@ -24,12 +24,13 @@ GLOBE_JSON_OCEAN_LOW_PATH_STAGING = "geojson/natural_earth/globe/working/ne_110m
 COUNTRY_LOOKUP_PATH_COPPER = "meta/country_lookup.csv"
 FASTTRACK_PATH_COPPER = "statistics/gapminder-fast-track/"
 FASTTRACK_META_COPPER = "statistics/gapminder-fast-track/ddf--concepts.parquet"
-
+SYSTEMAGLOBALIS_PATH_COPPER = "statistics/gapminder-systema-globalis/"
+SYSTEMAGLOBALIS_META_COPPER = "statistics/gapminder-systema-globalis/ddf--concepts.parquet"
 
 #IRON (TODO)
 FASTTRACK_PATH_IRON = "statistics/gapminder-fast-track/gapminder_fast_track.parquet"
+SYSTEMAGLOBALIS_PATH_IRON = "statistics/gapminder-systema-globalis/gapminder_systema_globalis.parquet"
 
-SYSTEMAGLOBALIS_PATH_IRON = "/data_lakehouse/iron/statistics/gapminder-systema-globalis/"
 WDINDICATORS_PATH_IRON = "/data_lakehouse/iron/statistics/world-development-indicators/"
 UNDATA_PATH_IRON = "/data_lakehouse/iron/statistics/undata/"
 SDG_PATH_IRON = "/data_lakehouse/iron/statistics/sdgindicators/"

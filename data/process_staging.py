@@ -8,7 +8,7 @@ import data_paths as paths
 import pandas as pd
 import os #get env vars
 import time #tic-toc
-import datetime #sas token
+import datetime #sas token expiry
 from io import BytesIO #stream df > blob
 
 from azure.storage.blob import (
