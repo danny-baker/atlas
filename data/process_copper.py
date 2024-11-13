@@ -41,14 +41,16 @@ def process_copper(container_name_origin: str, container_name_destination: str):
     return
 
 
-def get_country_lookup_df():
+def get_country_lookup_df(container_name: str, blob_path: str, encoding: str) -> pd.DataFrame():
+    # read in country lookup csv file as df
     
-    df_countries = pd.read_csv(
-       os.getcwd()+paths.COUNTRY_LOOKUP_PATH_COPPER,
-       encoding="utf-8",
-       names=["m49_a3_country", "country", "continent", "region_un", "region_wb", "su_a3"],
-    )
-    return df_countries
+    # build sas URL to the blob (so we can read it)
+    sas_url_blob = 'https://' + account_name+'.blob.core.windows.net/' + container_name + '/' + blob_path + '?' + sas_token 
+    
+    # read blob into df
+    df = pd.read_csv(sas_url_blob, encoding=encoding, names=["m49_a3_country", "country", "continent", "region_un", "region_wb", "su_a3"])
+    
+    return df
 
 
 def ironsmith_gapminder_fast_track(origin, destination):   
@@ -60,8 +62,10 @@ def ironsmith_gapminder_fast_track(origin, destination):
     print("Processing gapminder fast track COPPER > IRON")
     
     # read in unique country list from COPPER location
-    countries = get_country_lookup_df()
-
+    countries = get_country_lookup_df('copper', paths.COUNTRY_LOOKUP_PATH_COPPER, 'utf-8')
+    print(countries)
+    
+    """
     # set paths  
     destination_path = os.getcwd()+destination
     destination_filepath = os.getcwd()+destination+"gapminder_fast_track.parquet"
@@ -152,8 +156,34 @@ def ironsmith_gapminder_fast_track(origin, destination):
     # summary
     toc = time.perf_counter()    
     print("Processed series: ",len(pd.unique(pop['dataset_raw']))," in ",toc-tic," seconds")
+    """
     
     return
+
+def create_account_sas(account_name: str, account_key: str):
+    # Create an account SAS that's valid for one day
+    start_time = datetime.datetime.now(datetime.timezone.utc)
+    expiry_time = start_time + datetime.timedelta(days=1)
+
+    # Define the SAS token permissions (root)
+    sas_permissions=AccountSasPermissions(read=True, write=True, delete=True, list=True, add=True, create=True, update=True, process=True, delete_previous_version=True)
+
+    # Define the SAS token resource types (root)
+    sas_resource_types=ResourceTypes(service=True, container=True, object=True)
+
+    sas_token = generate_account_sas(
+        account_name=account_name,
+        account_key=account_key,
+        resource_types=sas_resource_types,
+        permission=sas_permissions,
+        expiry=expiry_time,
+        start=start_time
+    )
+
+    return sas_token
+
+
+
 
 
 ### RUN ###
@@ -174,4 +204,4 @@ account_sas_url = 'https://' + account_name+'.blob.core.windows.net/' + '?' + sa
 blob_service_client = BlobServiceClient(account_url=account_sas_url)
 
 # trigger the main operation
-process_iron('copper', 'iron')
+process_copper('copper', 'iron')

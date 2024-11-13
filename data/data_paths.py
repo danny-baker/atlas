@@ -3,7 +3,7 @@
 
 # A centralised location for all relative data paths, to assist in data lakehouse architecture
 
-# STAGING & COPPER
+# STAGING
 FASTTRACK_PATH_STAGING = "statistics/gapminder-fast-track/"
 SYSTEMAGLOBALIS_PATH_STAGING = "statistics/gapminder-systema-globalis/"
 WDINDICATORS_PATH_STAGING = "statistics/world-development-indicators/"
@@ -20,10 +20,13 @@ GLOBE_JSON_OCEAN_HIGH_PATH_STAGING = "geojson/natural_earth/globe/working/ne_50m
 GLOBE_JSON_LAND_LOW_PATH_STAGING = "geojson/natural_earth/globe/working/ne_110m_land_cultural.geojson"
 GLOBE_JSON_OCEAN_LOW_PATH_STAGING = "geojson/natural_earth/globe/working/ne_110m_ocean.geojson"
 
+# COPPER
+COUNTRY_LOOKUP_PATH_COPPER = "meta/country_lookup.csv"
+FASTTRACK_PATH_COPPER = "statistics/gapminder-fast-track/"
 
 #IRON (TODO)
+FASTTRACK_PATH_IRON = "statistics/gapminder-fast-track/"
 
-FASTTRACK_PATH_IRON = "/data_lakehouse/iron/statistics/gapminder-fast-track/"
 SYSTEMAGLOBALIS_PATH_IRON = "/data_lakehouse/iron/statistics/gapminder-systema-globalis/"
 WDINDICATORS_PATH_IRON = "/data_lakehouse/iron/statistics/world-development-indicators/"
 UNDATA_PATH_IRON = "/data_lakehouse/iron/statistics/undata/"
