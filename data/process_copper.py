@@ -31,7 +31,7 @@ from azure.storage.blob import (
 def process_copper(container_name_origin: str, container_name_destination: str):
     # process COPPER > IRON
     
-    ironsmith_gapminder_fast_track('copper', paths.FASTTRACK_PATH_COPPER, paths.FASTTRACK_PATH_IRON)   
+    ironsmith_gapminder_fast_track('copper', paths.FASTTRACK_PATH_COPPER, paths.FASTTRACK_PATH_IRON)   #WORKING
     
     #ironsmith_gapminder_systema_globalis(paths.SYSTEMAGLOBALIS_PATH_COPPER, paths.SYSTEMAGLOBALIS_PATH_IRON)     
     #ironsmith_gapminder_world_dev_indicators(paths.WDINDICATORS_PATH_COPPER, paths.WDINDICATORS_PATH_IRON)   
@@ -170,7 +170,7 @@ def ironsmith_gapminder_fast_track(container_name, origin_blob_folder, destinati
      
     # summary
     toc = time.perf_counter()    
-    print("Processed series: ",len(pd.unique(pop['dataset_raw']))," in ",toc-tic," seconds")
+    print("Processed series: ",len(pd.unique(pop['dataset_raw']))," in ",(toc-tic)/60," minutes")
         
                 
              
