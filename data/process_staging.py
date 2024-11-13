@@ -232,7 +232,7 @@ def coppersmith_global_power_stations(container_name_origin: str, container_name
     # read blob into df
     df = pd.read_csv(sas_url_blob, encoding=encoding)
     
-    # write df to csv stream
+    # write df to stream
     stream = BytesIO() #initialise a stream
     df.to_parquet(stream, engine='pyarrow', index=False) #write the csv to the stream
     stream.seek(0) #put pointer back to start of stream
