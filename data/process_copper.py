@@ -28,10 +28,13 @@ from azure.storage.blob import (
 def process_copper(container_name_origin: str, container_name_destination: str):
     # process COPPER > IRON
     
+    # WORKING
     #ironsmith_gapminder_fast_track('copper', paths.FASTTRACK_PATH_COPPER, paths.FASTTRACK_PATH_IRON)   #WORKING
+    #ironsmith_gapminder_systema_globalis('copper', paths.SYSTEMAGLOBALIS_PATH_COPPER, paths.SYSTEMAGLOBALIS_PATH_IRON)     
     
-    ironsmith_gapminder_systema_globalis('copper', paths.SYSTEMAGLOBALIS_PATH_COPPER, paths.SYSTEMAGLOBALIS_PATH_IRON)     
-    #ironsmith_gapminder_world_dev_indicators(paths.WDINDICATORS_PATH_COPPER, paths.WDINDICATORS_PATH_IRON)   
+    
+    ironsmith_gapminder_world_dev_indicators('copper', paths.WDINDICATORS_PATH_COPPER, paths.WDINDICATORS_PATH_IRON)   
+    
     #ironsmith_sdgindicators(paths.SDG_PATH_COPPER, paths.SDG_PATH_IRON)
     #ironsmith_world_standards(paths.WS_PATH_COPPER, paths.WS_PATH_IRON)
     #ironsmith_bigmac(paths.BIG_MAC_PATH_COPPER, paths.BIG_MAC_PATH_IRON)
@@ -275,9 +278,183 @@ def ironsmith_gapminder_systema_globalis(container_name: str, origin_blob_folder
     # summary
     toc = time.perf_counter()    
     print("Processed series: ",len(pd.unique(pop['dataset_raw']))," in ",(toc-tic)/60," minutes")
-    
-
+  
     return
+
+
+def ironsmith_gapminder_world_dev_indicators(container_name: str, origin_blob_folder: str, destination_blob_path: str): 
+    # clean the copper version of these parquets (as was previously done) and place a single consolidated parquet in IRON
+    # Goal of this function is to process each dataset into the master format and spit out a summary
+    
+    tic = time.perf_counter()   
+    print("Processing world development indicators COPPER > IRON")
+    
+    # read in unique country list from COPPER location
+    countries = get_country_lookup_df('copper', paths.COUNTRY_LOOKUP_PATH_COPPER, 'utf-8')
+    
+    # read in metadata
+    sas_url_blob = 'https://' + account_name+'.blob.core.windows.net/' + container_name + '/' + paths.WDINDICATORS_META_COPPER + '?' + sas_token 
+    lookup = pd.read_parquet(sas_url_blob)
+    
+    #declare empty dataframe   
+    pop = pd.DataFrame()
+    
+    # get file-blob list
+    files = walk_blobs(blob_service_client, container_name, origin_blob_folder)
+    
+    #Metrics    
+    files_num=len(files) 
+    runcount=0    
+    batch_size=400 #500
+    batch_counter=0
+    filewritecount=1
+    
+    #meta paths
+    metapath1 = paths.WDINDICATORS_META_COPPER
+    metapath2 = origin_blob_folder+"ddf--concepts--discrete.parquet" #checked this. It's all crud. keeping here so it can be skipped
+ 
+    for file in files:
+        
+        runcount = runcount +1
+        batch_counter = batch_counter+1
+        
+        # Check for batching first, before any breaks occur
+        #batch save files (mem management) every 500
+        if batch_counter == batch_size:
+            
+            # data typing 
+            pop = pop.astype({'m49_un_a3': 'category', 
+                            'country':'category', 
+                            'year':'uint16', 
+                            'dataset_raw':'category', 
+                            'value':'str', 
+                            'continent':'category',
+                            'region_un':'category',
+                            'region_wb':'category',
+                            'source':'str',
+                            'link':'str',
+                            'note':'str',
+                            })
+            
+            # clean out any commas from string numbers (known issue) Presume to do with parsing "12,300" > "12300"
+            pop["value"] = pop["value"].str.replace(",","")
+            
+            # write to parquet file                       
+            destination_filepath = destination_blob_path[:-8]+str(filewritecount)+".parquet"
+            print("Writing batch file ",destination_filepath)
+            stream = BytesIO() #initialise a stream
+            pop.to_parquet(stream, engine='pyarrow', index=False) #write the parquet to the stream
+            stream.seek(0) #put pointer back to start of stream
+            blob_client = blob_service_client.get_blob_client(container='iron', blob=destination_filepath)
+            blob_client.upload_blob(data=stream, overwrite=True, blob_type="BlockBlob")  
+            #pop.to_parquet((destination_filepath[:-8])+str(filewritecount)+".parquet"  )
+            
+            # batch run logic
+            filewritecount = filewritecount + 1            
+            batch_counter = 0 #reset
+            
+            # Empty dataframe rapidly
+            pop.drop(pop.columns, inplace=True, axis=1)    
+            pop = pop.iloc[0:0]
+            
+        # Continue normal parse
+        # in future should scan for filename pattern "ddf-concepts" and "ddf-entities" etc and ignore. This works though.
+        if file == metapath1: continue
+        if file == metapath2: continue
+        
+        print("Importing",runcount,"/",files_num," ",file)       
+        
+        # read in df
+        sas_url_blob = 'https://' + account_name+'.blob.core.windows.net/' + container_name + '/' + file + '?' + sas_token 
+        df = pd.read_parquet(sas_url_blob)
+        
+        # extract id
+        concept = df.columns[2]      
+        
+        # attempt to find details in lookup
+        try:
+            query = lookup[lookup['concept']==concept].fillna('')            
+        
+        except KeyError as error:
+            print("Exception thrown attempting to lookup ",concept)   
+        
+        # break if series not found in lookup
+        if len(query) != 1:
+            print("Query invalid, jumping to next file")
+            continue                
+        
+        # break if no year ("time") is in the dataset (sometimes categoricals are like this)
+        if "time" not in df.columns: continue #skip dataset
+        
+        # Add in metadata from query            
+        df['dataset_raw'] = query['name'].iloc[0]          
+        df['source'] = "World Bank - World Development Indicators." + " Series code: " + query['series_code'].iloc[0]
+        df['link'] = "https://github.com/open-numbers/ddf--open_numbers--world_development_indicators"                     
+        df['note'] = query['development_relevance'].iloc[0] + " " + query['long_definition'].iloc[0] + " " + query['statistical_concept_and_methodology'].iloc[0] + " " + query['general_comments'].iloc[0] + " " + query['limitations_and_exceptions'].iloc[0]
+        
+        # strip out new lines \n
+        df['note'] = df['note'].str.replace(r'\\n', '', regex=True)        
+               
+        #convert country codes to uppercase (to match datasetlookup)
+        try:
+            df['geo'] = df['geo'].str.upper() #this is su_a3 e.g. AUD
+        
+        except KeyError as error:
+            print("Exception thrown attempting to lookup Geo. Likely a global dataset only. Skipping")
+            continue    
+        
+        # Rename cols so far
+        df = df.rename(columns={"time":"year", concept:'value', 'geo':'su_a3'})
+        
+        # Merge in metadata from unique country list
+        df = df.merge(countries, on='su_a3', how='left')
+        
+        # Rename new cols
+        df = df.rename(columns={"m49_a3_country":"m49_un_a3", 'geo':'su_a3'})
+        
+        # reorganise cols and subset        
+        df = df[['m49_un_a3', 'country', 'year', 'dataset_raw', 'value', 'continent','region_un', 'region_wb', 'source', 'link', 'note' ]]
+        
+        #strip out any non-country regions from the dataset, based on countries shortlist
+        df = df[df['m49_un_a3'].isin(countries['m49_a3_country'])]  
+        
+        # append to clean pop dataframe
+        pop = pd.concat([pop,df])       
+       
+    # BREAK FOR LOOP
+    
+    # data typing 
+    pop = pop.astype({'m49_un_a3': 'category', 
+                    'country':'category', 
+                    'year':'uint16', 
+                    'dataset_raw':'category', 
+                    'value':'str', 
+                    'continent':'category',
+                    'region_un':'category',
+                    'region_wb':'category',
+                    'source':'str',
+                    'link':'str',
+                    'note':'str',
+                    })
+    
+    # clean out any commas from string numbers (known issue) Presume to do with parsing "12,300" > "12300"
+    pop["value"] = pop["value"].str.replace(",","")
+    
+    # write to (final) parquet file
+    destination_filepath = destination_blob_path[:-8]+str(filewritecount)+".parquet"
+    print("Writing batch file ",destination_filepath)
+    stream = BytesIO() #initialise a stream
+    pop.to_parquet(stream, engine='pyarrow', index=False) #write the parquet to the stream
+    stream.seek(0) #put pointer back to start of stream
+    blob_client = blob_service_client.get_blob_client(container='iron', blob=destination_filepath)
+    blob_client.upload_blob(data=stream, overwrite=True, blob_type="BlockBlob")  
+    
+    # summary
+    toc = time.perf_counter()    
+    print("Processed series: ",len(pd.unique(pop['dataset_raw']))," in ",toc-tic," seconds")
+    
+    
+    return 
 
 
 def create_account_sas(account_name: str, account_key: str):
