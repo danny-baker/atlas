@@ -32,10 +32,10 @@ def process_copper(container_name_origin: str, container_name_destination: str):
     #ironsmith_gapminder_fast_track('copper', paths.FASTTRACK_PATH_COPPER, paths.FASTTRACK_PATH_IRON)   #WORKING
     #ironsmith_gapminder_systema_globalis('copper', paths.SYSTEMAGLOBALIS_PATH_COPPER, paths.SYSTEMAGLOBALIS_PATH_IRON)     
     #ironsmith_gapminder_world_dev_indicators('copper', paths.WDINDICATORS_PATH_COPPER, paths.WDINDICATORS_PATH_IRON)   
+    #ironsmith_sdgindicators('copper', paths.SDG_PATH_COPPER, paths.SDG_PATH_IRON)
     
-    ironsmith_sdgindicators('copper', paths.SDG_PATH_COPPER, paths.SDG_PATH_IRON)
+    ironsmith_world_standards('copper', paths.WS_PATH_COPPER, paths.WS_PATH_IRON)
     
-    #ironsmith_world_standards(paths.WS_PATH_COPPER, paths.WS_PATH_IRON)
     #ironsmith_bigmac(paths.BIG_MAC_PATH_COPPER, paths.BIG_MAC_PATH_IRON)
     return
 
@@ -64,6 +64,125 @@ def walk_blobs(blob_service_client: object, container_name: str, folder_name: st
         blob_lst.append(blob.name)
     
     return blob_lst
+
+
+def ironsmith_world_standards(container_name: str, origin_blob_folder: str, destination_blob_path: str):
+    #Parse csvs here.
+    #CV format scraped manually from website.
+    #CSV format: Country, Year, Series, Value, Note, Source, Link (add link manually)
+    #country format: m49_a3_country, country, continent, region_un, region_wb, SU_A3 
+    
+    country_tweaks = {
+        'Bolivia' : 'Bolivia (Plurin. State of)',
+        'Bonaire' : 'Bonaire, St. Eustatius & Saba',
+        'Brunei' : 'Brunei Darussalam',
+        'Burma (officially Myanmar)' : 'Myanmar', #not working properly. Despite being fine if I run this script line by line
+        'China, Peoples Republic of' : 'China',
+        'Congo, Democratic Republic of the (Congo-Kinshasa)' : 'Dem. Rep. of the Congo',
+        'Congo, Republic of the (Congo-Brazzaville)': 'Congo',
+        'Curaaso' : 'Curaçao',
+        'Czechia (Czech Republic)' : 'Czechia',
+        'Côte dIvoire (Ivory Coast)': 'Côte dIvoire', #384 (ivory coast)
+         #'East Timor (Timor-Leste)' : 
+        'United Kingdom (UK)': 'United Kingdom',
+        'Falkland Islands': 'Falkland Islands (Malvinas)',
+        'Gabon (Gabonese Republic)': 'Gabon',
+         #'Guadeloupe (French overseas department)': 
+         #'Guernsey': 
+        'Holland (officially the Netherlands)': 'Netherlands',
+        'Hong Kong': 'China, Hong Kong SAR',
+        'Iran': 'Iran (Islamic Republic of)',
+        'Ireland (Eire)': 'Ireland',
+         #'Jersey'
+        'Korea, South': 'Republic of Korea',
+        'Laos': "Lao People's Dem. Rep.",
+        'Micronesia (officially: Federated States of Micronesia)': 'Micronesia (Fed. States of)',
+        'Moldova': 'Republic of Moldova',
+        'New Caledonia (French overseas collectivity)': 'New Caledonia',
+        'Myanmar (formerly Burma)': 'Myanmar',
+         #'Somaliland (unrecognised, self-declared state)': 'Somalia', #706
+         #'North Korea'
+        'Palestine': 'State of Palestine',
+        'Russia (officially the Russian Federation)': 'Russian Federation', #643 Not working properly
+        'Syria': 'Syrian Arab Republic',
+        'Suriname (Surinam)': 'Suriname', #740
+        'Tanzania': 'United Rep. of Tanzania',
+        'United Arab Emirates (UAE)': 'United Arab Emirates',
+        'United States of America (USA)': 'United States of America',
+        'Venezuela': 'Venezuela (Boliv. Rep. of)',
+        'Vietnam': 'Viet Nam',
+       
+        }
+    
+    
+    tic = time.perf_counter()
+    
+    # read in unique country list from COPPER location
+    countries = get_country_lookup_df('copper', paths.COUNTRY_LOOKUP_PATH_COPPER, 'utf-8')
+    
+    #declare empty dataframe    
+    pop = pd.DataFrame() 
+    
+    # get file-blob list
+    files = walk_blobs(blob_service_client, container_name, origin_blob_folder)
+    
+    for file in files:
+        print("Loading data: ", file)    
+        
+        #read blob-file into df
+        sas_url_blob = 'https://' + account_name+'.blob.core.windows.net/' + container_name + '/' + file + '?' + sas_token
+        df = pd.read_parquet(sas_url_blob)
+        
+        # For this data, we must merge UN data on country name (problematic). First do some custom substitutions.
+        df = df.replace({"country":country_tweaks})  
+        
+        #merge in additional info such as m49 integer identifier
+        df = df.merge(countries, how='left', on='country')
+        
+        # reconfigure dataframe to conform to iron standard           
+        
+        # subset and reorganise columns to iron standard
+        df = df[['m49_a3_country', 'country', 'year', 'dataset_raw', 'value', 'continent', 'region_un', 'region_wb', 'source', 'link', 'note' ]]
+        
+        # rename cols to new standard
+        df = df.rename(columns={"m49_a3_country":"m49_un_a3" })
+        
+        # pad empty notes
+        df['note'] = df['note'].fillna('Not available.')
+        
+        # count missing values
+        print("Missing values: ",df['m49_un_a3'].isna().sum())
+        
+        pop = pd.concat([pop,df])  #This could be the problem?
+    
+    # data typing 
+    pop = pop.astype({'m49_un_a3': 'category', 
+                    'country':'category', 
+                    'year':'uint16', 
+                    'dataset_raw':'category', 
+                    'value':'str', 
+                    'continent':'category',
+                    'region_un':'category',
+                    'region_wb':'category',
+                    'source':'str',
+                    'link':'str',
+                    'note':'str',
+                    })
+    
+    # write fast track dataset to parquet-blob
+    stream = BytesIO() #initialise a stream
+    pop.to_parquet(stream, engine='pyarrow', index=False) #write the csv to the stream
+    stream.seek(0) #put pointer back to start of stream
+    
+    # write the stream to blob
+    blob_client = blob_service_client.get_blob_client(container='iron', blob=destination_blob_path)
+    blob_client.upload_blob(data=stream, overwrite=True, blob_type="BlockBlob")
+    
+    # summary
+    toc = time.perf_counter()    
+    print("Processed series: ",len(pd.unique(pop['dataset_raw']))," in ",toc-tic," seconds")
+    
+    return
 
 
 def ironsmith_sdgindicators(container_name: str, origin_blob_folder: str, destination_blob_path: str):

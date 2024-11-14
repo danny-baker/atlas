@@ -29,16 +29,17 @@ SYSTEMAGLOBALIS_META_COPPER = "statistics/gapminder-systema-globalis/ddf--concep
 WDINDICATORS_PATH_COPPER = "statistics/world-development-indicators/"
 WDINDICATORS_META_COPPER = "statistics/world-development-indicators/ddf--concepts--continuous.parquet"
 SDG_PATH_COPPER = "statistics/sdgindicators/"
+WS_PATH_COPPER = "statistics/world-standards-unofficial-website/"
 
 #IRON 
 FASTTRACK_PATH_IRON = "statistics/gapminder-fast-track/gapminder_fast_track.parquet"
 SYSTEMAGLOBALIS_PATH_IRON = "statistics/gapminder-systema-globalis/gapminder_systema_globalis.parquet"
 WDINDICATORS_PATH_IRON = "statistics/world-development-indicators/world_development_indicators.parquet" #this gets chunked and suffix with 1/2/3 etc
 SDG_PATH_IRON = "statistics/sdgindicators/sdgindicators.parquet"
+WS_PATH_IRON = "statistics/world-standards-unofficial-website/world-standards.parquet"
 
 UNDATA_PATH_IRON = "/data_lakehouse/iron/statistics/undata/"
 IRON_STATS_PATH = "/data_lakehouse/iron/statistics/" #smelting
-WS_PATH_IRON = "/data_lakehouse/iron/statistics/world-standards-unofficial-website/"
 BIG_MAC_PATH_IRON = "/data_lakehouse/iron/statistics/big-mac-index/"
 
 # TITANIUM
