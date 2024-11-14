@@ -30,6 +30,7 @@ WDINDICATORS_PATH_COPPER = "statistics/world-development-indicators/"
 WDINDICATORS_META_COPPER = "statistics/world-development-indicators/ddf--concepts--continuous.parquet"
 SDG_PATH_COPPER = "statistics/sdgindicators/"
 WS_PATH_COPPER = "statistics/world-standards-unofficial-website/"
+BIG_MAC_PATH_COPPER = "statistics/big-mac-index/big-mac-adjusted-index.parquet" #single file
 
 #IRON 
 FASTTRACK_PATH_IRON = "statistics/gapminder-fast-track/gapminder_fast_track.parquet"
@@ -37,10 +38,11 @@ SYSTEMAGLOBALIS_PATH_IRON = "statistics/gapminder-systema-globalis/gapminder_sys
 WDINDICATORS_PATH_IRON = "statistics/world-development-indicators/world_development_indicators.parquet" #this gets chunked and suffix with 1/2/3 etc
 SDG_PATH_IRON = "statistics/sdgindicators/sdgindicators.parquet"
 WS_PATH_IRON = "statistics/world-standards-unofficial-website/world-standards.parquet"
+BIG_MAC_PATH_IRON = "statistics/big-mac-index/big-mac-index.parquet"
 
-UNDATA_PATH_IRON = "/data_lakehouse/iron/statistics/undata/"
+UNDATA_PATH_IRON = "/data_lakehouse/iron/statistics/undata/" # ? unused?
 IRON_STATS_PATH = "/data_lakehouse/iron/statistics/" #smelting
-BIG_MAC_PATH_IRON = "/data_lakehouse/iron/statistics/big-mac-index/"
+
 
 # TITANIUM
 PWR_STN_PATH_TITANIUM = "geojson/global-power-stations/xp1_global_power_plant_database.parquet"

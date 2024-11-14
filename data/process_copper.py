@@ -28,15 +28,12 @@ from azure.storage.blob import (
 def process_copper(container_name_origin: str, container_name_destination: str):
     # process COPPER > IRON
     
-    # WORKING
-    #ironsmith_gapminder_fast_track('copper', paths.FASTTRACK_PATH_COPPER, paths.FASTTRACK_PATH_IRON)   #WORKING
-    #ironsmith_gapminder_systema_globalis('copper', paths.SYSTEMAGLOBALIS_PATH_COPPER, paths.SYSTEMAGLOBALIS_PATH_IRON)     
-    #ironsmith_gapminder_world_dev_indicators('copper', paths.WDINDICATORS_PATH_COPPER, paths.WDINDICATORS_PATH_IRON)   
-    #ironsmith_sdgindicators('copper', paths.SDG_PATH_COPPER, paths.SDG_PATH_IRON)
-    
+    ironsmith_gapminder_fast_track('copper', paths.FASTTRACK_PATH_COPPER, paths.FASTTRACK_PATH_IRON)   #WORKING
+    ironsmith_gapminder_systema_globalis('copper', paths.SYSTEMAGLOBALIS_PATH_COPPER, paths.SYSTEMAGLOBALIS_PATH_IRON)     
+    ironsmith_gapminder_world_dev_indicators('copper', paths.WDINDICATORS_PATH_COPPER, paths.WDINDICATORS_PATH_IRON)   
+    ironsmith_sdgindicators('copper', paths.SDG_PATH_COPPER, paths.SDG_PATH_IRON)
     ironsmith_world_standards('copper', paths.WS_PATH_COPPER, paths.WS_PATH_IRON)
-    
-    #ironsmith_bigmac(paths.BIG_MAC_PATH_COPPER, paths.BIG_MAC_PATH_IRON)
+    ironsmith_bigmac('copper', paths.BIG_MAC_PATH_COPPER, paths.BIG_MAC_PATH_IRON)
     return
 
 
@@ -64,6 +61,72 @@ def walk_blobs(blob_service_client: object, container_name: str, folder_name: st
         blob_lst.append(blob.name)
     
     return blob_lst
+
+
+def ironsmith_bigmac(container_name: str, origin_blob_path: str, destination_blob_path: str):
+    # Transform the data to conform to Atlas data structure and write to IRON
+    
+    print('Processing data: ', origin_blob_path)
+    
+    tic = time.perf_counter()     
+    
+    # read in unique country list from COPPER location
+    countries = get_country_lookup_df('copper', paths.COUNTRY_LOOKUP_PATH_COPPER, 'utf-8')
+    
+    #read blob-file into df
+    sas_url_blob = 'https://' + account_name+'.blob.core.windows.net/' + container_name + '/' + origin_blob_path + '?' + sas_token
+    df = pd.read_parquet(sas_url_blob)
+    
+    # subset to remove redundant data
+    df = df[['date', 'iso_a3', 'dollar_price']]
+    
+    # extract year from date string
+    year = df['date'].str.split(pat="-", expand=True)
+    df['year'] = year[[0]]    
+    
+    # merge in country M49s and names from meta
+    df = df.rename(columns={'iso_a3':'su_a3'})   
+    df = df.merge(countries, on='su_a3', how='left')
+    
+    # Prep
+    df['dataset_raw'] = 'Big mac index (US Dollars)'
+    df = df.rename(columns={'dollar_price':'value', 'm49_a3_country':'m49_un_a3'})
+    
+    # Subset and reorganise to align with master structure
+    df = df[['m49_un_a3', 'country', 'year', 'dataset_raw', 'value', 'continent', 'region_un', 'region_wb' ]]
+    
+    # Add custom source, link and note for this dataset
+    df['source'] = 'The Economist Big Mac Index https://www.economist.com/big-mac-index'
+    df['link'] = 'https://github.com/TheEconomist/big-mac-data'
+    df['note'] = 'THE BIG MAC index was invented by The Economist in 1986 as a lighthearted guide to whether currencies are at their “correct” level. It is based on the theory of purchasing-power parity (PPP), the notion that in the long run exchange rates should move towards the rate that would equalise the prices of an identical basket of goods and services (in this case, a burger) in any two countries.'
+    
+    # data typing 
+    df = df.astype({'m49_un_a3': 'category', 
+                    'country':'category', 
+                    'year':'uint16', 
+                    'dataset_raw':'category', 
+                    'value':'str', 
+                    'continent':'category',
+                    'region_un':'category',
+                    'region_wb':'category',
+                    'source':'str',
+                    'link':'str',
+                    'note':'str',
+                    })
+    
+    # write fast track dataset to parquet-blob
+    stream = BytesIO() #initialise a stream
+    df.to_parquet(stream, engine='pyarrow', index=False) #write the csv to the stream
+    stream.seek(0) #put pointer back to start of stream
+    
+    # write the stream to blob
+    blob_client = blob_service_client.get_blob_client(container='iron', blob=destination_blob_path)
+    blob_client.upload_blob(data=stream, overwrite=True, blob_type="BlockBlob")
+
+    # summary
+    toc = time.perf_counter()    
+    print("Processed series: ",len(pd.unique(df['dataset_raw']))," in ",toc-tic," seconds")
+    return
 
 
 def ironsmith_world_standards(container_name: str, origin_blob_folder: str, destination_blob_path: str):
@@ -127,7 +190,7 @@ def ironsmith_world_standards(container_name: str, origin_blob_folder: str, dest
     files = walk_blobs(blob_service_client, container_name, origin_blob_folder)
     
     for file in files:
-        print("Loading data: ", file)    
+        print("Processing data: ", file)    
         
         #read blob-file into df
         sas_url_blob = 'https://' + account_name+'.blob.core.windows.net/' + container_name + '/' + file + '?' + sas_token
