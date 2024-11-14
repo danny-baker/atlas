@@ -31,11 +31,10 @@ def process_copper(container_name_origin: str, container_name_destination: str):
     # WORKING
     #ironsmith_gapminder_fast_track('copper', paths.FASTTRACK_PATH_COPPER, paths.FASTTRACK_PATH_IRON)   #WORKING
     #ironsmith_gapminder_systema_globalis('copper', paths.SYSTEMAGLOBALIS_PATH_COPPER, paths.SYSTEMAGLOBALIS_PATH_IRON)     
+    #ironsmith_gapminder_world_dev_indicators('copper', paths.WDINDICATORS_PATH_COPPER, paths.WDINDICATORS_PATH_IRON)   
     
+    ironsmith_sdgindicators('copper', paths.SDG_PATH_COPPER, paths.SDG_PATH_IRON)
     
-    ironsmith_gapminder_world_dev_indicators('copper', paths.WDINDICATORS_PATH_COPPER, paths.WDINDICATORS_PATH_IRON)   
-    
-    #ironsmith_sdgindicators(paths.SDG_PATH_COPPER, paths.SDG_PATH_IRON)
     #ironsmith_world_standards(paths.WS_PATH_COPPER, paths.WS_PATH_IRON)
     #ironsmith_bigmac(paths.BIG_MAC_PATH_COPPER, paths.BIG_MAC_PATH_IRON)
     return
@@ -66,6 +65,106 @@ def walk_blobs(blob_service_client: object, container_name: str, folder_name: st
     
     return blob_lst
 
+
+def ironsmith_sdgindicators(container_name: str, origin_blob_folder: str, destination_blob_path: str):
+    # clean the copper version of these parquets (as was previously done) and place a single consolidated parquet in IRON
+    # Goal of this function is to process each dataset into the master format and spit out a summary
+    # this data has metadata embedded in each dataset, so less complex to parse than gapminder stuff    
+    
+    tic = time.perf_counter()  
+    print("Processing SDG indicator data COPPER > IRON")
+    
+    # read in unique country list from COPPER location
+    countries = get_country_lookup_df('copper', paths.COUNTRY_LOOKUP_PATH_COPPER, 'utf-8')
+    
+    #declare empty dataframe    
+    pop = pd.DataFrame() 
+    
+    # get file-blob list
+    files = walk_blobs(blob_service_client, container_name, origin_blob_folder)
+    
+    for file in files:
+        print("Loading data: ", file)    
+        
+        #read blob-file into df
+        sas_url_blob = 'https://' + account_name+'.blob.core.windows.net/' + container_name + '/' + file + '?' + sas_token
+        df = pd.read_parquet(sas_url_blob)
+     
+        # concatenate the goal/target/indicator to source
+        df['curatedSrc'] = 'United Nations Sustainable Development Goals (SDG) Indicators Database. '
+        df['goalid']=' Goal '
+        df['targetid']=' Target '
+        df['indicatorid']=' Indicator '
+        df['seriesid']=' Series ID: '   
+        df['newSource'] = df['curatedSrc'] + df['Source'] + df['goalid'] + df['Goal'].astype(str) + df['targetid'].astype(str) + df['Target'].astype(str) + df['indicatorid'] + df['Indicator'] + df['seriesid'] + df['SeriesCode'] 
+        
+        #drop unneeded columns
+        df = df.drop(columns=['goalid','targetid','indicatorid','seriesid','Source','Goal','Target','Indicator','SeriesCode'])
+        
+        #add column for Link (THIS IS MANUAL ADDITION)
+        df['Link'] = "https://unstats.un.org/sdgs/dataportal"
+        
+        #Note for meta. Units is available. eg PERCENT
+        #CLAIMER FOR LATER
+        
+        # subset cols
+        df = df[["GeoAreaCode", "TimePeriod", "SeriesDescription", "Value", "newSource" , "Link", "FootNote"]]
+        
+        # rename cols
+        df = df.rename(columns={"GeoAreaCode":'m49_a3_country', "TimePeriod":'Year', "SeriesDescription":'Series', "FootNote":'Note', "newSource":"Source"})
+                
+        #pad the 3 digit m49 country integer with zeros if it less than 100 (i.e. "3" will become "003")    
+        df['m49_a3_country'] = df['m49_a3_country'].astype(str).str.zfill(3) 
+        
+        #merge in additional region info and country name (for consistency)
+        df = df.merge(countries, on='m49_a3_country', how='left')
+
+        #  subset and reorder cols        
+        df = df[['m49_a3_country', 'country', 'Year', 'Series', 'Value', 'continent','region_un', 'region_wb', 'Source', 'Link', 'Note' ]]
+        
+        # rename where necessary
+        df = df.rename(columns={"m49_a3_country":"m49_un_a3"})
+                
+        #strip out any non-country regions from the dataset, based on countries shortlist
+        df = df[df['m49_un_a3'].isin(countries['m49_a3_country'])]   
+        
+        #drop any rows with nan value
+        df = df.dropna(subset=['Value'])       
+          
+        # rename cols to new standard
+        df = df.rename(columns={"m49_a3_country":"m49_un_a3", "Year":"year", "Series":"dataset_raw", "Value":"value", "Source":"source", "Link":"link", "Note":"note" })
+        
+        # append to clean pop dataframe
+        pop = pd.concat([pop,df])  
+        
+    # data typing 
+    pop = pop.astype({'m49_un_a3': 'category', 
+                    'country':'category', 
+                    'year':'uint16', 
+                    'dataset_raw':'category', 
+                    'value':'str', 
+                    'continent':'category',
+                    'region_un':'category',
+                    'region_wb':'category',
+                    'source':'str',
+                    'link':'str',
+                    'note':'str',
+                    })
+    
+    # write fast track dataset to parquet-blob
+    stream = BytesIO() #initialise a stream
+    pop.to_parquet(stream, engine='pyarrow', index=False) #write the csv to the stream
+    stream.seek(0) #put pointer back to start of stream
+    
+    # write the stream to blob
+    blob_client = blob_service_client.get_blob_client(container='iron', blob=destination_blob_path)
+    blob_client.upload_blob(data=stream, overwrite=True, blob_type="BlockBlob")
+    
+    # summary
+    toc = time.perf_counter()    
+    print("Processed series: ",len(pd.unique(pop['dataset_raw']))," in ",(toc-tic)/60," minutes")
+    
+    return 
 
 def ironsmith_gapminder_fast_track(container_name: str, origin_blob_folder: str, destination_blob_path: str):   
     # clean the copper version of these parquets (as was previously done) and place a single consolidated parquet in IRON
@@ -159,7 +258,6 @@ def ironsmith_gapminder_fast_track(container_name: str, origin_blob_folder: str,
                     })
      
     # write fast track dataset to parquet-blob
-    # write df to stream
     stream = BytesIO() #initialise a stream
     pop.to_parquet(stream, engine='pyarrow', index=False) #write the csv to the stream
     stream.seek(0) #put pointer back to start of stream
