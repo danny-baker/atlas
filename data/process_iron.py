@@ -106,7 +106,8 @@ def smelt_iron(origin_blob_folder: str, meta_file_path: str, stats_file_path: st
     print("Attempting to write master stats parquet to blob")
     #master.to_parquet(destination_filepath_stats, compression='brotli')  
     stream = BytesIO() #initialise a stream
-    master.to_parquet(stream, engine='pyarrow', compression='brotli', index=False) #write the csv to the stream
+    #master.to_parquet(stream, engine='pyarrow', compression='brotli', index=False) #write the csv to the stream
+    master.to_parquet(stream, engine='pyarrow', index=False) #write the csv to the stream
     stream.seek(0) #put pointer back to start of stream
     
     # write the stream to blob
