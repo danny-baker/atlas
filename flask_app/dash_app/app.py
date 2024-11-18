@@ -48,7 +48,8 @@ account_key = os.getenv("AZURE_STORAGE_ACCOUNT_KEY")
 #sudo docker run -p 80:8050 -v /home/dan/atlas/.env:/usr/src/app/.env ghcr.io/danny-baker/atlas/atlas_app:latest
 
 # setup system
-if not os.path.exists("tmp"): os.mkdir("tmp")  # this is used to store charts and zip files on server OS until in memory solution is found
+if os.path.exists("tmp") == False: 
+    os.mkdir("tmp")  # this is used to store charts and zip files on server OS until in memory solution is found
 
 # initialise dash layout and callbacks
 def init_dashboard(server):
