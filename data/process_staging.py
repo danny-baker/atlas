@@ -3,6 +3,15 @@
 # step 2: run in parallel (magic way)
     # https://learn.microsoft.com/en-us/python/api/overview/azure/storage-file-datalake-readme?view=azure-python
 
+# TODO
+# refactor and simplify. i.e don't need to pass blob_service_client as it should be global var
+# clean up 
+# harden: use try/catch statements in case of error. i.e. catch error and return false for function, so it can be rerun.
+# try to catch errors at the file level (in the for loop) so can just repull the file rather than rerun the entire function (1000s of datafiles)#
+# parallelise using laptop compute
+# operationalise in cloud (custom VM) spin up with yaml, and run, spin down)
+
+
 from dotenv import load_dotenv
 import data_paths as paths
 import pandas as pd
@@ -129,58 +138,8 @@ def coppersmith_sdgindicators(container_name_origin: str, container_name_destina
     print("Processing time: ",toc-tic," seconds")
     return
 
-"""
-def coppersmith_sdgindicators_new():
-    # source
-    # https://unstats.un.org/sdgs/indicators/database/archive
-    # Still need to do lots of work to parse this properly. Can get 1.7GB CSV with all data and all years.
-    
-    # new file is a 1.7GB csv so we need to do some wrangling to even get it to a raw parquet
-    
-    origin = os.getcwd()+'/data_lakehouse/staging/statistics/sdgindicators_new/2024_Q1.2_AllData_Before_20240628.csv'
-    destination_path =  os.getcwd()+'/data_lakehouse/copper/statistics/sdgindicators_new/'
-    destination_filepath = destination_path+'sdgindicators_new.parquet'
-    
-    #Check if destination folder exists. If not, create it.
-    if not os.path.exists(destination_path): os.mkdir(destination_path)  
-    
-    # Read in big bertha csv
-    df0 = pd.read_csv(origin)
-    
-    # Subset the cols we need
-    df1 = df0[['GeoAreaCode', 'GeoAreaName', 'TimePeriod', 'SeriesDescription', 'Value', 'Goal', 'Target', 'Indicator', 'ReleaseName', 'SeriesCode', 'Source', 'FootNote', 'Location','Age', 'Sex', 'Units', 'Quantile']]
-                   
-    # free mem
-    del df0
-    
-    # data typing 
-    df1 = df1.astype({'GeoAreaCode': 'uint16', 
-                    'GeoAreaName':'category', 
-                    'TimePeriod':'uint16', 
-                    'SeriesDescription':'category', 
-                    'Value':'str', 
-                    'Goal':'str',
-                    'Target':'str',
-                    'Indicator':'str',
-                    'ReleaseName':'str',
-                    'SeriesCode':'str',
-                    'Source':'str',
-                    'FootNote':'str',
-                    'Location':'str',
-                    'Age':'str',
-                    'Sex':'str',
-                    'Units':'str',
-                    'Quantile':'str',
-                    })
-    
-    # write to parquet   
-    df1.to_parquet(destination_filepath, engine='pyarrow', index=False)
-    
-    return
-"""  
-    
 
-
+    
 def coppersmith_map_json(container_name_origin: str, container_name_destination: str):
     #The map json (from memory) was unprocessed, sourced from Natural Earth
     # Move map json data from STAGING > TITANIUM
@@ -399,9 +358,6 @@ def convert_folder_xlsx_to_parquet_blob(container_name_origin: str, container_na
     return
  
 
-    
-    
-
 
 
 ### RUN ###
@@ -425,15 +381,215 @@ blob_service_client = BlobServiceClient(account_url=account_sas_url)
 process_staging('staging', 'copper')
 
 
-# TODO
-# refactor and simplify. i.e don't need to pass blob_service_client as it should be global var
-# clean up 
-# harden: use try/catch statements in case of error. i.e. catch error and return false for function, so it can be rerun.
-# try to catch errors at the file level (in the for loop) so can just repull the file rather than rerun the entire function (1000s of datafiles)#
-# parallelise using laptop compute
-# operationalise in cloud (custom VM) spin up with yaml, and run, spin down)
 
 
+
+
+
+
+
+
+
+
+
+
+"""
+# Old stuff that we may need to use again if reprocessing. Problematic and needs reworking.
+
+def clean_3d_land_data_JSON_ne110m(json_path):
+    
+    #this dataset does in fact have the integer codes we want, so all we need to do is some basic processing to make it consistent with what is expected by update_3d_geo_data_JSON
+    #i.e. add a few properties with consistent names to what is used in the ne50m data
+    #these clean functions are helpers, they only really need to be run once, to producea cleaned geojson file for importing at runtime.
+    
+    #load data    
+    countries_json = json.load(open(json_path, 'r', encoding='utf-8'))
+    
+    #bring country name up to feature level (from properties.) This is required for tooltip to work on deck.gl    
+    gj = copy.deepcopy(countries_json)
+    
+    #add country name and random colours
+    for i in range(0, len(gj['features'])):
+        gj['features'][i]['COUNTRY'] = gj['features'][i]['properties']['SUBUNIT'] #grab country name from json(this fieldname differs between natural earth datasets)
+        gj['features'][i]['properties']['red']= np.random.randint(0,255)
+        gj['features'][i]['properties']['green']= np.random.randint(0,255)
+        gj['features'][i]['properties']['blue']= np.random.randint(0,255)
+    
+    #now we simply create a new property 'sr_un_a3' for consistency with the other datasets so all functions work. In this case, we'll duplicate ISO_n3
+    for i in range(0, len(gj['features'])):
+        gj['features'][i]['properties']['sr_un_a3'] = gj['features'][i]['properties']['ISO_N3']
+    
+    
+    #now try to write the json as a once off and test it.       
+    with open('data/geojson/globe/ne_110m_land_test.geojson', 'w') as outfile:
+        json.dump(gj, outfile) 
+    
+    return gj
+
+
+def clean_3d_land_data_JSON_ne50m(json_path, countries, json_destination):    
+    #Not working. I think some preprocessing was done to the json before this could run on it.
+    # Given the time to reengineer, it's simply not worth it unless I need to reprocess it.
+    # Storing this on ice.
+    
+    #This dataset does NOT have the unique integer codes for which I've used as the primary key to extract from pop when updating (in another func)
+    #consequently I've added alphanumeric codes "AUS" to the country_lookup, then extracted the integer code and added it to this json under 'sr_un_a3'
+    
+    #load data    
+    countries_json = json.load(open(json_path, 'r', encoding='utf-8'))
+            
+    #bring country name up to feature level (from properties.) This is required for tooltip to work on deck.gl    
+    gj = copy.deepcopy(countries_json)
+    
+    #add country name and random colours
+    for i in range(0, len(gj['features'])):
+        gj['features'][i]['COUNTRY'] = gj['features'][i]['properties']['sr_subunit'] #grab country name from json  
+        gj['features'][i]['properties']['red']= np.random.randint(0,255)
+        gj['features'][i]['properties']['green']= np.random.randint(0,255)
+        gj['features'][i]['properties']['blue']= np.random.randint(0,255)
+  
+    #add in the un_a3 integer code (once) and test out writing this file
+    for i in range(0, len(gj['features'])):
+        #print(gj['features'][i]['properties']['sr_su_a3'])
+        
+        if gj['features'][i]['properties']['sr_adm0_a3'] in countries['su_a3'].values:
+            #extract un_a3 integer code from lookup and set it as a new feature property in the json
+            gj['features'][i]['properties']['sr_un_a3'] = countries[countries["su_a3"]==gj['features'][i]['properties']['sr_adm0_a3']].iloc[0,0]
+        else:            
+            gj['features'][i]['properties']['sr_un_a3'] = "none"
+            
+    #now try to write the json as a once off and test it.       
+    #with open('data/geojson/globe/ne_50m_land_test.geojson', 'w') as outfile:
+    with open(json_destination, 'w') as outfile:
+        json.dump(gj, outfile)    
+             
+    return 
+
+
+def clean_3d_ocean_data_JSON_ne110m(json_path):
+    
+    # Storing this on ice.
+    
+    #load raw json
+    geojson_globe_ocean_ne50m = json.load(open(json_path, 'r', encoding='utf-8'))
+    
+    #deep copy json (had problems so this works)    
+    ocean_coords = copy.deepcopy(geojson_globe_ocean_ne50m)
+
+    #ocean: add json features
+    geojson_globe_ocean_ne50m['features'][0]['properties']['sr_un_a3'] = "000" 
+    geojson_globe_ocean_ne50m['features'][0]['COUNTRY'] = "Ocean"
+    geojson_globe_ocean_ne50m['features'][0]['geometry']['type'] = "Polygon"
+    #geojson_globe_ocean_ne50m['features'][0]['geometry']['coordinates'] = coord2_L
+    geojson_globe_ocean_ne50m['features'][0]['geometry']['coordinates'] = ocean_coords['features'][1]['geometry']['coordinates'][0] 
+    
+    #append a duplicate of this dictionary to list (i.e. because it was not read in from file like this)
+    #geojson_globe_ocean_ne50m['features'].append(copy.deepcopy(geojson_globe_ocean_ne50m['features'][0]))
+    
+    #Caspian sea: add json features
+    geojson_globe_ocean_ne50m['features'][1]['properties']['sr_un_a3'] = "000" #must add this custom property to json
+    geojson_globe_ocean_ne50m['features'][1]['COUNTRY'] = "Caspian Sea"
+    geojson_globe_ocean_ne50m['features'][1]['geometry']['type'] = "Polygon"
+    #geojson_globe_ocean_ne50m['features'][1]['geometry']['coordinates'] = coord1_L
+    geojson_globe_ocean_ne50m['features'][1]['geometry']['coordinates'] = ocean_coords['features'][0]['geometry']['coordinates'][0] #caspian sea
+    
+    #now try to write the json as a once off and test it.       
+    gj = geojson_globe_ocean_ne50m
+    with open('data/geojson/globe/ne_110m_ocean_test.geojson', 'w') as outfile:
+        json.dump(gj, outfile) 
+    
+    return geojson_globe_ocean_ne50m
+
+
+
+def clean_3d_ocean_data_JSON_ne50m(json_path):
+    
+    # Storing this on ice.
+    
+    #load raw json
+    geojson_globe_ocean_ne50m = json.load(open(json_path, 'r', encoding='utf-8'))
+    
+    #deep copy json (had problems so this works)    
+    ocean_coords = copy.deepcopy(geojson_globe_ocean_ne50m)
+
+    #geojson_globe_ocean_ne50m_test = d.load_3d_geo_data_JSON_cleaned("data/geojson/globe/ne_50m_ocean.geojson")
+    
+    del(ocean_coords['features'][0]['geometry']['coordinates'][1][98])
+        
+    #ocean: add json features
+    geojson_globe_ocean_ne50m['features'][0]['properties']['sr_un_a3'] = "000" 
+    geojson_globe_ocean_ne50m['features'][0]['COUNTRY'] = "Ocean"
+    geojson_globe_ocean_ne50m['features'][0]['geometry']['type'] = "Polygon"
+    #geojson_globe_ocean_ne50m['features'][0]['geometry']['coordinates'] = coord2_L
+    geojson_globe_ocean_ne50m['features'][0]['geometry']['coordinates'] = ocean_coords['features'][0]['geometry']['coordinates'][1] #main ocean
+    
+    #append a duplicate of this dictionary to list (i.e. because it was not read in from file like this)
+    geojson_globe_ocean_ne50m['features'].append(copy.deepcopy(geojson_globe_ocean_ne50m['features'][0]))
+    
+    #Caspian sea: add json features
+    geojson_globe_ocean_ne50m['features'][1]['properties']['sr_un_a3'] = "000" #must add this custom property to json
+    geojson_globe_ocean_ne50m['features'][1]['COUNTRY'] = "Caspian Sea"
+    geojson_globe_ocean_ne50m['features'][1]['geometry']['type'] = "Polygon"
+    #geojson_globe_ocean_ne50m['features'][1]['geometry']['coordinates'] = coord1_L
+    geojson_globe_ocean_ne50m['features'][1]['geometry']['coordinates'] = ocean_coords['features'][0]['geometry']['coordinates'][0] #caspian sea
+    
+    #now try to write the json as a once off and test it.       
+    gj = geojson_globe_ocean_ne50m
+    with open('data/geojson/globe/ne_50m_ocean_test.geojson', 'w') as outfile:
+        json.dump(gj, outfile) 
+    
+    return geojson_globe_ocean_ne50m
+
+
+
+def coppersmith_sdgindicators_new():
+    # source
+    # https://unstats.un.org/sdgs/indicators/database/archive
+    # Still need to do lots of work to parse this properly. Can get 1.7GB CSV with all data and all years.
+    
+    # new file is a 1.7GB csv so we need to do some wrangling to even get it to a raw parquet
+    
+    origin = os.getcwd()+'/data_lakehouse/staging/statistics/sdgindicators_new/2024_Q1.2_AllData_Before_20240628.csv'
+    destination_path =  os.getcwd()+'/data_lakehouse/copper/statistics/sdgindicators_new/'
+    destination_filepath = destination_path+'sdgindicators_new.parquet'
+    
+    #Check if destination folder exists. If not, create it.
+    if not os.path.exists(destination_path): os.mkdir(destination_path)  
+    
+    # Read in big bertha csv
+    df0 = pd.read_csv(origin)
+    
+    # Subset the cols we need
+    df1 = df0[['GeoAreaCode', 'GeoAreaName', 'TimePeriod', 'SeriesDescription', 'Value', 'Goal', 'Target', 'Indicator', 'ReleaseName', 'SeriesCode', 'Source', 'FootNote', 'Location','Age', 'Sex', 'Units', 'Quantile']]
+                   
+    # free mem
+    del df0
+    
+    # data typing 
+    df1 = df1.astype({'GeoAreaCode': 'uint16', 
+                    'GeoAreaName':'category', 
+                    'TimePeriod':'uint16', 
+                    'SeriesDescription':'category', 
+                    'Value':'str', 
+                    'Goal':'str',
+                    'Target':'str',
+                    'Indicator':'str',
+                    'ReleaseName':'str',
+                    'SeriesCode':'str',
+                    'Source':'str',
+                    'FootNote':'str',
+                    'Location':'str',
+                    'Age':'str',
+                    'Sex':'str',
+                    'Units':'str',
+                    'Quantile':'str',
+                    })
+    
+    # write to parquet   
+    df1.to_parquet(destination_filepath, engine='pyarrow', index=False)
+    
+    return
+"""  
 
 
 
