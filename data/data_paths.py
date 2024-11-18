@@ -39,13 +39,7 @@ WDINDICATORS_PATH_IRON = "statistics/world-development-indicators/world_developm
 SDG_PATH_IRON = "statistics/sdgindicators/sdgindicators.parquet"
 WS_PATH_IRON = "statistics/world-standards-unofficial-website/world-standards.parquet"
 BIG_MAC_PATH_IRON = "statistics/big-mac-index/big-mac-index.parquet"
-
 IRON_STATS_PATH = "statistics/" #smelting
-
-
-UNDATA_PATH_IRON = "/data_lakehouse/iron/statistics/undata/" # ? unused?
-
-
 
 # TITANIUM
 PWR_STN_PATH_TITANIUM = "geojson/global-power-stations/xp1_global_power_plant_database.parquet"
@@ -56,17 +50,16 @@ GLOBE_JSON_LAND_HIGH_PATH_TITANIUM = "geojson/globe/ne_50m_land.geojson"
 GLOBE_JSON_OCEAN_HIGH_PATH_TITANIUM = "geojson/globe/ne_50m_ocean.geojson"
 GLOBE_JSON_LAND_LOW_PATH_TITANIUM = "geojson/globe/ne_110m_land_cultural.geojson"
 GLOBE_JSON_OCEAN_LOW_PATH_TITANIUM = "geojson/globe/ne_110m_ocean.geojson"
-
 MASTER_STATS_PATH = "statistics/master_stats.parquet" #smelting
 MASTER_META_PATH = "meta/master_meta.parquet" #smelting
+MASTER_CONFIG_PATH = "meta/master_config.csv" #smelting
 
-MASTER_CONFIG_PATH = "/data_lakehouse/titanium/meta/master_config.csv"
-
-MAP_JSON_PATH = "/data_lakehouse/titanium/geojson/map/"
-
-GLOBE_JSON_PATH = "/data_lakehouse/titanium/geojson/globe/" # ?
-PWR_STN_STATS_FILEPATH = "/data_lakehouse/titanium/geojson/global-power-stations/xp1_global_power_plant_database.parquet" #?
-PWR_STN_JSON_FILEPATH = "/data_lakehouse/titanium/geojson/global-power-stations/xp1_countries.geojson" #?
+# TO VERIFY / CLEAN
+UNDATA_PATH_IRON = "/data_lakehouse/iron/statistics/undata/" # ? unused?
+MAP_JSON_PATH = "/data_lakehouse/titanium/geojson/map/" #?
+GLOBE_JSON_PATH = "/data_lakehouse/titanium/geojson/globe/" # ? obsolete?
+PWR_STN_STATS_FILEPATH = "/data_lakehouse/titanium/geojson/global-power-stations/xp1_global_power_plant_database.parquet" #? obsolete?
+PWR_STN_JSON_FILEPATH = "/data_lakehouse/titanium/geojson/global-power-stations/xp1_countries.geojson" #? obsolete
 
 
 

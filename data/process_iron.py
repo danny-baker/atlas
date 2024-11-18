@@ -28,8 +28,8 @@ from azure.storage.blob import (
 def process_iron(container_name_origin: str, container_name_destination: str):
     # process data in IRON > TITANIUM
     
-    smelt_iron(paths.IRON_STATS_PATH, paths.MASTER_META_PATH, paths.MASTER_STATS_PATH, container_name_origin, container_name_destination)
-    #update_config(paths.MASTER_META_PATH, paths.MASTER_CONFIG_PATH)
+    #smelt_iron(paths.IRON_STATS_PATH, paths.MASTER_META_PATH, paths.MASTER_STATS_PATH, container_name_origin, container_name_destination)
+    update_config(paths.MASTER_META_PATH, paths.MASTER_CONFIG_PATH, 'titanium')
     return
     
 
@@ -116,6 +116,98 @@ def smelt_iron(origin_blob_folder: str, meta_file_path: str, stats_file_path: st
         
     return  
 
+def update_config(meta_blob_path, config_blob_path, container_name):
+    # Update master_config file with any new data
+    # Housekeeping like remove duplicate dataset_raws from config (no)
+    # Update source, link, notes from meta for any dataset_raw (incase human fucked with it)    
+    # Add (Concatenate) all datasets in meta_data that are not found in master_config
+    # Sort file so anything without a dataset_label (i.e. unprocessed) is at the top
+    # reset dataset_id index (numeric is fine) but this is critial for app loading and inputs etc.
+    # write back to csv. No index.    
+      
+    print('Updating master config file ...')      
+    
+    # read master metadata into df
+    sas_url_blob = 'https://' + account_name+'.blob.core.windows.net/' + container_name + '/' + meta_blob_path + '?' + sas_token
+    meta = pd.read_parquet(sas_url_blob)
+    print('Metadata read from blob. Length: ', len(meta))    
+    
+    # read master config into df
+    sas_url_blob = 'https://' + account_name+'.blob.core.windows.net/' + container_name + '/' + config_blob_path + '?' + sas_token
+    config = pd.read_csv(sas_url_blob)
+    print('Config data read from blob. Length: ', len(config))
+    
+    # Housekeeping
+    
+    # Remove duplicate datasets from config
+    #config = config.drop_duplicates(subset=['dataset_raw']) #pulled this to allow multiple placements in menu.
+    
+    # Identify series in config that are not in meta
+    rem_series = pd.DataFrame()
+    rem_series['dataset_raw'] = pd.unique(config['dataset_raw'])
+    mask = ~rem_series['dataset_raw'].isin(pd.unique(meta['dataset_raw']))
+    keep_series = rem_series[~mask]
+    del_series = rem_series[mask]
+    keep_series_list = keep_series['dataset_raw'].tolist()   
+    
+    # Add any special datasets to the list to keep (i.e. Global power station thingy)
+    keep_series_list.append('Global power stations of the world')
+    
+    # Remove series in config that are not in meta
+    config = config[config['dataset_raw'].isin(keep_series_list)]
+    
+    # Update source, link, notes from metadata (incase config has been fucked by human)
+    config = config.drop(columns=['source', 'link', 'note'])
+    
+    # Merge in source, link, note from meta
+    config = config.merge(meta, on='dataset_raw', how='left')
+    
+    # Identify new series (meta series not in config)
+    new_series = pd.DataFrame()
+    new_series['dataset_raw'] = pd.unique(meta['dataset_raw'])
+    mask = new_series['dataset_raw'].isin(pd.unique(config['dataset_raw']))
+    mask_invert = ~mask #insert boolean mask to identify missing data
+    new_series = new_series[mask_invert]
+    
+    # Rebuild new dataset metadata ready for adding to config
+    df = pd.DataFrame(columns = config.columns)
+    df['dataset_raw'] = new_series['dataset_raw']
+    df = df.drop(columns=['source', 'link', 'note'])
+    df = df.merge(meta, on='dataset_raw', how='left')
+    
+    # Fill human required columns with helper text
+    df['dataset_label'] = df['dataset_label'].fillna("TODO")
+    df['var_type'] = df['var_type'].fillna("TODO")
+    df['nav_cat'] = df['nav_cat'].fillna("TODO")
+    df['colour'] = df['colour'].fillna("TODO")
+    df['nav_cat_nest'] = df['nav_cat_nest'].fillna("TODO")
+    
+    # Append new datasets to config putting new stuff at the top
+    config = pd.concat([df,config])
+    
+    # Reminder config used to have duplicated datasets for placeing in diff menu areas
+    # If we want to display data in multiple areas (e.g. top 10 and SDG) then this must happen
+    # But, think new standard should be to make them unique in config.
+    
+    # Reset dataset_id
+    config['dataset_id'] = range(1, 1+len(config))
+    
+    # Update any NaN values that escaped parsing in notes.
+    config['note'] = config['note'].fillna("Not available.")
+    
+    # Write config file to disk/blob
+    stream = BytesIO() #initialise a stream
+    config.to_csv(stream, index=False) #write the csv to the stream
+    stream.seek(0) #put pointer back to start of stream 
+    blob_client = blob_service_client.get_blob_client(container=container_name, blob=config_blob_path)
+    blob_client.upload_blob(data=stream, overwrite=True, blob_type="BlockBlob") # write the stream to blob
+    
+    #config.to_csv(filepath_config,index=False)
+    
+    print("Master config file successfully updated.")
+   
+    return
+
 
 def walk_blobs(blob_service_client: object, container_name: str, folder_name: str) -> list: 
     # effectively the equivalent of list contents in a directory on a file system
@@ -197,5 +289,3 @@ blob_service_client = BlobServiceClient(account_url=account_sas_url)
 
 # trigger the main operation
 process_iron('iron', 'titanium')
-
-#walk_blobs_recursive(blob_service_client, 'iron', 'statistics/')
