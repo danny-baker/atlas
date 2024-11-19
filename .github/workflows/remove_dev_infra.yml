@@ -3,7 +3,7 @@
 # migrate static ip back to staging
 # delete resource group (i.e. tear down the dev vm)
 
-name: cleanup_dev
+name: remove_dev_infrastructure
 
 on:
     workflow_dispatch: #allows manual trigger from github browser

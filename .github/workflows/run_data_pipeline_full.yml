@@ -11,3 +11,5 @@
 
 #This keeps everything independent. Each step can be run independently. 
 # Suggest separate yml workflow to do the full pipeline run in one go (same VM)
+
+name: run_data_pipeline_full

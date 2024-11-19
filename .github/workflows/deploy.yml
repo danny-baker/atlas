@@ -9,7 +9,7 @@
 # Special note: workflows only apply to the default branch (I think) so when testing dev deployments you may need to change default to the feature branch
 # This should (in theory) allow the build pipeline to work properly for dev. Test shit. Then set default branch back to main, and merge feature branch.
 
-name: deploy-test
+name: deploy
 
 on:
   workflow_run:
