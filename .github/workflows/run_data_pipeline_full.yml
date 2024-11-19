@@ -1,0 +1,13 @@
+# run the complete pipeline on a single cloud vm
+
+# Steps
+# 1. Create resource group 'data_pipeline'
+# 2. Move static IP from staging to RG
+# 3. Provision custom VM with Python image (might want a bicep file for this). Can the runner do it? worker_vm_specs.bicep
+# 4. Checkout repo on VM
+# 5. run process_staging.py
+# 6. move static IP back to staging rg
+# 7. Delete 'data pipeline' resource group
+
+#This keeps everything independent. Each step can be run independently. 
+# Suggest separate yml workflow to do the full pipeline run in one go (same VM)
