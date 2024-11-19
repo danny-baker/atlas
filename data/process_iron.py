@@ -28,7 +28,7 @@ from azure.storage.blob import (
 def process_iron(container_name_origin: str, container_name_destination: str):
     # process data in IRON > TITANIUM
     
-    #smelt_iron(paths.IRON_STATS_PATH, paths.MASTER_META_PATH, paths.MASTER_STATS_PATH, container_name_origin, container_name_destination)
+    smelt_iron(paths.IRON_STATS_PATH, paths.MASTER_META_PATH, paths.MASTER_STATS_PATH, container_name_origin, container_name_destination)
     update_config(paths.MASTER_META_PATH, paths.MASTER_CONFIG_PATH, 'titanium')
     return
     
