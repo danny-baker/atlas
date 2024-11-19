@@ -4,8 +4,6 @@
     # https://learn.microsoft.com/en-us/python/api/overview/azure/storage-file-datalake-readme?view=azure-python
 
 # TODO
-# refactor and simplify. i.e don't need to pass blob_service_client as it should be global var
-# clean up 
 # harden: use try/catch statements in case of error. i.e. catch error and return false for function, so it can be rerun.
 # try to catch errors at the file level (in the for loop) so can just repull the file rather than rerun the entire function (1000s of datafiles)#
 # parallelise using laptop compute
