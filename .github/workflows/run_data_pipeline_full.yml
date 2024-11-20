@@ -5,6 +5,7 @@
 # create repository vars/secrets to manage worker
 
 #might want to try to add os image with python 3.12 preinstalled (think using default ubunto hardcoded into bicep file at present)
+# next step ensure .env file is added.
 
 # 1. Create resource group 'data_pipeline'
 # 2. Move static IP from staging to RG
@@ -40,23 +41,23 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # Create resource group and migrate static ip from staging to data rg
-      - name: Create resource group and migrate static ip from STAGING -> DATA
-        uses: azure/CLI@v2
-        env:
-          RESOURCE_GROUP_NAME: ${{ vars.AZURE_DATA_RG }}
-          RESOURCE_GROUP_LOCATION: ${{ vars.AZURE_DATA_RG_LOCN }}
-          AZURE_STATIC_IP_STAGING_RG: ${{ vars.AZURE_STATIC_IP_STAGING_RG }}
-          AZURE_SUBSCRIPTION: ${{ vars.AZURE_SUBSCRIPTION }}
-          AZURE_VM_STATIC_IP_RESOURCE_ID: ${{ vars.AZURE_DATA_VM_STATIC_IP_RESOURCE_ID_STAGING }}
-              
-        with:
-          azcliversion: latest
-          inlineScript: |
-            echo "Creating resource group $RESOURCE_GROUP_NAME "
-            az group create --name $RESOURCE_GROUP_NAME --location $RESOURCE_GROUP_LOCATION
-            echo "Migrating static ip from STAGING -> DEV"
-            az resource move --destination-group $RESOURCE_GROUP_NAME --destination-subscription-id $AZURE_SUBSCRIPTION --ids "$AZURE_VM_STATIC_IP_RESOURCE_ID"
+#      # Create resource group and migrate static ip from staging to data rg
+#      - name: Create resource group and migrate static ip from STAGING -> DATA
+#        uses: azure/CLI@v2
+#        env:
+#          RESOURCE_GROUP_NAME: ${{ vars.AZURE_DATA_RG }}
+#          RESOURCE_GROUP_LOCATION: ${{ vars.AZURE_DATA_RG_LOCN }}
+#          AZURE_STATIC_IP_STAGING_RG: ${{ vars.AZURE_STATIC_IP_STAGING_RG }}
+#          AZURE_SUBSCRIPTION: ${{ vars.AZURE_SUBSCRIPTION }}
+#          AZURE_VM_STATIC_IP_RESOURCE_ID: ${{ vars.AZURE_DATA_VM_STATIC_IP_RESOURCE_ID_STAGING }}
+#              
+#        with:
+#          azcliversion: latest
+#          inlineScript: |
+#            echo "Creating resource group $RESOURCE_GROUP_NAME "
+#            az group create --name $RESOURCE_GROUP_NAME --location $RESOURCE_GROUP_LOCATION
+#            echo "Migrating static ip from STAGING -> DEV"
+#            az resource move --destination-group $RESOURCE_GROUP_NAME --destination-subscription-id $AZURE_SUBSCRIPTION --ids "$AZURE_VM_STATIC_IP_RESOURCE_ID"
       
       # Deploy VM via Bicep file, passing in parameters from environment vars
       - name: Deploy VM with bicep file
@@ -65,7 +66,7 @@ jobs:
           subscriptionId: ${{ vars.AZURE_SUBSCRIPTION }}
           resourceGroupName: ${{ vars.AZURE_DATA_RG }}
           template: ./infrastructure/azure-deploy/create-vm.bicep
-          parameters: adminUsername="${{ vars.AZURE_VM_USERNAME }}" adminPublicKey="${{ secrets.AZURE_VM_SSHPUBKEY }}" vmModel="${{ vars.AZURE_VM_MODEL }}" osDiskSize=${{ vars.AZURE_VM_DISK_SIZE_GB }} osDiskType="${{ vars.AZURE_VM_DISK_TYPE }}" projectName="${{ vars.AZURE_VM_PROJECT_NAME }}" ipConfig="${{ vars.AZURE_VM_IPCONFIG }}"
+          parameters: adminUsername="${{ vars.AZURE_VM_USERNAME }}" adminPublicKey="${{ secrets.AZURE_VM_SSHPUBKEY }}" vmModel="${{ vars.AZURE_VM_MODEL }}" osDiskSize="${{ vars.AZURE_VM_DISK_SIZE_GB }}" osDiskType="${{ vars.AZURE_VM_DISK_TYPE }}" projectName="${{ vars.AZURE_VM_PROJECT_NAME }}" ipConfig="${{ vars.AZURE_VM_IPCONFIG }}"
           failOnStdErr: false
 
       # Bind static ip to NIC
@@ -106,3 +107,23 @@ jobs:
             cd ~
             git clone git@github.com:danny-baker/atlas.git
             cd atlas
+            
+      # Add Azure storage credentials to local .env file
+      - name: ssh to server and build .env file (Azure Blob Storage access)
+        uses: appleboy/ssh-action@master
+        env:
+            AZURE_STORAGE_ACCOUNT_NAME: ${{ vars.AZURE_STORAGE_ACCOUNT_NAME }}
+            AZURE_STORAGE_ACCOUNT_CONTAINER_NAME: ${{ vars.AZURE_STORAGE_ACCOUNT_CONTAINER_NAME }}
+            AZURE_STORAGE_ACCOUNT_KEY: ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}
+
+        with:
+          host: ${{ vars.AZURE_DATA_VM_SSHHOST }}
+          username: ${{ vars.AZURE_DATA_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_DATA_VM_SSH_PORT }}
+          envs: AZURE_STORAGE_ACCOUNT_NAME, AZURE_STORAGE_ACCOUNT_CONTAINER_NAME, AZURE_STORAGE_ACCOUNT_KEY 
+          script: |
+            touch ~/atlas/.env
+            echo "AZURE_STORAGE_ACCOUNT_NAME=$AZURE_STORAGE_ACCOUNT_NAME" >> ~/atlas/.env
+            echo "AZURE_STORAGE_ACCOUNT_CONTAINER_NAME=$AZURE_STORAGE_ACCOUNT_CONTAINER_NAME" >> ~/atlas/.env
+            echo "AZURE_STORAGE_ACCOUNT_KEY=$AZURE_STORAGE_ACCOUNT_KEY" >> ~/atlas/.env
