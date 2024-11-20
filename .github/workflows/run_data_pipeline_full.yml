@@ -2,10 +2,13 @@
 
 # Steps
 # create static IP [DONE]
-# create repository vars/secrets to manage worker
+# create repository vars/secrets to manage worker [DONE]
+# test build vm with .env and access [DONE]
+# test run process_staging.py [FAIL] Need updated python version on vm. Need a new OS image. Custom param for bicep.
 
 #might want to try to add os image with python 3.12 preinstalled (think using default ubunto hardcoded into bicep file at present)
-# next step ensure .env file is added.
+# yes this is needed as new python version needed to interpret current codebase (blah:str etc)
+
 
 # 1. Create resource group 'data_pipeline'
 # 2. Move static IP from staging to RG

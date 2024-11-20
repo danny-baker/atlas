@@ -1,0 +1,46 @@
+# A workflow to clean up data vm resources. Can be run manually.
+# i.e. 
+# migrate static ip back to staging
+# delete resource group (i.e. tear down the data vm)
+
+name: remove_data_infrastructure
+
+on:
+    workflow_dispatch: #allows manual trigger from github browser
+
+jobs:
+ 
+  clean-data-resources:
+
+    runs-on: ubuntu-latest
+
+    steps:
+     
+      # Log into Azure
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # Move static IP to staging and delete resource group
+      - name: Move static IP to staging and delete resource group (if it exists)
+        uses: azure/CLI@v2
+        env:
+          RESOURCE_GROUP_NAME: ${{ vars.AZURE_DATA_RG }}
+          RESOURCE_GROUP_LOCATION: ${{ vars.AZURE_DATA_RG_LOCN }}
+          AZURE_STATIC_IP_STAGING_RG: ${{ vars.AZURE_STATIC_IP_STAGING_RG }}
+          AZURE_SUBSCRIPTION: ${{ vars.AZURE_SUBSCRIPTION }}
+          AZURE_VM_STATIC_IP_RESOURCE_ID: ${{ vars.AZURE_DATA_VM_STATIC_IP_RESOURCE_ID }}
+              
+        with:
+          azcliversion: latest
+          inlineScript: |
+            if [[ $(az group exists -n $RESOURCE_GROUP_NAME --output tsv) == 'true' ]]
+            then
+                echo "Resource group exists. Moving static IP from DEV -> STAGING"
+                az resource move --destination-group $AZURE_STATIC_IP_STAGING_RG --destination-subscription-id $AZURE_SUBSCRIPTION --ids "$AZURE_VM_STATIC_IP_RESOURCE_ID"
+                echo "Deleting resource group."
+                az group delete --resource-group $RESOURCE_GROUP_NAME --yes
+            else
+                echo "Resource group does not exist. Skipping delete."
+            fi
