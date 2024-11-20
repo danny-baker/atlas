@@ -1,6 +1,11 @@
 # run the complete pipeline on a single cloud vm
 
 # Steps
+# create static IP [DONE]
+# create repository vars/secrets to manage worker
+
+#might want to try to add os image with python 3.12 preinstalled (think using default ubunto hardcoded into bicep file at present)
+
 # 1. Create resource group 'data_pipeline'
 # 2. Move static IP from staging to RG
 # 3. Provision custom VM with Python image (might want a bicep file for this). Can the runner do it? worker_vm_specs.bicep
@@ -13,3 +18,91 @@
 # Suggest separate yml workflow to do the full pipeline run in one go (same VM)
 
 name: run_data_pipeline_full
+
+on:
+    workflow_dispatch: #allows manual trigger from github browser
+
+jobs:
+ 
+  run-data-pipeline-full:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    
+      # Checkout code (needed to access bicep file)
+      - name: Checkout repo
+        uses: actions/checkout@main
+     
+      # Log into Azure
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # Create resource group and migrate static ip from staging to data rg
+      - name: Create resource group and migrate static ip from STAGING -> DATA
+        uses: azure/CLI@v2
+        env:
+          RESOURCE_GROUP_NAME: ${{ vars.AZURE_DATA_RG }}
+          RESOURCE_GROUP_LOCATION: ${{ vars.AZURE_DATA_RG_LOCN }}
+          AZURE_STATIC_IP_STAGING_RG: ${{ vars.AZURE_STATIC_IP_STAGING_RG }}
+          AZURE_SUBSCRIPTION: ${{ vars.AZURE_SUBSCRIPTION }}
+          AZURE_VM_STATIC_IP_RESOURCE_ID: ${{ vars.AZURE_DATA_VM_STATIC_IP_RESOURCE_ID_STAGING }}
+              
+        with:
+          azcliversion: latest
+          inlineScript: |
+            echo "Creating resource group $RESOURCE_GROUP_NAME "
+            az group create --name $RESOURCE_GROUP_NAME --location $RESOURCE_GROUP_LOCATION
+            echo "Migrating static ip from STAGING -> DEV"
+            az resource move --destination-group $RESOURCE_GROUP_NAME --destination-subscription-id $AZURE_SUBSCRIPTION --ids "$AZURE_VM_STATIC_IP_RESOURCE_ID"
+      
+      # Deploy VM via Bicep file, passing in parameters from environment vars
+      - name: Deploy VM with bicep file
+        uses: azure/arm-deploy@v1
+        with:
+          subscriptionId: ${{ vars.AZURE_SUBSCRIPTION }}
+          resourceGroupName: ${{ vars.AZURE_DATA_RG }}
+          template: ./infrastructure/azure-deploy/create-vm.bicep
+          parameters: adminUsername="${{ vars.AZURE_VM_USERNAME }}" adminPublicKey="${{ secrets.AZURE_VM_SSHPUBKEY }}" vmModel="${{ vars.AZURE_VM_MODEL }}" osDiskSize=${{ vars.AZURE_VM_DISK_SIZE_GB }} osDiskType="${{ vars.AZURE_VM_DISK_TYPE }}" projectName="${{ vars.AZURE_VM_PROJECT_NAME }}" ipConfig="${{ vars.AZURE_VM_IPCONFIG }}"
+          failOnStdErr: false
+
+      # Bind static ip to NIC
+      - name: Associate the static IP with the VM's NIC
+        uses: azure/CLI@v2
+        env:
+          RESOURCE_GROUP_NAME: ${{ vars.AZURE_DATA_RG }} 
+          VM_NIC: "${{ vars.AZURE_DATA_VM_PROJECT_NAME }}-nic"
+          VM_IPCONFIG: ${{ vars.AZURE_DATA_VM_IPCONFIG }} # this is the default ipconfig name Azure gives the nic which is "myIPconfig"
+          VM_STATIC_IP: ${{ vars.AZURE_DATA_VM_STATIC_IP }}  #this is the literal IP address resource name in Azure portal (it need not be a secret handle)
+      
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az network nic ip-config update --name $VM_IPCONFIG --nic-name $VM_NIC --resource-group $RESOURCE_GROUP_NAME --public-ip-address $VM_STATIC_IP
+            
+      # Setup github and clone repo to new vm (server). Checkout feature branch.
+      - name: ssh to server, setup github keys and clone repo
+        uses: appleboy/ssh-action@master
+        env:
+            GITHUB_PRIVATE_KEY: ${{ secrets.GHUB_PRIVATE_KEY }}
+            GITHUB_PUBLIC_KEY: ${{ secrets.GHUB_PUBLIC_KEY }}
+            GITHUB_BRANCH_NAME: ${{ github.ref_name }}  
+        with:
+          host: ${{ vars.AZURE_DATA_VM_SSHHOST }}
+          username: ${{ vars.AZURE_DATA_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_DATA_VM_SSH_PORT }}
+          envs: GITHUB_PRIVATE_KEY, GITHUB_PUBLIC_KEY, GITHUB_BRANCH_NAME
+          script: |
+            echo "$GITHUB_PRIVATE_KEY" > ~/.ssh/github
+            echo "$GITHUB_PUBLIC_KEY" > ~/.ssh/github.pub
+            chmod 600 ~/.ssh/github
+            eval "$(ssh-agent -s)"
+            ssh-add ~/.ssh/github
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
+            ssh -T git@github.com
+            cd ~
+            git clone git@github.com:danny-baker/atlas.git
+            cd atlas
