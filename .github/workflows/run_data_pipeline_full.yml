@@ -44,23 +44,23 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-#      # Create resource group and migrate static ip from staging to data rg
-#      - name: Create resource group and migrate static ip from STAGING -> DATA
-#        uses: azure/CLI@v2
-#        env:
-#          RESOURCE_GROUP_NAME: ${{ vars.AZURE_DATA_RG }}
-#          RESOURCE_GROUP_LOCATION: ${{ vars.AZURE_DATA_RG_LOCN }}
-#          AZURE_STATIC_IP_STAGING_RG: ${{ vars.AZURE_STATIC_IP_STAGING_RG }}
-#          AZURE_SUBSCRIPTION: ${{ vars.AZURE_SUBSCRIPTION }}
-#          AZURE_VM_STATIC_IP_RESOURCE_ID: ${{ vars.AZURE_DATA_VM_STATIC_IP_RESOURCE_ID_STAGING }}
-#              
-#        with:
-#          azcliversion: latest
-#          inlineScript: |
-#            echo "Creating resource group $RESOURCE_GROUP_NAME "
-#            az group create --name $RESOURCE_GROUP_NAME --location $RESOURCE_GROUP_LOCATION
-#            echo "Migrating static ip from STAGING -> DEV"
-#            az resource move --destination-group $RESOURCE_GROUP_NAME --destination-subscription-id $AZURE_SUBSCRIPTION --ids "$AZURE_VM_STATIC_IP_RESOURCE_ID"
+      # Create resource group and migrate static ip from staging to data rg
+      - name: Create resource group and migrate static ip from STAGING -> DATA
+        uses: azure/CLI@v2
+        env:
+          RESOURCE_GROUP_NAME: ${{ vars.AZURE_DATA_RG }}
+          RESOURCE_GROUP_LOCATION: ${{ vars.AZURE_DATA_RG_LOCN }}
+          AZURE_STATIC_IP_STAGING_RG: ${{ vars.AZURE_STATIC_IP_STAGING_RG }}
+          AZURE_SUBSCRIPTION: ${{ vars.AZURE_SUBSCRIPTION }}
+          AZURE_VM_STATIC_IP_RESOURCE_ID: ${{ vars.AZURE_DATA_VM_STATIC_IP_RESOURCE_ID_STAGING }}
+              
+        with:
+          azcliversion: latest
+          inlineScript: |
+            echo "Creating resource group $RESOURCE_GROUP_NAME "
+            az group create --name $RESOURCE_GROUP_NAME --location $RESOURCE_GROUP_LOCATION
+            echo "Migrating static ip from STAGING -> DEV"
+            az resource move --destination-group $RESOURCE_GROUP_NAME --destination-subscription-id $AZURE_SUBSCRIPTION --ids "$AZURE_VM_STATIC_IP_RESOURCE_ID"
       
       # Deploy VM via Bicep file, passing in parameters from environment vars
       - name: Deploy VM with bicep file
