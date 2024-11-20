@@ -66,7 +66,7 @@ jobs:
           subscriptionId: ${{ vars.AZURE_SUBSCRIPTION }}
           resourceGroupName: ${{ vars.AZURE_DATA_RG }}
           template: ./infrastructure/azure-deploy/create-vm.bicep
-          parameters: adminUsername="${{ vars.AZURE_VM_USERNAME }}" adminPublicKey="${{ secrets.AZURE_VM_SSHPUBKEY }}" vmModel="${{ vars.AZURE_VM_MODEL }}" osDiskSize="${{ vars.AZURE_VM_DISK_SIZE_GB }}" osDiskType="${{ vars.AZURE_VM_DISK_TYPE }}" projectName="${{ vars.AZURE_VM_PROJECT_NAME }}" ipConfig="${{ vars.AZURE_VM_IPCONFIG }}"
+          parameters: adminUsername="${{ vars.AZURE_DATA_VM_USERNAME }}" adminPublicKey="${{ secrets.AZURE_VM_SSHPUBKEY }}" vmModel="${{ vars.AZURE_DATA_VM_MODEL }}" osDiskSize="${{ vars.AZURE_DATA_VM_DISK_SIZE_GB }}" osDiskType="${{ vars.AZURE_DATA_VM_DISK_TYPE }}" projectName="${{ vars.AZURE_DATA_VM_PROJECT_NAME }}" ipConfig="${{ vars.AZURE_DATA_VM_IPCONFIG }}"
           failOnStdErr: false
 
       # Bind static ip to NIC
