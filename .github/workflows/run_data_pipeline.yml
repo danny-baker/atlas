@@ -8,7 +8,7 @@ on:
 
 jobs:
  
-  run-data-pipeline-full:
+  run-data-pipeline:
 
     runs-on: ubuntu-latest
 

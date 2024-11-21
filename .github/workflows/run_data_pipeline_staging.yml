@@ -1,3 +1,0 @@
-# Trigger processing of data in staging > copper
-
-name: run_data_pipeline_staging
