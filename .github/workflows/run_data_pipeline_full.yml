@@ -8,7 +8,7 @@
 
 #might want to try to add os image with python 3.12 preinstalled (think using default ubunto hardcoded into bicep file at present)
 # yes this is needed as new python version needed to interpret current codebase (blah:str etc)
-
+# another option is to use docker.
 
 # 1. Create resource group 'data_pipeline'
 # 2. Move static IP from staging to RG
@@ -69,7 +69,7 @@ jobs:
           subscriptionId: ${{ vars.AZURE_SUBSCRIPTION }}
           resourceGroupName: ${{ vars.AZURE_DATA_RG }}
           template: ./infrastructure/azure-deploy/create-vm.bicep
-          parameters: adminUsername="${{ vars.AZURE_DATA_VM_USERNAME }}" adminPublicKey="${{ secrets.AZURE_VM_SSHPUBKEY }}" vmModel="${{ vars.AZURE_DATA_VM_MODEL }}" osDiskSize="${{ vars.AZURE_DATA_VM_DISK_SIZE_GB }}" osDiskType="${{ vars.AZURE_DATA_VM_DISK_TYPE }}" projectName="${{ vars.AZURE_DATA_VM_PROJECT_NAME }}" ipConfig="${{ vars.AZURE_DATA_VM_IPCONFIG }}"
+          parameters: osImagePublisher="${{ vars.AZURE_DATA_VM_OS_PUBLISHER }}" osImageOffer="${{ vars.AZURE_DATA_VM_OS_OFFER }}" osImageSku="${{ vars.AZURE_DATA_VM_OS_SKU }}" adminUsername="${{ vars.AZURE_DATA_VM_USERNAME }}" adminPublicKey="${{ secrets.AZURE_VM_SSHPUBKEY }}" vmModel="${{ vars.AZURE_DATA_VM_MODEL }}" osDiskSize="${{ vars.AZURE_DATA_VM_DISK_SIZE_GB }}" osDiskType="${{ vars.AZURE_DATA_VM_DISK_TYPE }}" projectName="${{ vars.AZURE_DATA_VM_PROJECT_NAME }}" ipConfig="${{ vars.AZURE_DATA_VM_IPCONFIG }}"
           failOnStdErr: false
 
       # Bind static ip to NIC

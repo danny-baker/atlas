@@ -2,6 +2,12 @@
 param vmModel string = 'Standard_B2s'      // View available vm types with 'az vm list-skus -l centralus --output table
 param osDiskSize int = 32                     // OS disk size in GB (allowable: 1 - 4,095 GB) https://azure.microsoft.com/en-gb/pricing/details/managed-disks/
 param osDiskType string = 'Standard_LRS'       // choices are 'Premium_LRS' for premium SSD, 'StandardSSD_LRS' for standard SSD, 'Standard_LRS' for HDD platter 
+
+param osImageSku string = '18.04-LTS'
+param osImagePublisher string = 'Canonical'
+param osImageOffer string = 'UbuntuServer'
+param osImageVersion string = 'latest'
+
 param projectName string = 'b2s-flappy'             // If this parameter is not passed in at build it will default to this value.
 param ipConfig string = 'ipconfig1'
 param resourceGroupName string = resourceGroup().name
@@ -168,10 +174,10 @@ resource vmName 'Microsoft.Compute/virtualMachines@2019-12-01' = {
     }
     storageProfile: {
       imageReference: {
-        publisher: 'Canonical'
-        offer: 'UbuntuServer'
-        sku: '18.04-LTS'
-        version: 'latest'
+        publisher: osImagePublisher
+        offer: osImageOffer
+        sku: osImageSku
+        version: osImageVersion
       }
       osDisk: {
         name: vmDiskName
