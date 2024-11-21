@@ -1,25 +1,5 @@
 # run the complete pipeline on a single cloud vm
-
-# Steps
-# create static IP [DONE]
-# create repository vars/secrets to manage worker [DONE]
-# test build vm with .env and access [DONE]
-# test run process_staging.py [FAIL] Need updated python version on vm. Need a new OS image. Custom param for bicep.
-
-#might want to try to add os image with python 3.12 preinstalled (think using default ubunto hardcoded into bicep file at present)
-# yes this is needed as new python version needed to interpret current codebase (blah:str etc)
-# another option is to use docker.
-
-# 1. Create resource group 'data_pipeline'
-# 2. Move static IP from staging to RG
-# 3. Provision custom VM with Python image (might want a bicep file for this). Can the runner do it? worker_vm_specs.bicep
-# 4. Checkout repo on VM
-# 5. run process_staging.py
-# 6. move static IP back to staging rg
-# 7. Delete 'data pipeline' resource group
-
-#This keeps everything independent. Each step can be run independently. 
-# Suggest separate yml workflow to do the full pipeline run in one go (same VM)
+# vm specs are repository vars (including disk image, etc)
 
 name: run_data_pipeline_full
 
@@ -59,7 +39,7 @@ jobs:
           inlineScript: |
             echo "Creating resource group $RESOURCE_GROUP_NAME "
             az group create --name $RESOURCE_GROUP_NAME --location $RESOURCE_GROUP_LOCATION
-            echo "Migrating static ip from STAGING -> DEV"
+            echo "Migrating static ip from STAGING -> DATA"
             az resource move --destination-group $RESOURCE_GROUP_NAME --destination-subscription-id $AZURE_SUBSCRIPTION --ids "$AZURE_VM_STATIC_IP_RESOURCE_ID"
       
       # Deploy VM via Bicep file, passing in parameters from environment vars
@@ -130,3 +110,61 @@ jobs:
             echo "AZURE_STORAGE_ACCOUNT_NAME=$AZURE_STORAGE_ACCOUNT_NAME" >> ~/atlas/.env
             echo "AZURE_STORAGE_ACCOUNT_CONTAINER_NAME=$AZURE_STORAGE_ACCOUNT_CONTAINER_NAME" >> ~/atlas/.env
             echo "AZURE_STORAGE_ACCOUNT_KEY=$AZURE_STORAGE_ACCOUNT_KEY" >> ~/atlas/.env
+            
+      # Configure vm (install pip, requrements etc)
+      - name: configure vm (install pip, update pip, setup venv, install requirements.txt)
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ vars.AZURE_DATA_VM_SSHHOST }}
+          username: ${{ vars.AZURE_DATA_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_DATA_VM_SSH_PORT }}
+          script: |
+            sudo apt update
+            sudo apt install -y python3-pip
+            sudo apt install -y python3.12-venv
+            python3 -m venv venv
+            source venv/bin/activate
+            pip3 install --upgrade pip
+            cd ~/atlas
+            pip3 install -r requirements.txt
+
+      # Run pipeline task: staging
+      - name: pipeline process staging
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ vars.AZURE_DATA_VM_SSHHOST }}
+          username: ${{ vars.AZURE_DATA_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_DATA_VM_SSH_PORT }}
+          script: |
+            source venv/bin/activate
+            cd ~/atlas/data
+            python3 process_staging.py
+            
+      # Run pipeline tasks: copper
+      - name: pipeline process copper
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ vars.AZURE_DATA_VM_SSHHOST }}
+          username: ${{ vars.AZURE_DATA_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_DATA_VM_SSH_PORT }}
+          script: |
+            source venv/bin/activate
+            cd ~/atlas/data
+            python3 process_copper.py
+            
+      # Run pipeline tasks: iron
+      # fails with 8GB ram machine. Could try 16GB or 32GB. Noting my lappy has 32.
+      - name: pipeline process iron (SMELT)
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ vars.AZURE_DATA_VM_SSHHOST }}
+          username: ${{ vars.AZURE_DATA_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
+          port: ${{ vars.AZURE_DATA_VM_SSH_PORT }}
+          script: |
+            source venv/bin/activate
+            cd ~/atlas/data
+            python3 process_iron.py 
