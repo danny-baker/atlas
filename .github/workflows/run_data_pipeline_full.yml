@@ -137,6 +137,7 @@ jobs:
           username: ${{ vars.AZURE_DATA_VM_USERNAME }}
           key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
           port: ${{ vars.AZURE_DATA_VM_SSH_PORT }}
+          command_timeout: 200m
           script: |
             source venv/bin/activate
             cd ~/atlas/data
@@ -150,6 +151,7 @@ jobs:
           username: ${{ vars.AZURE_DATA_VM_USERNAME }}
           key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
           port: ${{ vars.AZURE_DATA_VM_SSH_PORT }}
+          command_timeout: 200m
           script: |
             source venv/bin/activate
             cd ~/atlas/data
@@ -164,6 +166,7 @@ jobs:
           username: ${{ vars.AZURE_DATA_VM_USERNAME }}
           key: ${{ secrets.AZURE_VM_SSHPRIVKEY }}
           port: ${{ vars.AZURE_DATA_VM_SSH_PORT }}
+          command_timeout: 200m
           script: |
             source venv/bin/activate
             cd ~/atlas/data
