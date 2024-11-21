@@ -1,7 +1,11 @@
 # run the complete pipeline on a single cloud vm
 # vm specs are repository vars (including disk image, etc)
+# control behaviour:
+#   vars.RUN_DATA_PIPELINE_STAGING = true/false
+#   vars.RUN_DATA_PIPELINE_COPPER = true/false
+#   vars.RUN_DATA_PIPELINE_IRON = true/false
 
-name: run_data_pipeline_full
+name: run_data_pipeline
 
 on:
     workflow_dispatch: #allows manual trigger from github browser
@@ -131,6 +135,7 @@ jobs:
 
       # Run pipeline task: staging
       - name: pipeline process staging
+        if:  vars.RUN_DATA_PIPELINE_STAGING == 'true'
         uses: appleboy/ssh-action@master
         with:
           host: ${{ vars.AZURE_DATA_VM_SSHHOST }}
@@ -145,6 +150,7 @@ jobs:
             
       # Run pipeline tasks: copper
       - name: pipeline process copper
+        if:  vars.RUN_DATA_PIPELINE_COPPER == 'true'
         uses: appleboy/ssh-action@master
         with:
           host: ${{ vars.AZURE_DATA_VM_SSHHOST }}
@@ -160,6 +166,7 @@ jobs:
       # Run pipeline tasks: iron
       # fails with 8GB ram machine. Could try 16GB or 32GB. Noting my lappy has 32.
       - name: pipeline process iron (SMELT)
+        if:  vars.RUN_DATA_PIPELINE_IRON == 'true'
         uses: appleboy/ssh-action@master
         with:
           host: ${{ vars.AZURE_DATA_VM_SSHHOST }}
