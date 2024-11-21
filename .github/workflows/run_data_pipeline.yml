@@ -5,6 +5,10 @@
 #   vars.RUN_DATA_PIPELINE_COPPER = true/false
 #   vars.RUN_DATA_PIPELINE_IRON = true/false
 
+#vms
+#Standard_D8s_v6 (8cores 32gb ram, latest gen)
+#Standard_E4s_v6 (4cores 32GB ram, latest gen)
+
 name: run_data_pipeline
 
 on:
@@ -178,3 +182,26 @@ jobs:
             source venv/bin/activate
             cd ~/atlas/data
             python3 process_iron.py 
+            
+      # Cleanup. Move static IP to staging and delete data pipeline resource group
+      - name: Cleanup. Move static IP to staging and delete data pipeline resource group
+        uses: azure/CLI@v2
+        env:
+          RESOURCE_GROUP_NAME: ${{ vars.AZURE_DATA_RG }}
+          RESOURCE_GROUP_LOCATION: ${{ vars.AZURE_DATA_RG_LOCN }}
+          AZURE_STATIC_IP_STAGING_RG: ${{ vars.AZURE_STATIC_IP_STAGING_RG }}
+          AZURE_SUBSCRIPTION: ${{ vars.AZURE_SUBSCRIPTION }}
+          AZURE_VM_STATIC_IP_RESOURCE_ID: ${{ vars.AZURE_DATA_VM_STATIC_IP_RESOURCE_ID }}
+              
+        with:
+          azcliversion: latest
+          inlineScript: |
+            if [[ $(az group exists -n $RESOURCE_GROUP_NAME --output tsv) == 'true' ]]
+            then
+                echo "Resource group exists. Moving static IP from DEV -> STAGING"
+                az resource move --destination-group $AZURE_STATIC_IP_STAGING_RG --destination-subscription-id $AZURE_SUBSCRIPTION --ids "$AZURE_VM_STATIC_IP_RESOURCE_ID"
+                echo "Deleting resource group."
+                az group delete --resource-group $RESOURCE_GROUP_NAME --yes
+            else
+                echo "Resource group does not exist. Skipping delete."
+            fi
