@@ -1,13 +1,16 @@
-# run the complete pipeline on a single cloud vm
-# vm specs are repository vars (including disk image, etc)
+# Run the complete pipeline on a single beefy cloud vm then tear down all the infrastructure.
+# vm specs are repository vars (including OS disk image, etc)
 # control behaviour:
 #   vars.RUN_DATA_PIPELINE_STAGING = true/false
 #   vars.RUN_DATA_PIPELINE_COPPER = true/false
 #   vars.RUN_DATA_PIPELINE_IRON = true/false
 
-#vms
-#Standard_D8s_v6 (8cores 32gb ram, latest gen)
-#Standard_E4s_v6 (4cores 32GB ram, latest gen)
+# Current vm specs:
+# Standard_E4_v4 with StandardSSD_LRS (4 cores 32gb ram, SSD HDD, Ubuntu 24.04 w/python 3.12.4 preinstalled)
+
+# Performance:
+# Sequential processing: run time ~40mins
+# Parallel processing: TBA (next feature)
 
 name: run_data_pipeline
 
