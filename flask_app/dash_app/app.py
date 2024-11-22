@@ -50,7 +50,7 @@ load_dotenv()
 container_name  = os.getenv("AZURE_STORAGE_ACCOUNT_CONTAINER_NAME")
 account_name = os.getenv("AZURE_STORAGE_ACCOUNT_NAME")
 account_key = os.getenv("AZURE_STORAGE_ACCOUNT_KEY")
-#sudo docker run -p 80:8050 -v /home/dan/atlas/.env:/usr/src/app/.env ghcr.io/danny-baker/atlas/atlas_app:latest
+#sudo docker run -p 80:8050 -v /home/dan/atlas/.env:/usr/src/app/.env ghcr.io/danny-baker/atlas/atlas_app:latest 
 
 # setup system
 if os.path.exists("tmp") == False: 
