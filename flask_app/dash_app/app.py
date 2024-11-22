@@ -6,7 +6,6 @@ from . import data_processing_runtime as d  # run-time processing
 from . import dash_html #index page
 from . import hovertip_text
 from . import modal_text
-from data_paths import * # get all paths in data/data_paths.py
 import logging
 import dash
 from dash.dependencies import Input, Output, State
@@ -32,9 +31,11 @@ import time
 import xlsxwriter #needed for linux Ubuntu server
 import plotly
 import gc
+import sys
 
 # add atlas/data folder to path (so we can access all the blobs at runtime from /data/data_paths.py)
-sys.path.append('~/atlas/data')
+sys.path.append('/home/dan/atlas/data')
+from data_paths import * # get all paths in data/data_paths.py
 
 # config
 DEBUG=False
