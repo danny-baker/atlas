@@ -3,10 +3,10 @@
 # At run-time, it reads in geojson polygons (for country borders), the master statistics file (15M rows) and a master config file (which defines the menu structure and data types for each dataset)
 
 from . import data_processing_runtime as d  # run-time processing
-#from . import data_paths as paths
 from . import dash_html #index page
 from . import hovertip_text
 from . import modal_text
+from data_paths import * # get all paths in data/data_paths.py
 import logging
 import dash
 from dash.dependencies import Input, Output, State
@@ -32,6 +32,9 @@ import time
 import xlsxwriter #needed for linux Ubuntu server
 import plotly
 import gc
+
+# add atlas/data folder to path (so we can access all the blobs at runtime from /data/data_paths.py)
+sys.path.append('~/atlas/data')
 
 # config
 DEBUG=False
@@ -203,6 +206,8 @@ INIT_LOADER_TYPE = 'dot'
 
 
 ## LOAD APP DATA ## CONSIDER LOADING THESE IN PARALLEL WITH THREAD POOLING
+
+print('Checking weve imported paths ok. PWR_STN_PATH_TITANIUM:', PWR_STN_PATH_TITANIUM)
 
 #Load geojson 2d region data
 geojson_LOWRES = d.read_blob(account_name, account_key, container_name,'geojson/map/ne_110m.geojson', 'json', 'json')

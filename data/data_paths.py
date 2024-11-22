@@ -51,13 +51,6 @@ MASTER_STATS_PATH = "statistics/master_stats.parquet" #smelting
 MASTER_META_PATH = "meta/master_meta.parquet" #smelting
 MASTER_CONFIG_PATH = "meta/master_config.csv" #smelting
 
-# TO VERIFY / CLEAN
-UNDATA_PATH_IRON = "/data_lakehouse/iron/statistics/undata/" # ? unused?
-MAP_JSON_PATH = "/data_lakehouse/titanium/geojson/map/" #?
-GLOBE_JSON_PATH = "/data_lakehouse/titanium/geojson/globe/" # ? obsolete?
-PWR_STN_STATS_FILEPATH = "/data_lakehouse/titanium/geojson/global-power-stations/xp1_global_power_plant_database.parquet" #? obsolete?
-PWR_STN_JSON_FILEPATH = "/data_lakehouse/titanium/geojson/global-power-stations/xp1_countries.geojson" #? obsolete
-
 
 
 
