@@ -9,7 +9,10 @@
 # Standard_E4_v4 with StandardSSD_LRS (4 cores 32gb ram, SSD HDD, Ubuntu 24.04 w/python 3.12.4 preinstalled)
 
 # Performance:
-# Sequential processing: run time ~40mins
+# Sequential processing: ~40m
+#   Task process_staging: 13m 
+#   Task process_copper: 8m
+#   Task process_iron: 1m:40s
 # Parallel processing: TBA (next feature)
 
 name: run_data_pipeline

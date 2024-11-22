@@ -1,7 +1,4 @@
-# REPURPOSE FOR BLOB
-# Consider dictionary as alternate structure
-
-# A centralised location for all relative data paths, to assist in data lakehouse architecture
+# A centralised location for all data paths, to assist in data lakehouse architecture
 
 # STAGING
 FASTTRACK_PATH_STAGING = "statistics/gapminder-fast-track/"
