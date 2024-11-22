@@ -34,7 +34,8 @@ import gc
 import sys
 
 # add atlas/data folder to path (so we can access all the blobs at runtime from /data/data_paths.py)
-sys.path.append('/home/dan/atlas/data')
+sys.path.append('/home/dan/atlas/data') #local machine
+sys.path.append('/usr/src/app/data') #working dir for built container
 from data_paths import * # get all paths in data/data_paths.py
 
 # config
