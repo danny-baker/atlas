@@ -34,8 +34,7 @@ import gc
 import sys
 
 # add atlas/data folder to path (so we can access all the blobs at runtime from /data/data_paths.py)
-sys.path.append('/home/dan/atlas/data') #local machine
-sys.path.append('/usr/src/app/data') #working dir for built container
+sys.path.append('/usr/src/app/data') #working dir for built container (see /Dockerfile)
 from data_paths import * # get all paths in data/data_paths.py
 
 # config
@@ -209,28 +208,26 @@ INIT_LOADER_TYPE = 'dot'
 
 ## LOAD APP DATA ## CONSIDER LOADING THESE IN PARALLEL WITH THREAD POOLING
 
-print('Checking weve imported paths ok. PWR_STN_PATH_TITANIUM:', PWR_STN_PATH_TITANIUM)
-
 #Load geojson 2d region data
-geojson_LOWRES = d.read_blob(account_name, account_key, container_name,'geojson/map/ne_110m.geojson', 'json', 'json')
-geojson_MEDRES = d.read_blob(account_name, account_key, container_name,'geojson/map/ne_50m.geojson', 'json', 'json')
-geojson_HIRES = d.read_blob(account_name, account_key, container_name,'geojson/map/ne_10m.geojson', 'json', 'json')
+geojson_LOWRES = d.read_blob(account_name, account_key, container_name, MAP_JSON_LOW_PATH_TITANIUM, 'json', 'json')
+geojson_MEDRES = d.read_blob(account_name, account_key, container_name, MAP_JSON_MED_PATH_TITANIUM, 'json', 'json')
+geojson_HIRES = d.read_blob(account_name, account_key, container_name, MAP_JSON_HIGH_PATH_TITANIUM, 'json', 'json')
 
 #Load geojson 3d region data
-geojson_globe_land_ne50m = d.read_blob(account_name, account_key, container_name,'geojson/globe/ne_50m_land.geojson', 'json', 'json') # load contries
-geojson_globe_ocean_ne50m = d.read_blob(account_name, account_key, container_name,'geojson/globe/ne_50m_ocean.geojson', 'json', 'json') #load oceans
-geojson_globe_land_ne110m = d.read_blob(account_name, account_key, container_name,'geojson/globe/ne_110m_land_cultural.geojson', 'json', 'json') # load countries
-geojson_globe_ocean_ne110m = d.read_blob(account_name, account_key, container_name,'geojson/globe/ne_110m_ocean.geojson', 'json', 'json') # load oceans
-del(geojson_globe_ocean_ne110m['features'][0]['geometry']['coordinates'][12]) #americas, also a problem on ne50m
+geojson_globe_land_ne50m = d.read_blob(account_name, account_key, container_name, GLOBE_JSON_LAND_HIGH_PATH_TITANIUM, 'json', 'json') # load contries
+geojson_globe_ocean_ne50m = d.read_blob(account_name, account_key, container_name, GLOBE_JSON_OCEAN_HIGH_PATH_TITANIUM, 'json', 'json') #load oceans
+geojson_globe_land_ne110m = d.read_blob(account_name, account_key, container_name, GLOBE_JSON_LAND_LOW_PATH_TITANIUM, 'json', 'json') # load countries
+geojson_globe_ocean_ne110m = d.read_blob(account_name, account_key, container_name, GLOBE_JSON_OCEAN_LOW_PATH_TITANIUM, 'json', 'json') # load oceans
+del(geojson_globe_ocean_ne110m['features'][0]['geometry']['coordinates'][12]) #americas, also a problem on ne50m. Fix this later in pipeline.
 
 # Load config (Dictionary of all datasets, their metadata and how to display them in the overhead nav menu)
-master_config, master_config_key_datasetid, master_config_key_nav_cat = d.read_master_config(['dataset_raw', 'dataset_id', 'nav_cat'],account_name, account_key, container_name, 'meta/master_config.csv' )
+master_config, master_config_key_datasetid, master_config_key_nav_cat = d.read_master_config(['dataset_raw', 'dataset_id', 'nav_cat'],account_name, account_key, container_name, MASTER_CONFIG_PATH )
 
 #Load master stats dataset
-pop = d.read_blob(account_name, account_key, container_name,'statistics/master_stats.parquet', 'parquet', 'dataframe')
+pop = d.read_blob(account_name, account_key, container_name, MASTER_STATS_PATH, 'parquet', 'dataframe')
 
 # Load experimental datasets
-EXP_POWER_PLANTS = d.read_blob(account_name, account_key, container_name, 'geojson/global-power-stations/xp1_global_power_plant_database.parquet', 'parquet', 'dataframe')
+EXP_POWER_PLANTS = d.read_blob(account_name, account_key, container_name, PWR_STN_PATH_TITANIUM, 'parquet', 'dataframe')
 
 #Set global dataset size indicators (for text in search bar)
 DATASETS = len(pd.unique(pop['dataset_raw'])) 
