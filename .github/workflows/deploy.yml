@@ -12,6 +12,7 @@
 name: deploy
 
 on:
+  workflow_dispatch: #allows manual trigger from github browser
   workflow_run:
     workflows: [build]
     types: [completed]

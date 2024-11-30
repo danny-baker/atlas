@@ -5,7 +5,7 @@
 name: build
 
 on:
-  
+  workflow_dispatch: #allows manual trigger from github browser
   push:
     #branches: [ "main" ]
     #tags: [ 'v*.*.*' ] # Publish server tags as releases.
