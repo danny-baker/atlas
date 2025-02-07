@@ -43,7 +43,9 @@ Recommend using [Github Desktop](https://desktop.github.com/) or Git command lin
 
 `git clone git@github.com:danny-baker/atlas.git` (requires ssh keys)
 
-`git checkout main_static_data` 
+`cd atlas` (change current working directory to the new atlas directory)
+
+`git checkout main_static_data` (check-out the self contained branch)
 
 #### 2. Setup virtual environment 
 
