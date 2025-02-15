@@ -37,9 +37,10 @@ Recommend using [Github Desktop](https://desktop.github.com/) or Git command lin
 
 Recommend using Ubuntu Linux environment. If so, these are the steps to get Python3.12 running on it without compromising the OS version of Python.
 
+```
 sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt-get update
-sudo apt-get install python3.12 python3.12-dev python3.12-venv
+sudo apt-get install python3.12 python3.12-dev python3.12-venv```
 
 This allows you to call by typing `python3.12`.
 
