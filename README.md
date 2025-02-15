@@ -86,23 +86,6 @@ This is the app entry point. The above command should start everything happening
 
 <br>
 
-## Run from a local machine *with* Docker (pull image)
-
-This is the most reliable method to run the app as a stand-alone container on your local machine, which we pull down from the github container registry. This is how the app is deployed on the production environment. You will need to have Docker installed. If you are unfamiliar with Docker, now is the time to learn. The cool thing about this: no faffing about with virtual python environments and installing requirements.txt. All that is abstracted away and happens when the Docker image is created. However, note that if you plan to modify the code and do a pull-request you will need to be able to build the container image yourself (next section) or at least run the app directly from your local Python webserver (previous step). This is more for sight seeing.
-
-#### 1. Install Docker to your local machine
-
-Follow the relevant pathway for your operating system, on their website [here](https://docs.docker.com/get-docker/).
-
-#### 2. Pull docker image and run
-
-The following command will pull (download) the pre-built Docker image of the app. This is stored in the github container registry. Once the image is pulled, docker will spin it up binding it to your HTTP port 80, so it can be viewed in a browser.
-
-`docker run -dp 80:8050 ghcr.io/danny-baker/atlas/atlas_app:latest`
-
-Once the container is running, you can open a browser and go to `localhost` or `http:0.0.0.0:80` or similar and voilla, you will have the app running directly from your local machine.
-
-<br>
 
 ## Run from a local machine *with* Docker (build image)
 
@@ -122,13 +105,13 @@ Recommend using [Github Desktop](https://desktop.github.com/) or Git command lin
 
 From a terminal in the main repo root directory
 
-`docker build . --tag atlas_app`
+`sudo docker build . --tag atlas_app`
 
 The above command will build the main Python web application into a Docker image, based on the `Dockerfile` in the repo. It will take a good 3-5 minutes to complete but you should see a bunch of outputs in the terimal window. During this build, an Ubuntu virtualised linux operating system is utilised, and all the python modules and dependencies will be installed. The main image file is around 3GB when finished. The reason it's so large is that all of my data files are currently being containerised also, so the app has direct access to them at run-time. Totally aware there are better ways to do this.
 
 #### 4. Run the Docker image (spin up the container)
 
-`docker run -dp 80:8050 atlas_app`
+`sudo docker run -dp 80:8050 atlas_app`
 
 Once the image is built, you can bring it up and view it on your local machine's web browser with the above command. The default TCP port for the app is `8050` so in the snippet above, we are simply binding the container's  port (8050) to your local machine's port 80 (http web traffic) so we can view the running app via a browser.
 
