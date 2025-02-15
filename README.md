@@ -33,13 +33,15 @@ Recommend using [Github Desktop](https://desktop.github.com/) or Git command lin
 
 `git clone git@github.com:danny-baker/atlas.git` (requires ssh keys)
 
-#### 2. Setup virtual environment 
+#### 2. Setup virtual environment and upgrade pip
 
 This varies slightly between Linux, MacOS, Windows. 
 
 `python3 -m venv venv`
 
 `source venv/bin/activate`
+
+`pip3 install --upgrade pip`
 
 #### 3. Ensure you are in the project root folder
 
