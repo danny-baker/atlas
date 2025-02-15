@@ -47,13 +47,15 @@ Recommend using [Github Desktop](https://desktop.github.com/) or Git command lin
 
 `git checkout main_static_data` (check-out the self contained branch)
 
-#### 2. Setup virtual environment 
+#### 2. Setup virtual environment and update pip
 
 This varies slightly between Linux, MacOS, Windows. 
 
 `python3 -m venv venv`
 
 `source venv/bin/activate`
+
+`pip3 install --upgrade pip`
 
 #### 3. Ensure you are in the project root folder
 
