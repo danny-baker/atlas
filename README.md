@@ -33,29 +33,52 @@ Recommend using [Github Desktop](https://desktop.github.com/) or Git command lin
 
 `git clone git@github.com:danny-baker/atlas.git` (requires ssh keys)
 
-#### 2. Setup virtual environment and upgrade pip
+#### 2. Ensure you have Python3.12
+
+Recommend using Ubuntu Linux environment. If so, these are the steps to get Python3.12 running on it without compromising the OS version of Python.
+
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt-get update
+sudo apt-get install python3.12 python3.12-dev python3.12-venv
+
+This allows you to call by typing `python3.12`.
+
+Check version
+
+`python3.12 --version`
+
+See where the binaries are located
+
+`which python3.12`
+
+Run with
+
+`python3.12 apythonfile.py`
+
+
+#### 3. Setup virtual environment and upgrade pip
 
 This varies slightly between Linux, MacOS, Windows. 
 
-`python3 -m venv venv`
+`python3.12 -m venv venv`
 
 `source venv/bin/activate`
 
 `pip3 install --upgrade pip`
 
-#### 3. Ensure you are in the project root folder
+#### 4. Ensure you are in the project root folder
 
 `cd atlas` (or similar)
 
-#### 4. Install python packages
+#### 5. Install python packages
 
 `pip3 install -r requirements.txt`
 
 Note you may struggle if trying to install with Annaconda with 'conda install'. This is because the site is built and tested in linux with the 'pip3' python package installer. If you get stuck here and can't use pip3 for some reason, I recommend using the Docker approach in the next section. This means the app will be built in a linux container and will run perfectly every time.
 
-#### 5. Spin up the app in your local web browser!
+#### 6. Spin up the app in your local web browser!
 
-`python3 wsgi.py`
+`python3.12 wsgi.py`
 
 This is the app entry point. The above command should start everything happening. Give it 30 seconds to spin up, and the console should spit out a URL. Copy-paste this URL into your browser and hopefully you can play with the site locally. 
 
