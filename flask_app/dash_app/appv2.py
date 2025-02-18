@@ -3,10 +3,6 @@
 # invoke with
 # python3.12 -d blah.py
 
-import sys
-print(sys.flags.debug)
-
-
 #successfully used brotli to compress master file hard from 97MB to 54MB. Nice.
 #going forward this means could periodically download titanium container and put into repo.
 
@@ -18,3 +14,11 @@ print(sys.flags.debug)
 # 1. Get snapshot of processed data into repo
 # 2 Test debug mode can succesfully pull from different sources
 # 3 Begin the process of refactoring and rebuilding. First update to latest dash version etc. 
+
+import sys
+
+debug_mode = sys.flags.debug
+print(debug_mode)
+
+
+
