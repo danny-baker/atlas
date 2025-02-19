@@ -5,11 +5,18 @@ import pandas as pd
 import numpy as np
 import matplotlib as mpl #colour
 import copy
+import sys
 import time
 from PIL import ImageColor
 import os
 from datetime import datetime, timedelta
 from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions, BlobClient, ContainerClient
+from dotenv import load_dotenv
+
+# add atlas/data folder to path (so we can access paths in /data/data_paths.py)
+sys.path.append('/usr/src/app/data') #working dir for built container (see /Dockerfile)
+sys.path.append('/home/dan/atlas/data') #testing on local machine (no docker)
+from data_paths import * 
 
 
 def get_list_of_dataset_labels_and_raw(master_config,var_type):
@@ -526,3 +533,30 @@ def extractColorPositions(colorscale, val):
     return   
 
 
+def load(debug_mode: bool):
+    # Load all data either from local snapshot our cloud store based on debug flag. Return each item.
+       
+    if debug_mode:
+        print('Loading data from local disk...')
+        os.chdir('/home/dan/atlas/data/data_snapshot')   #TODO change this when running docker. Will not run. Maybe use home ~ default in Dockerfile?? so can be universal?     
+        geojson_LOWRES = json.load(open(os.getcwd() + '/' + MAP_JSON_LOW_PATH_TITANIUM, 'r', encoding='utf-8'))
+        geojson_MEDRES = json.load(open(os.getcwd() + '/' + MAP_JSON_MED_PATH_TITANIUM, 'r', encoding='utf-8'))
+        geojson_HIRES = json.load(open(os.getcwd() + '/' + MAP_JSON_HIGH_PATH_TITANIUM, 'r', encoding='utf-8'))
+        print('Success.')
+        
+    else:
+        print('Loading data from blob...')
+        # Get Azure Blob credentials for cloud data (if not in debug mode)
+        load_dotenv() # read .env file in cwd
+        container_name  = os.getenv("AZURE_STORAGE_ACCOUNT_CONTAINER_NAME")
+        account_name = os.getenv("AZURE_STORAGE_ACCOUNT_NAME")
+        account_key = os.getenv("AZURE_STORAGE_ACCOUNT_KEY")
+        #sudo docker run -p 80:8050 -v /home/dan/atlas/.env:/usr/src/app/.env ghcr.io/danny-baker/atlas/atlas_app:latest 
+        
+        geojson_LOWRES = read_blob(account_name, account_key, container_name, MAP_JSON_LOW_PATH_TITANIUM, 'json', 'json')
+        geojson_MEDRES = read_blob(account_name, account_key, container_name, MAP_JSON_MED_PATH_TITANIUM, 'json', 'json')
+        geojson_HIRES = read_blob(account_name, account_key, container_name, MAP_JSON_HIGH_PATH_TITANIUM, 'json', 'json')
+        print('Success.')
+        
+        
+    return geojson_LOWRES, geojson_MEDRES, geojson_HIRES
