@@ -52,7 +52,7 @@ def get_list_of_dataset_labels_and_raw(master_config,var_type):
 
 
 
-def read_master_config(set_key_list, account_name, account_key, container_name, filepath):
+def build_config_dicts(set_key_list: list, master_config: pd.DataFrame):
     #The successor to read_dataset_metadata using new master_config.csv
     #Returns a dictionary of dictionaries, with a specified parent key (for rapid lookup)
   
@@ -60,10 +60,7 @@ def read_master_config(set_key_list, account_name, account_key, container_name, 
     #master_config_key_datasetid = d.read_master_config("dataset_id") #used by main callback upon user selection from navbar and key is datasetID (integer)
     #master_config_key_nav_cat = d.read_master_config("nav_cat") #used to lookup colour when constructing nav menu
     
-    print('Building configuration dictionaries...')
-    
-    # Read in config csv as df
-    master_config = read_blob(account_name, account_key, container_name, filepath, 'csv', 'dataframe')
+    print('Building configuration dictionaries...')    
     
     # Remove all rows with unprocessed configurations (i.e. pipeline has run but not updated by human yet)
     master_config = master_config[~master_config['dataset_label'].isin(["TODO"])]
@@ -536,7 +533,10 @@ def extractColorPositions(colorscale, val):
     return   
 
 
-# New abstraction work
+
+
+
+################# New abstraction work ######################
 
 
 @dataclass
@@ -553,7 +553,16 @@ class Data:
     globe_ocean_hires: json
     
     # statistics
+    stats: pd.DataFrame
     
+    # experimental data
+    EXP_POWER_PLANTS_DF: pd.DataFrame 
+    
+    # config dicts
+    # prev known as master_config, master_config_key_datasetid, master_config_key_nav_cat
+    config_key_dsraw: dict
+    config_key_dsid: dict
+    config_key_navcat: dict
 
 
 def load(debug_mode: bool) -> Data:
@@ -575,6 +584,14 @@ def load(debug_mode: bool) -> Data:
         globe_ocean_hires = json.load(open(os.getcwd() + '/' + GLOBE_JSON_OCEAN_LOW_PATH_TITANIUM, 'r', encoding='utf-8'))
         del(globe_ocean_lowres['features'][0]['geometry']['coordinates'][12]) #americas, also a problem on ne50m. Fix this later in pipeline.
         
+        # statistics
+        stats = pd.read_parquet(os.getcwd() + '/' + MASTER_STATS_PATH)
+        
+        # experimental data
+        EXP_POWER_PLANTS_DF = pd.read_parquet(os.getcwd() + '/' + PWR_STN_PATH_TITANIUM)
+        
+        # load master config
+        config_df = pd.read_csv(os.getcwd() + '/' + MASTER_CONFIG_PATH)  
         
         print('Success.')
         
@@ -598,8 +615,21 @@ def load(debug_mode: bool) -> Data:
         globe_land_lowres = read_blob(account_name, account_key, container_name, GLOBE_JSON_LAND_LOW_PATH_TITANIUM, 'json', 'json') 
         globe_ocean_lowres = read_blob(account_name, account_key, container_name, GLOBE_JSON_OCEAN_LOW_PATH_TITANIUM, 'json', 'json') 
         del(globe_ocean_lowres['features'][0]['geometry']['coordinates'][12]) #americas, also a problem on ne50m. Fix this later in pipeline.
+        
+        # statistics
+        stats = read_blob(account_name, account_key, container_name, MASTER_STATS_PATH, 'parquet', 'dataframe')
+        
+        # experimental data
+        EXP_POWER_PLANTS_DF = read_blob(account_name, account_key, container_name, PWR_STN_PATH_TITANIUM, 'parquet', 'dataframe')
+        
+        # load master config
+        config_df = read_blob(account_name, account_key, container_name, MASTER_CONFIG_PATH, 'csv', 'dataframe')
+        
         print('Success.')
         
+    
+    # build config dictionaries
+    config_key_dsraw, config_key_dsid, config_key_navcat = build_config_dicts(['dataset_raw', 'dataset_id', 'nav_cat'], config_df)
     
     # build data object
     data_obj = Data(map_lowres=map_lowres,
@@ -608,7 +638,12 @@ def load(debug_mode: bool) -> Data:
                     globe_land_lowres=globe_land_lowres,
                     globe_ocean_lowres=globe_ocean_lowres,
                     globe_land_hires=globe_land_hires,
-                    globe_ocean_hires=globe_ocean_hires
+                    globe_ocean_hires=globe_ocean_hires,
+                    stats=stats,
+                    EXP_POWER_PLANTS_DF=EXP_POWER_PLANTS_DF,
+                    config_key_dsraw=config_key_dsraw,
+                    config_key_dsid=config_key_dsid,
+                    config_key_navcat=config_key_navcat
                     )    
     
     return data_obj

@@ -72,21 +72,12 @@ def init_dashboard(server):
 
 
 
-#Load geojson 3d region data
-geojson_globe_land_ne50m = d.read_blob(account_name, account_key, container_name, GLOBE_JSON_LAND_HIGH_PATH_TITANIUM, 'json', 'json') # load contries
-geojson_globe_ocean_ne50m = d.read_blob(account_name, account_key, container_name, GLOBE_JSON_OCEAN_HIGH_PATH_TITANIUM, 'json', 'json') #load oceans
-geojson_globe_land_ne110m = d.read_blob(account_name, account_key, container_name, GLOBE_JSON_LAND_LOW_PATH_TITANIUM, 'json', 'json') # load countries
-geojson_globe_ocean_ne110m = d.read_blob(account_name, account_key, container_name, GLOBE_JSON_OCEAN_LOW_PATH_TITANIUM, 'json', 'json') # load oceans
-del(geojson_globe_ocean_ne110m['features'][0]['geometry']['coordinates'][12]) #americas, also a problem on ne50m. Fix this later in pipeline.
+
 
 # Load config (Dictionary of all datasets, their metadata and how to display them in the overhead nav menu)
 master_config, master_config_key_datasetid, master_config_key_nav_cat = d.read_master_config(['dataset_raw', 'dataset_id', 'nav_cat'],account_name, account_key, container_name, MASTER_CONFIG_PATH )
 
-#Load master stats dataset
-pop = d.read_blob(account_name, account_key, container_name, MASTER_STATS_PATH, 'parquet', 'dataframe')
 
-# Load experimental datasets
-EXP_POWER_PLANTS = d.read_blob(account_name, account_key, container_name, PWR_STN_PATH_TITANIUM, 'parquet', 'dataframe')
 
 
 
@@ -809,7 +800,7 @@ def create_chart_globe_powerstations_xp1():
     LAND = geojson_globe_land_ne50m
     OCEANS = geojson_globe_ocean_ne50m 
     
-    df = EXP_POWER_PLANTS
+    df = EXP_POWER_PLANTS_DF
 
     def color_by_fuel(fuel_type):
         if fuel_type.lower() in "nuclear": return [10, 230, 120] #green

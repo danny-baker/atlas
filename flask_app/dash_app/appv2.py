@@ -31,7 +31,7 @@ from data_paths import *
 
 # Get debug flag 
 debug_mode = sys.flags.debug # determines if cloud or local data ingested
-debug_mode = 0
+#debug_mode = 0
 
 # setup logger to console
 logging.basicConfig(level=logging.DEBUG)
@@ -45,3 +45,8 @@ print('Data successfully loaded....blahpidy')
 
 t = pop.globe_land_hires
 m = pop.globe_land_lowres
+d = pop.stats
+xp = pop.EXP_POWER_PLANTS_DF
+config_key_dsraw = pop.config_key_dsraw
+config_key_dsid = pop.config_key_dsid
+config_key_navcat = pop.config_key_navcat
