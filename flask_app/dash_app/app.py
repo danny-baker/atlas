@@ -70,10 +70,7 @@ def init_dashboard(server):
 
 ## LOAD APP DATA ## CONSIDER LOADING THESE IN PARALLEL WITH THREAD POOLING
 
-#Load geojson 2d region data
-geojson_LOWRES = d.read_blob(account_name, account_key, container_name, MAP_JSON_LOW_PATH_TITANIUM, 'json', 'json')
-geojson_MEDRES = d.read_blob(account_name, account_key, container_name, MAP_JSON_MED_PATH_TITANIUM, 'json', 'json')
-geojson_HIRES = d.read_blob(account_name, account_key, container_name, MAP_JSON_HIGH_PATH_TITANIUM, 'json', 'json')
+
 
 #Load geojson 3d region data
 geojson_globe_land_ne50m = d.read_blob(account_name, account_key, container_name, GLOBE_JSON_LAND_HIGH_PATH_TITANIUM, 'json', 'json') # load contries

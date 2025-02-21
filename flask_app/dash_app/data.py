@@ -12,11 +12,14 @@ import os
 from datetime import datetime, timedelta
 from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions, BlobClient, ContainerClient
 from dotenv import load_dotenv
+from dataclasses import dataclass
 
 # add atlas/data folder to path (so we can access paths in /data/data_paths.py)
 sys.path.append('/usr/src/app/data') #working dir for built container (see /Dockerfile)
 sys.path.append('/home/dan/atlas/data') #testing on local machine (no docker)
 from data_paths import * 
+
+
 
 
 def get_list_of_dataset_labels_and_raw(master_config,var_type):
@@ -533,15 +536,46 @@ def extractColorPositions(colorscale, val):
     return   
 
 
-def load(debug_mode: bool):
+# New abstraction work
+
+
+@dataclass
+class Data:
+    # abstract all static data used by app at run-time (load once)
+    
+    # geojson data
+    map_lowres: json
+    map_medres: json
+    map_hires: json
+    globe_land_lowres: json
+    globe_ocean_lowres: json
+    globe_land_hires: json
+    globe_ocean_hires: json
+    
+    # statistics
+    
+
+
+def load(debug_mode: bool) -> Data:
     # Load all data either from local snapshot our cloud store based on debug flag. Return each item.
        
     if debug_mode:
         print('Loading data from local disk...')
         os.chdir('/home/dan/atlas/data/data_snapshot')   #TODO change this when running docker. Will not run. Maybe use home ~ default in Dockerfile?? so can be universal?     
-        geojson_LOWRES = json.load(open(os.getcwd() + '/' + MAP_JSON_LOW_PATH_TITANIUM, 'r', encoding='utf-8'))
-        geojson_MEDRES = json.load(open(os.getcwd() + '/' + MAP_JSON_MED_PATH_TITANIUM, 'r', encoding='utf-8'))
-        geojson_HIRES = json.load(open(os.getcwd() + '/' + MAP_JSON_HIGH_PATH_TITANIUM, 'r', encoding='utf-8'))
+        
+        # 2d map geojson polygons
+        map_lowres = json.load(open(os.getcwd() + '/' + MAP_JSON_LOW_PATH_TITANIUM, 'r', encoding='utf-8'))
+        map_medres = json.load(open(os.getcwd() + '/' + MAP_JSON_MED_PATH_TITANIUM, 'r', encoding='utf-8'))
+        map_hires = json.load(open(os.getcwd() + '/' + MAP_JSON_HIGH_PATH_TITANIUM, 'r', encoding='utf-8'))
+        
+        # 3d globe geojson polygons
+        globe_land_lowres = json.load(open(os.getcwd() + '/' + GLOBE_JSON_LAND_LOW_PATH_TITANIUM, 'r', encoding='utf-8'))
+        globe_ocean_lowres = json.load(open(os.getcwd() + '/' + GLOBE_JSON_OCEAN_LOW_PATH_TITANIUM, 'r', encoding='utf-8'))
+        globe_land_hires = json.load(open(os.getcwd() + '/' + GLOBE_JSON_LAND_HIGH_PATH_TITANIUM, 'r', encoding='utf-8'))
+        globe_ocean_hires = json.load(open(os.getcwd() + '/' + GLOBE_JSON_OCEAN_LOW_PATH_TITANIUM, 'r', encoding='utf-8'))
+        del(globe_ocean_lowres['features'][0]['geometry']['coordinates'][12]) #americas, also a problem on ne50m. Fix this later in pipeline.
+        
+        
         print('Success.')
         
     else:
@@ -553,10 +587,28 @@ def load(debug_mode: bool):
         account_key = os.getenv("AZURE_STORAGE_ACCOUNT_KEY")
         #sudo docker run -p 80:8050 -v /home/dan/atlas/.env:/usr/src/app/.env ghcr.io/danny-baker/atlas/atlas_app:latest 
         
-        geojson_LOWRES = read_blob(account_name, account_key, container_name, MAP_JSON_LOW_PATH_TITANIUM, 'json', 'json')
-        geojson_MEDRES = read_blob(account_name, account_key, container_name, MAP_JSON_MED_PATH_TITANIUM, 'json', 'json')
-        geojson_HIRES = read_blob(account_name, account_key, container_name, MAP_JSON_HIGH_PATH_TITANIUM, 'json', 'json')
+        # 2d map geojson polygons
+        map_lowres = read_blob(account_name, account_key, container_name, MAP_JSON_LOW_PATH_TITANIUM, 'json', 'json')
+        map_medres = read_blob(account_name, account_key, container_name, MAP_JSON_MED_PATH_TITANIUM, 'json', 'json')
+        map_hires = read_blob(account_name, account_key, container_name, MAP_JSON_HIGH_PATH_TITANIUM, 'json', 'json')
+        
+        # 3d globe geojson polygons
+        globe_land_hires = read_blob(account_name, account_key, container_name, GLOBE_JSON_LAND_HIGH_PATH_TITANIUM, 'json', 'json') 
+        globe_ocean_hires = read_blob(account_name, account_key, container_name, GLOBE_JSON_OCEAN_HIGH_PATH_TITANIUM, 'json', 'json') 
+        globe_land_lowres = read_blob(account_name, account_key, container_name, GLOBE_JSON_LAND_LOW_PATH_TITANIUM, 'json', 'json') 
+        globe_ocean_lowres = read_blob(account_name, account_key, container_name, GLOBE_JSON_OCEAN_LOW_PATH_TITANIUM, 'json', 'json') 
+        del(globe_ocean_lowres['features'][0]['geometry']['coordinates'][12]) #americas, also a problem on ne50m. Fix this later in pipeline.
         print('Success.')
         
-        
-    return geojson_LOWRES, geojson_MEDRES, geojson_HIRES
+    
+    # build data object
+    data_obj = Data(map_lowres=map_lowres,
+                    map_medres=map_medres,
+                    map_hires=map_hires,
+                    globe_land_lowres=globe_land_lowres,
+                    globe_ocean_lowres=globe_ocean_lowres,
+                    globe_land_hires=globe_land_hires,
+                    globe_ocean_hires=globe_ocean_hires
+                    )    
+    
+    return data_obj

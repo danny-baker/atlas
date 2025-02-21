@@ -22,7 +22,7 @@ from global_constants import *
 import logging
 
 #from . import data_processing_runtime as data  # run-time helpers (needed when running from wsgi.py in normal operation)
-import data_processing_runtime as data  # run-time helpers
+import data  # run-time helpers
 
 # add atlas/data folder to path (so we can access paths in /data/data_paths.py)
 sys.path.append('/usr/src/app/data') #working dir for built container (see /Dockerfile)
@@ -31,6 +31,7 @@ from data_paths import *
 
 # Get debug flag 
 debug_mode = sys.flags.debug # determines if cloud or local data ingested
+debug_mode = 0
 
 # setup logger to console
 logging.basicConfig(level=logging.DEBUG)
@@ -38,8 +39,9 @@ logger = logging.getLogger("atlas")
 
 
 # load app data into memory
-geojson_LOWRES, geojson_MEDRES, geojson_HIRES = data.load(debug_mode)
+pop = data.load(debug_mode)
 
-print('Data successfully loaded')
+print('Data successfully loaded....blahpidy')
 
-
+t = pop.globe_land_hires
+m = pop.globe_land_lowres
