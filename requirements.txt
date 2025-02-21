@@ -9,16 +9,13 @@ pandas==2.2.3
 matplotlib==3.10.0
 dataclasses==0.6
 pyarrow==19.0.1
+dash==2.18.2
 
-
+dash-bootstrap-components==1.7.1
 
 # =====================================
 
 
-# WORKING
-#dash==1.18.1 #Dash 2.0 problematic and unneeded. Still problematic on firefox on linux.
-#flask==2.0.3 # Note Flask 3 is out now
-#Werkzeug==2.0.0 # needed due to weird flask error
 #kaleido==0.2.1 #pdf export
 #dash-deck==0.0.1
 #pydeck==0.4.1 #Had to lock this as updates are breaking. Might be cool new features though.
@@ -28,17 +25,6 @@ pyarrow==19.0.1
 #xlrd==1.2.0
 #xlsxwriter==1.4.4
 
-# UPDATED
-#pandas==2.2.3
-#pillow==11.0.0
-#matplotlib==3.9.2
-#pyarrow==18.0.0
-
-
-
 # LAKEHOUSE
 #openpyxl==3.1.5 #Needed for opening xlsx files using pandas. 
-
-# SPYDER
-#spyder-kernels==3.0.1
 
