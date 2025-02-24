@@ -2,12 +2,12 @@
 # It has a few helper files which are imported, but the core code for the entire app is here
 # At run-time, it reads in geojson polygons (for country borders), the master statistics file (15M rows) and a master config file (which defines the menu structure and data types for each dataset)
 
-from . import data_processing_runtime as d  # run-time processing
+
 from . import dash_html #index page
 from . import hovertip_text
 from . import modal_text
 
-import dash
+
 from dash.dependencies import Input, Output, State
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
