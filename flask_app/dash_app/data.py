@@ -570,7 +570,7 @@ def load(debug_mode: bool) -> Data:
        
     if debug_mode:
         print('Loading data from local disk...')
-        os.chdir('/home/dan/atlas/data/data_snapshot')   #TODO change this when running docker. Will not run. Maybe use home ~ default in Dockerfile?? so can be universal?     
+        os.chdir(os.getcwd() + '/data/data_snapshot')   #TODO change this when running docker. Will not run. Maybe use home ~ default in Dockerfile?? so can be universal?     
         
         # 2d map geojson polygons
         map_lowres = json.load(open(os.getcwd() + '/' + MAP_JSON_LOW_PATH_TITANIUM, 'r', encoding='utf-8'))

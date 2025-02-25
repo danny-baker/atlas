@@ -17,10 +17,7 @@ COPY . .
 
 EXPOSE 8050
 
-# start gunicorn and specify workers and threads (Defaults are "workers 1" and "threads 1".)
-# These are overwritten at build via github actions from repository variables). 
-# Changing them here will be a breaking change for the build (as it uses pattern matching)
+# start gunicorn and specify workers and threads (worker and thread count are substituted in prod build using gihub actions VARS.GUNICORN_THREADS, VARS.GUNICORN_WORKERS)
 
-ENTRYPOINT gunicorn --bind 0.0.0.0:8050 wsgi:app --timeout=0 --workers 1 --worker-class gthread --threads 1
-
+ENTRYPOINT ["gunicorn", "--bind", "0.0.0.0:8050", "wsgi:app", "--timeout=0", "--workers", "1", "--worker-class", "gthread", "--threads", "1"]
 

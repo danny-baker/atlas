@@ -11,8 +11,8 @@
 
 # script: pull titanium subfolders to new folder location called snapshot in /data/data_snapshot
 
-# 1. Get snapshot of processed data into repo (DONE)
-# 2 Test debug mode can succesfully pull from different sources
+# 1. Get snapshot of processed data into repo [DONE]
+# 2 Test debug mode can succesfully pull from different sources [DONE]
 # See if can do this via docker (i.e. can I run docker image in debug mode from cmd line? for other users)
 # 3 Begin the process of refactoring and rebuilding. First update to latest dash version etc. 
 
@@ -39,18 +39,18 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("atlas")
 
 
-# load app data into memory
-pop = data.load(debug_mode)
-
+# load app data object into memory
+dobj = data.load(debug_mode)
 print('Data successfully loaded.')
 
-t = pop.globe_land_hires
-m = pop.globe_land_lowres
-d = pop.stats
-xp = pop.EXP_POWER_PLANTS_DF
-config_key_dsraw = pop.config_key_dsraw
-config_key_dsid = pop.config_key_dsid
-config_key_navcat = pop.config_key_navcat
+# Testing
+t = dobj.globe_land_hires
+m = dobj.globe_land_lowres
+d = dobj.stats
+xp = dobj.EXP_POWER_PLANTS_DF
+config_key_dsraw = dobj.config_key_dsraw
+config_key_dsid = dobj.config_key_dsid
+config_key_navcat = dobj.config_key_navcat
 
 # initialise dash layout and callbacks
 def init_dashboard(server):

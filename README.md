@@ -91,21 +91,26 @@ Recommend using [Github Desktop](https://desktop.github.com/) or Git command lin
 
 `git clone git@github.com:danny-baker/atlas.git`
 
-Checkout the branch containing static data (older branch)
-
-`git checkout main_static_data`
 
 #### 3. Build the Docker image
 
 From a terminal in the main repo root directory
 
-`docker build . --tag atlas_app`
+`cd atlas`
+
+`sudo docker build . --tag atlas_app`
 
 The above command will build the main Python web application into a Docker image, based on the `Dockerfile` in the repo. It will take a good 3-5 minutes to complete but you should see a bunch of outputs in the terimal window. During this build, an Ubuntu virtualised linux operating system is utilised, and all the python modules and dependencies will be installed. The main image file is around 3GB when finished. The reason it's so large is that all of my data files are currently being containerised also, so the app has direct access to them at run-time. Totally aware there are better ways to do this.
 
 #### 4. Run the Docker image (spin up the container)
 
-`docker run -dp 80:8050 atlas_app`
+Run docker process in current terminal, seeing all output to stdout (useful for debugging)
+
+`sudo docker run -p 80:8050 atlas_app`
+
+Run docker process as a daemon in the background
+
+`sudo docker run -dp 80:8050 atlas_app`
 
 For developer contributors (on main branch):
 

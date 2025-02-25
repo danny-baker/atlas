@@ -11,7 +11,7 @@ dataclasses==0.6
 pyarrow==19.0.1
 dash==2.18.2
 dash-bootstrap-components==1.7.1
-
+gunicorn==23.0.0
 
 
 # =====================================
@@ -20,7 +20,6 @@ dash-bootstrap-components==1.7.1
 #kaleido==0.2.1 #pdf export
 #dash-deck==0.0.1
 #pydeck==0.4.1 #Had to lock this as updates are breaking. Might be cool new features though.
-#gunicorn==20.0.4
 #dash-extensions==0.0.58 #Download features
 #dash-bootstrap-components==0.13.1 #this is as high as we can go before dash 2.0 breaking changes come into effect
 #xlrd==1.2.0
