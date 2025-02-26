@@ -21,7 +21,6 @@ gunicorn==23.0.0
 #dash-deck==0.0.1
 #pydeck==0.4.1 #Had to lock this as updates are breaking. Might be cool new features though.
 #dash-extensions==0.0.58 #Download features
-#dash-bootstrap-components==0.13.1 #this is as high as we can go before dash 2.0 breaking changes come into effect
 #xlrd==1.2.0
 #xlsxwriter==1.4.4
 

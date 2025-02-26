@@ -13,7 +13,7 @@
 
 # 1. Get snapshot of processed data into repo [DONE]
 # 2 Test debug mode can succesfully pull from different sources [DONE]
-# See if can do this via docker (i.e. can I run docker image in debug mode from cmd line? for other users)
+# See if can do this via docker (i.e. can I run docker image in debug mode from cmd line? for other users) [DONE]
 # 3 Begin the process of refactoring and rebuilding. First update to latest dash version etc. 
 
 
@@ -43,14 +43,6 @@ logger = logging.getLogger("atlas")
 dobj = data.load(debug_mode)
 print('Data successfully loaded.')
 
-# Testing
-t = dobj.globe_land_hires
-m = dobj.globe_land_lowres
-d = dobj.stats
-xp = dobj.EXP_POWER_PLANTS_DF
-config_key_dsraw = dobj.config_key_dsraw
-config_key_dsid = dobj.config_key_dsid
-config_key_navcat = dobj.config_key_navcat
 
 # initialise dash layout and callbacks
 def init_dashboard(server):
@@ -87,14 +79,12 @@ def create_dash_layout(app):
     app.index_string = dash_html.index_string      
     
     # Header
-    #header = create_dash_layout_header()
-    header = html.Div([html.Br(), dcc.Markdown(""" # Hi. I'm your Dash app."""), html.Br()])
+    header = create_dash_layout_header()
     
     # Navigation menu    
     #navbar = create_dash_layout_navbar()    
     
-    # Body (i.e. the map centrepiece, with loaders to overlay ontop)
-    #body = html.Div([dcc.Markdown(""" ## I'm ready to serve static files on Heroku. Just look at this! """), html.Br()])
+    # Body (i.e. the map centrepiece,)
     body = create_dash_layout_body()     
        
     # Build low navigation menu                      
@@ -121,6 +111,65 @@ def create_dash_layout(app):
     
     
     return app
+
+
+
+def create_dash_layout_header():
+            
+    #title of app in page
+    title = html.Div([
+        html.Span(INIT_TITLE_TEXT, style={"marginBottom": 0,
+                                        #"marginTop": INIT_TITLE_PAD_TOP,
+                                        #"marginLeft": 0,
+                                        #'textAlign': 'center',
+                                        'fontWeight': 'bold',
+                                        'fontFamily': INIT_TITLE_FONT,
+                                        'fontSize': INIT_TITLE_H,
+                                        'height': INIT_TITLE_DIV_H,
+                                        'color':INIT_TITLE_COL,
+                                        'backgroundColor': INIT_TITLE_BG_COL,
+                                        'opacity': INIT_TITLE_OPACITY}, 
+        ),  
+        ], style={"marginBottom": 0,
+                                        "marginTop": INIT_TITLE_PAD_TOP,
+                                        "marginLeft": 0,
+                                        'textAlign': 'center',                                        
+                                        'height': INIT_TITLE_DIV_H }, 
+        )
+   
+    
+    loader_main = html.Div(
+                dcc.Loading(
+                type=INIT_LOADER_TYPE,
+                color=INIT_LOADER_DATASET_COLOR, #hex colour close match to nav bar ##515A5A
+                children=html.Span("No data selected", id="my-loader-main", style={"marginBottom": 0, "marginTop": 10, "marginLeft": 0, 'textAlign': 'center', 'fontSize': INIT_SELECTION_H, 'fontFamily': 'Helvetica', 'fontWeight': '', 'backgroundColor': INIT_TITLE_BG_COL, 'opacity': INIT_TITLE_OPACITY  },), #style of span
+                style={'textAlign': 'center' } #style of loader
+                ),style={'textAlign': 'center', 'marginTop':10, 'marginBottom':10, 'color': INIT_TITLE_COL}, #style of div
+    )
+  
+        
+    #wrap the title, loader and selection up in a container called header
+    header = dbc.Container([
+        dbc.Row([
+            dbc.Col([title, loader_main]),        
+            ])            
+        ],
+        style={"marginBottom": 0,
+               "marginTop": 0,
+               "marginLeft": 0,
+               "marginRight": 0,
+               #"margin-left": "auto",
+               #"margin-right": "auto",               
+               #'backgroundColor':'white',
+               "max-width": "none",
+               "width": "100vw",
+               "position": "absolute",
+               "z-index": "2",
+               #"top": "0vh",
+               #"left": "5vw",
+               })             
+    
+    return header
 
 
 def create_dash_layout_body():
