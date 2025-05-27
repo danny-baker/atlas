@@ -23,7 +23,7 @@ sys.path.append('/home/dan/atlas/data') #testing on local machine (no docker)
 import logging
 from . global_constants import *
 from . import data  # run-time helpers
-from data_paths import * 
+from src.data_pipeline.data_paths import * 
 import dash_bootstrap_components as dbc
 from dash import dash, html, dcc
 from . import dash_html #index page
