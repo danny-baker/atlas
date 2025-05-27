@@ -31,7 +31,7 @@ import plotly.express as px
 import plotly.graph_objs as go
 
 # Get debug flag 
-debug_mode = sys.flags.debug # determines if cloud or local data ingested
+#debug_mode = sys.flags.debug # determines if cloud or local data ingested
 debug_mode = 1
 
 # setup logger to console

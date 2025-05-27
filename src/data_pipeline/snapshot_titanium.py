@@ -89,7 +89,7 @@ def download_blob_to_file(blob_service_client: BlobServiceClient, container_name
 # RUN #
 
 # target folder
-target_directory_name = 'data_snapshot'
+target_directory_name = '/../../data'
 
 # Azure storage blob config (credentials)
 load_dotenv()
@@ -108,7 +108,7 @@ account_sas_url = 'https://' + account_name+'.blob.core.windows.net/' + '?' + sa
 blob_service_client = BlobServiceClient(account_url=account_sas_url)
 
 # create target folder
-target_path = os.getcwd() + '/' + target_directory_name
+target_path = os.getcwd() + target_directory_name
 os.makedirs(target_path, exist_ok=True)
 
 # set cwd to target folder
