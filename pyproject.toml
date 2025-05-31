@@ -1,12 +1,11 @@
 [project]
-name = "McApp"
+name = "McAppFace"
 version = "0.1.0"
 requires-python = "==3.12.*"
 dependencies = [
     # APP
     "python-dotenv==1.0.1",
-    "azure-storage-blob==12.24.1",
-    "spyder-kernels==3.0.1", #for IDE
+    "azure-storage-blob==12.24.1",    
     "pandas==2.2.3",
     "matplotlib==3.10.0",
     "dataclasses==0.6",
@@ -25,9 +24,5 @@ dependencies = [
     #openpyxl==3.1.5 #Needed for opening xlsx files using pandas.    
 ]
 
-[project.optional-dependencies]
-dev = [
-    "ruff" #lint
-
-
-]
+[project.scripts]
+atlas = "atlas.atlas.py"

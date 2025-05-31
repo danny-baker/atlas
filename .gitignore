@@ -8,4 +8,5 @@ tmp/
 .~lock* #any open locked files
 venv/
 .env
+*.egg*
 
