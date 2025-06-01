@@ -23,6 +23,3 @@ dependencies = [
     # DATA PIPELINE
     #openpyxl==3.1.5 #Needed for opening xlsx files using pandas.    
 ]
-
-[project.scripts]
-atlas = "atlas.atlas.py"

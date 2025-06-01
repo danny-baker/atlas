@@ -21,7 +21,6 @@ from src.data_pipeline.data_paths import *
 
 
 
-
 def get_list_of_dataset_labels_and_raw(master_config,var_type):
 
     # build and return list of dictionaries containing var_type, datset_raw, dataset_label

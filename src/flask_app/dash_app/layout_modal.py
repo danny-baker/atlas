@@ -1,5 +1,5 @@
-import dash_core_components as dcc
-import dash_html_components as html
+#might need some more cleanup, as it originally just had text. Now we want to clearly contain code to an artefact.
+from dash import dcc, html
 import dash_bootstrap_components as dbc
 
 

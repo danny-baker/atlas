@@ -1,5 +1,9 @@
 # Global configuration constants for main app
 
+LOGGER = "Atlas"
+FAVICON = "favicon.ico" #must be in /assets/favicon.ico 
+TAB_TITLE = "WORLD ATLAS 2.0" #browser tab
+
 #DECLARE GLOBAL APPLICATION DATA
 
 mapbox_style = ["open-street-map", "carto-positron", "carto-darkmatter", "stamen-terrain", "stamen-toner", "stamen-watercolor"]

@@ -4,8 +4,8 @@
 
 
 from . import dash_html #index page
-from . import hovertip_text
-from . import modal_text
+from . import layout_hovertip
+from . import layout_modal
 
 
 from dash.dependencies import Input, Output, State
@@ -1534,7 +1534,7 @@ def create_dash_layout_about_modal():
     m = dbc.Modal(
             [
                 dbc.ModalHeader(html.Div("This site is a front-end to thousands of datasets.", style={"fontFamily":INIT_MODAL_HEADER_FONT_GENERAL, "fontSize": INIT_MODAL_HEADER_FONT_SIZE, "fontWeight": INIT_MODAL_HEADER_FONT_WEIGHT })),
-                dbc.ModalBody(modal_text.about_modal_body),
+                dbc.ModalBody(layout_modal.about_modal_body),
                 dbc.ModalFooter([
                     dcc.Markdown(""" Built with ![Image](/static/img/heart1.png) in Python using [Dash](https://plotly.com/dash/)."""),
                     dbc.Button("Close", id="modal-about-close", className="ml-auto",size=INIT_BUTTON_SIZE)
@@ -1703,7 +1703,7 @@ def create_dash_layout_settings_modal():
         
                 #COLOUR SCHEME
                 dcc.Markdown(""" #### Colour Scheme  """),
-                modal_text.settings_colour_scheme,
+                layout_modal.settings_colour_scheme,
                                 
                 #Create colorscale buttons recursively by calling a special function
                 html.Div(children=[create_dash_layout_settings_modal_colorscale_button(i) for i in range(0,93)]),
@@ -1830,7 +1830,7 @@ def create_dash_layout_bargraph_modal():
                         dbc.Popover(
                             [
                                 dbc.PopoverHeader("Instructions", style={'fontWeight':'bold'}),
-                                dbc.PopoverBody(hovertip_text.bargraph_instructions),
+                                dbc.PopoverBody(layout_hovertip.bargraph_instructions),
                             ],
                             #id="modal-bar-instruction-popover",
                             #is_open=False,
@@ -1844,7 +1844,7 @@ def create_dash_layout_bargraph_modal():
                         dbc.Popover(
                             [
                                 dbc.PopoverHeader("About", style={'fontWeight':'bold'}),
-                                dbc.PopoverBody(hovertip_text.bargraph_about)                                    
+                                dbc.PopoverBody(layout_hovertip.bargraph_about)                                    
                             ],
                             #id="modal-bar-guide-popover",
                             #is_open=False,
@@ -1968,7 +1968,7 @@ def create_dash_layout_linegraph_modal():
                     dbc.Popover(
                         [
                             dbc.PopoverHeader("Instructions", style={'fontWeight':'bold'}),
-                            dbc.PopoverBody(hovertip_text.linegraph_instructions)
+                            dbc.PopoverBody(layout_hovertip.linegraph_instructions)
                         ],
                         #id="modal-line-instructions-popover",
                         #is_open=False,
@@ -1982,7 +1982,7 @@ def create_dash_layout_linegraph_modal():
                     dbc.Popover(
                         [
                             dbc.PopoverHeader("About", style={'fontWeight':'bold'}),
-                            dbc.PopoverBody(hovertip_text.linegraph_about),
+                            dbc.PopoverBody(layout_hovertip.linegraph_about),
                         ],
                         #id="modal-line-guide-popover",
                         #is_open=False,
@@ -2078,7 +2078,7 @@ def create_dash_layout_globe_modal():
                             dbc.Popover(
                             [
                                 dbc.PopoverHeader("Instructions", style={'fontWeight':'bold'}),
-                                dbc.PopoverBody(hovertip_text.globe_instructions),
+                                dbc.PopoverBody(layout_hovertip.globe_instructions),
                             ],
                             #id="modal-globe-instructions-popover",
                             #is_open=False,
@@ -2092,7 +2092,7 @@ def create_dash_layout_globe_modal():
                             dbc.Popover(
                                 [
                                     dbc.PopoverHeader("About", style={'fontWeight':'bold'}),
-                                    dbc.PopoverBody(hovertip_text.globe_about),                                    
+                                    dbc.PopoverBody(layout_hovertip.globe_about),                                    
                                 ],
                                 #id="modal-globe-guide-popover",
                                 #is_open=False,
@@ -2161,7 +2161,7 @@ def create_dash_layout_geobar_modal():
                             dbc.Popover(
                                 [
                                 dbc.PopoverHeader("Instructions", style={'fontWeight':'bold'}),
-                                dbc.PopoverBody(hovertip_text.jigsaw_instructions),
+                                dbc.PopoverBody(layout_hovertip.jigsaw_instructions),
                                 ],
                                 #id="modal-geobar-instructions-popover",
                                 #is_open=False,
@@ -2175,7 +2175,7 @@ def create_dash_layout_geobar_modal():
                             dbc.Popover(
                                 [
                                 dbc.PopoverHeader("About", style={'fontWeight':'bold'}),
-                                dbc.PopoverBody(hovertip_text.jigsaw_about),
+                                dbc.PopoverBody(layout_hovertip.jigsaw_about),
                                 #dbc.PopoverBody(dcc.Markdown(""" Built with ![Image](media/heart1.png) in Python using [Dash](https://plotly.com/dash/)."""), style={'display':'inline-block'}),
                                 ],
                                 #id="modal-geobar-guide-popover",
@@ -2277,7 +2277,7 @@ def create_dash_layout_sunburst_modal():
                     dbc.Popover(
                         [
                             dbc.PopoverHeader("About", style={'fontWeight':'bold'}),
-                            dbc.PopoverBody(hovertip_text.sunburst_about),
+                            dbc.PopoverBody(layout_hovertip.sunburst_about),
                         ],
                         #id="modal-sunburst-guide-popover",
                         #is_open=False,
@@ -2291,7 +2291,7 @@ def create_dash_layout_sunburst_modal():
                     dbc.Popover(
                         [
                             dbc.PopoverHeader("Instructions", style={'fontWeight':'bold'}),
-                            dbc.PopoverBody(hovertip_text.sunburst_instructions),
+                            dbc.PopoverBody(layout_hovertip.sunburst_instructions),
                         ],
                         #id="modal-sunburst-instructions-popover",
                         #is_open=False,
@@ -2469,7 +2469,7 @@ def create_dash_layout_bubblegraph_modal():
                     dbc.Popover(
                         [
                             dbc.PopoverHeader("About", style={'fontWeight':'bold'}),
-                            dbc.PopoverBody(hovertip_text.bubblegraph_about),
+                            dbc.PopoverBody(layout_hovertip.bubblegraph_about),
                         ],
                         #id="modal-bubble-guide-popover",
                         #is_open=False,
@@ -2483,7 +2483,7 @@ def create_dash_layout_bubblegraph_modal():
                     dbc.Popover(
                         [
                             dbc.PopoverHeader("Instructions", style={'fontWeight':'bold'}),
-                            dbc.PopoverBody(hovertip_text.bubblegraph_instructions),
+                            dbc.PopoverBody(layout_hovertip.bubblegraph_instructions),
                         ],
                         #id="modal-bubble-instructions-popover",
                         #is_open=False,
