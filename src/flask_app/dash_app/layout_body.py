@@ -8,7 +8,7 @@ from . global_constants import *
 #Obtain the root logger
 logger = logging.getLogger(LOGGER)
 
-def build_body():
+def build():
     
     body = html.Div(
         children=[

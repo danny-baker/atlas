@@ -563,6 +563,11 @@ class Data:
     config_key_dsid: dict
     config_key_navcat: dict
 
+    # helpers
+    dataset_count: int
+    observation_count: int
+    dataset_list: list
+
 
 def load(debug_mode: bool) -> Data:
     # Load all data either from local snapshot our cloud store based on debug flag. Return each item.
@@ -630,6 +635,11 @@ def load(debug_mode: bool) -> Data:
     # build config dictionaries
     config_key_dsraw, config_key_dsid, config_key_navcat = build_config_dicts(['dataset_raw', 'dataset_id', 'nav_cat'], config_df)
     
+    # Add helpers
+    dataset_count = len(pd.unique(stats['dataset_raw'])) 
+    observation_count = len(stats.index)
+    dataset_list = pd.unique(stats['dataset_raw']) 
+
     # build data object
     data_obj = Data(map_lowres=map_lowres,
                     map_medres=map_medres,
@@ -642,7 +652,10 @@ def load(debug_mode: bool) -> Data:
                     EXP_POWER_PLANTS_DF=EXP_POWER_PLANTS_DF,
                     config_key_dsraw=config_key_dsraw,
                     config_key_dsid=config_key_dsid,
-                    config_key_navcat=config_key_navcat
+                    config_key_navcat=config_key_navcat,
+                    dataset_count=dataset_count,
+                    observation_count=observation_count,
+                    dataset_list=dataset_list
                     )    
     
     return data_obj

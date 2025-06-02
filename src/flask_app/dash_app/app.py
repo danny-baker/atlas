@@ -8,19 +8,14 @@
 # 2 Test debug mode can succesfully pull from different sources [DONE]
 # See if can do this via docker (i.e. can I run docker image in debug mode from cmd line? for other users) [DONE]
 
-#2.5 Get footer running ok
+# Get overhead menu working
 
-# 3 Get overhead menu working
-# 4 Get a map displaying data (see what free tilemaps are now available. Xp here.)
-# 5 Port rest of app_old.py across
-# 6 Refactor and make nice.
+# Get footer running ok
+# Port rest of app_old.py across
+# Get a map displaying data (see what free tilemaps are now available. Xp here.)
+# Refactor and make nice.
 
-# Each major component make as a separate file. Way cleaner. Refactor the current ones before moving on baby.
-# This file should be silky clean and happy.
-# layout_navbar
-# layout_footer
-# layout_body
-# callback logic might live here, but definitely not layout bullshit. It's too messy.
+#Build note...when call uv build, want to build into a container, not a package. See if that's possible.
 
 
 import sys
@@ -34,8 +29,8 @@ import dash_bootstrap_components as dbc
 from dash import dash, html, dcc
 import plotly.express as px
 import plotly.graph_objs as go
-from . import layout_html, layout_footer, layout_body, layout_header
-
+from . import layout_html, layout_footer, layout_body, layout_header, layout_navmenu
+import pandas as pd
 
 # Get debug flag 
 #debug_mode = sys.flags.debug # determines if cloud or local data ingested
@@ -47,6 +42,7 @@ logger = logging.getLogger(LOGGER)
 
 # load all run-time data
 dobj = data.load(debug_mode)
+print(dobj.dataset_count, dobj.observation_count)
 
 # setup system
 if os.path.exists("tmp") == False: 
@@ -81,13 +77,13 @@ def create_dash_layout(app):
     app.title = TAB_TITLE 
     app.index_string = layout_html.index_string     
 
-    #navbar = create_dash_layout_navbar()    
+    navmenu = layout_navmenu.build(dobj)   
   
-    header = layout_header.build_header()
+    header = layout_header.build()
     
-    body = layout_body.build_body() 
+    body = layout_body.build() 
        
-    footer = layout_footer.build_footer()
+    footer = layout_footer.build()
     
     # dcc stores for settings
     #dcc_stores = create_dash_layout_dcc_stores()        
@@ -105,7 +101,7 @@ def create_dash_layout(app):
     
     # Assemble dash layout 
     #app.layout = html.Div([navbar, header, body, nav_footer, dcc_stores, hidden_div_triggers, api]) 
-    app.layout = html.Div([header, body, footer])     
+    app.layout = html.Div([navmenu, header, body, footer])     
     
     
     return app

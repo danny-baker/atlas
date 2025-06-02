@@ -3,7 +3,7 @@ import dash_bootstrap_components as dbc
 from . global_constants import *
 
 
-def build_header():
+def build():
             
     #title of app in page
     title = html.Div([

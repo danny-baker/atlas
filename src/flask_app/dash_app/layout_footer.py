@@ -5,50 +5,56 @@ from . import layout_globe_modal, layout_geobar_modal, layout_bargraph_modal, la
 from . import layout_userguide_modal, layout_settings_modal, layout_downloads_modal
 
 
-def build_footer():
+# CSS bullshit
+STYLE_BUTTON = {"marginLeft": 0, "marginBottom": 10, 'display': 'inline-block', 'opacity':INIT_BUTTON_OPACITY, 'fontSize': INIT_NAVFOOTER_BTN_FONT}
+
+
+def build():
     
     #Builds out the nav footer including all modals
     
     # Bottom navbar (buttons for now)
     nav_footer = html.Div(
         [                  
-            #The button and slider column
-            dbc.Row(
-            #html.Div(
-                [
+                         
+            # 1 main row
+            dbc.Row([
                              
                     #Button column
-                    dbc.Col(
-                    #html.Div(
+                    dbc.Col(                    
 
-                            html.Div([                                     
-                                  
-                                  dbc.Row([                                                                 
-                                  dbc.Button("USER GUIDE",  outline=INIT_BTN_OUTLINE, color="primary", className="mr-1", id="uguide-button", style={"marginRight": 0, "marginBottom": 10, 'display': 'inline-block', 'opacity':INIT_BUTTON_OPACITY, 'fontSize': INIT_NAVFOOTER_BTN_FONT }, size=INIT_BUTTON_SIZE),
-                                  dbc.Button("SETTINGS", outline=INIT_BTN_OUTLINE, color="warning", className="mr-1", id="settings-button", style={"marginLeft": 0, "marginBottom": 10, 'display': 'inline-block', 'opacity':INIT_BUTTON_OPACITY, 'fontSize': INIT_NAVFOOTER_BTN_FONT}, size=INIT_BUTTON_SIZE),                                                                                                                                             
-                                  dbc.Button("DOWNLOAD", outline=INIT_BTN_OUTLINE, color="success", className="mr-1", id="download-button", disabled=False, style={"marginLeft": 0, "marginBottom": 10, 'display': 'none', 'opacity':INIT_BUTTON_OPACITY, 'fontSize': INIT_NAVFOOTER_BTN_FONT}, size=INIT_BUTTON_SIZE), #disabled on initial
-                                  dcc.Download(id='download_dataset_main'),                                  
-                                  #dbc.Button("STAR TREK MODE", outline=INIT_BTN_OUTLINE, color="danger", className="mr-1", id="startrek-button", disabled=False, style={"marginLeft": 0, "marginBottom": 10, 'display': 'none', 'opacity':INIT_BUTTON_OPACITY}, size=INIT_BUTTON_SIZE), #disabled on initial
-                                  dbc.Button("ABOUT", outline=INIT_BTN_OUTLINE, color="info", className="mr-1", id="about-button", style={"marginLeft": 0, "marginBottom": 10, 'display': 'inline-block', 'opacity':INIT_BUTTON_OPACITY, 'fontSize': INIT_NAVFOOTER_BTN_FONT}, size=INIT_BUTTON_SIZE),
-                                  ]),
-                                                               
-                                  dbc.Row([                                  
-                                  dbc.Button("BAR", outline=INIT_BTN_OUTLINE, color="dark", className="mr-1", id="bar-button", style={"marginLeft": 0, "marginBottom": 0, 'display': 'none', 'fontSize': INIT_NAVFOOTER_BTN_FONT}, size=INIT_BUTTON_SIZE), #disabled on initial 
-                                  dbc.Button("LINE", outline=INIT_BTN_OUTLINE, color="dark", className="mr-1", id="line-button", style={"marginLeft": 0, "marginBottom": 0, 'display': 'none', 'fontSize': INIT_NAVFOOTER_BTN_FONT}, size=INIT_BUTTON_SIZE), #disabled on initial 
-                                  dbc.Button("BUBBLE", outline=INIT_BTN_OUTLINE, color="dark", className="mr-1", id="bubble-button", style={"marginLeft": 0, "marginBottom": 0, 'display': 'none', 'fontSize': INIT_NAVFOOTER_BTN_FONT}, size=INIT_BUTTON_SIZE),
-                                  dbc.Button("PIZZA", outline=INIT_BTN_OUTLINE, color="dark", className="mr-1", id='sunburst-button', style={"marginLeft": 0, "marginBottom": 0, 'display': 'none', 'fontSize': INIT_NAVFOOTER_BTN_FONT}, size=INIT_BUTTON_SIZE), #disabled on initial 
-                                  dbc.Button("JIGSAW", outline=INIT_BTN_OUTLINE, color="dark", className="mr-1", id="geobar-button", style={"marginLeft": 0, "marginBottom": 0, 'display': 'none', 'fontSize': INIT_NAVFOOTER_BTN_FONT}, size=INIT_BUTTON_SIZE),
-                                  dbc.Button("GLOBE", outline=INIT_BTN_OUTLINE, color="dark", className="mr-1", id="globe-button", style={"marginLeft": 0, "marginBottom": 0, 'display': 'none', 'fontSize': INIT_NAVFOOTER_BTN_FONT}, size=INIT_BUTTON_SIZE),
-                                  ]),        
-                               
-                            ],
-                            id = 'button-panel-style',
-                            style = {'display': 'block', "marginLeft":"1vw" }, #I think this is needed somehow to make the secondary buttons wrap properly, it gets set to flexc
-                            ),                           
+                        html.Div([                                     
+                                
+                            dbc.Row([                                                                 
+                                html.Div([
+                                    dbc.Button("USER GUIDE", color="primary", className="me-1", id="uguide-button", size=INIT_BUTTON_SIZE,style=STYLE_BUTTON),
+                                    dbc.Button("SETTINGS", outline=INIT_BTN_OUTLINE, color="warning", className="me-1", id="settings-button", style=STYLE_BUTTON, size=INIT_BUTTON_SIZE),                                                                                                                                             
+                                    dbc.Button("DOWNLOAD", outline=INIT_BTN_OUTLINE, color="success", className="me-1", id="download-button", disabled=False,style=STYLE_BUTTON, size=INIT_BUTTON_SIZE), #disabled on initial
+                                    dcc.Download(id='download_dataset_main'),   
+                                    dbc.Button("ABOUT", outline=INIT_BTN_OUTLINE, color="info", className="me-1", id="about-button", style=STYLE_BUTTON, size=INIT_BUTTON_SIZE),
+                                ]),
+                            ]),
+                                                            
+                            dbc.Row([
+                                html.Div([                                  
+                                    dbc.Button("BAR", outline=INIT_BTN_OUTLINE, color="dark", className="me-1", id="bar-button",style=STYLE_BUTTON, size=INIT_BUTTON_SIZE), #disabled on initial 
+                                    dbc.Button("LINE", outline=INIT_BTN_OUTLINE, color="dark", className="me-1", id="line-button",style=STYLE_BUTTON, size=INIT_BUTTON_SIZE), #disabled on initial 
+                                    dbc.Button("BUBBLE", outline=INIT_BTN_OUTLINE, color="dark", className="me-1", id="bubble-button",style=STYLE_BUTTON, size=INIT_BUTTON_SIZE),
+                                    dbc.Button("PIZZA", outline=INIT_BTN_OUTLINE, color="dark", className="me-1", id='sunburst-button',style=STYLE_BUTTON, size=INIT_BUTTON_SIZE), #disabled on initial 
+                                    dbc.Button("JIGSAW", outline=INIT_BTN_OUTLINE, color="dark", className="me-1", id="geobar-button",style=STYLE_BUTTON, size=INIT_BUTTON_SIZE),
+                                    dbc.Button("GLOBE", outline=INIT_BTN_OUTLINE, color="dark", className="me-1", id="globe-button",style=STYLE_BUTTON, size=INIT_BUTTON_SIZE),
+                                ]),
+                            ]),        
+                            
+                        ],
+                        id = 'button-panel-style',
+                        #style = {'display': 'block', "marginLeft":"1vw" }, #I think this is needed somehow to make the secondary buttons wrap properly, it gets set to flexc
+                        ),                           
                         style={"marginBottom": 5, "marginLeft": 10, 'backgroundColor': 'transparent', 'width':'33%', 'display':'inline-block', 'minWidth':INIT_NAVFOOTER_COMPONENT_MINWIDTH, }, #formatting for column 
                         align='end',                          
                               
                     ),
+                    
                     
                     
                     dbc.Tooltip(
@@ -79,8 +85,7 @@ def build_footer():
                               ]),
                           ],
                           id="download-popover",                                        
-                          target="download-button",
-                          #style={'maxHeight': '300px', 'overflowY': 'auto'},
+                          target="download-button",                          
                           trigger="legacy",
                           placement="top",
                           hide_arrow=False,
@@ -175,25 +180,24 @@ def build_footer():
                             )],
                             
                             id='year-slider-style', #div id
-                            style={'display': 'none'}, #use only one style value, to udpate with callback (initially slider is invisible)
+                            #style={'display': 'none'}, #use only one style value, to udpate with callback (initially slider is invisible)
                         ),
                         ], 
                         style={"marginTop": 15, "marginLeft": 0, 'backgroundColor': 'transparent', 'width':'33%', 'display':'inline-block', 'minWidth':INIT_NAVFOOTER_COMPONENT_MINWIDTH}, #use col to move slider down
-                        align='end',
+                        #align='end', #this fucks shit
                     ),
                     
+                        
+
                     #Data source column
-                    dbc.Col(
-                    #html.Div(
+                    dbc.Col(                    
 
                         [
                               
                             html.Div([
                                 html.Span("Data source: ", style={'fontSize':INIT_SOURCE_FONT}),
-                                html.Span("No data selected", id="my-source", style={'fontSize':INIT_SOURCE_FONT}),
-                                #html.Span(" "),
-                                html.Div(dcc.Link(href='', target="_blank", id="my-source-link", style={'fontSize':INIT_SOURCE_FONT, 'color':'LightBlue'})),
-                                #html.Span(")")
+                                html.Span("No data selected", id="my-source", style={'fontSize':INIT_SOURCE_FONT}),                                
+                                html.Div(dcc.Link(href='', target="_blank", id="my-source-link", style={'fontSize':INIT_SOURCE_FONT, 'color':'LightBlue'})),                                
                             ], id="source-popover-target", style={"marginBottom": 0, "marginTop": 0, "marginLeft": 0, "marginRight": 0, "fontSize": INIT_SOURCE_POPOVER_FONT, 'backgroundColor': INIT_TITLE_BG_COL, 'opacity': INIT_TITLE_OPACITY,'color':INIT_TITLE_COL}),
                             
                             dbc.Popover(
@@ -212,8 +216,8 @@ def build_footer():
                             ),                            
                        ],
                     id = 'data-source-style',
-                    style = {'display': 'none'}, #default hidden 
-                    align='end',               
+                    #style = {'display': 'none'}, #default hidden 
+                    #align='end',               
                     
                     ),                                                      
                 ],                
@@ -223,7 +227,8 @@ def build_footer():
             ),
             
             
-        ],style={
+        ],
+        style={
                 "width": INIT_NAVFOOTER_W,
                 #"margin-left": "1vw",
                 #"margin-right": "auto",
