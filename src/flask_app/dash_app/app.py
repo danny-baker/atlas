@@ -8,14 +8,14 @@
 # 2 Test debug mode can succesfully pull from different sources [DONE]
 # See if can do this via docker (i.e. can I run docker image in debug mode from cmd line? for other users) [DONE]
 
-# Get overhead menu working
+# Get overhead menu working.It's close. Do a dummy one and work out what style is needed so they float. It's like eachone added is an inlineblock so it takes a new row rather than flex. PRetty sure it's just css style.
 
 # Get footer running ok
 # Port rest of app_old.py across
 # Get a map displaying data (see what free tilemaps are now available. Xp here.)
 # Refactor and make nice.
+# Build note...when call uv build, want to build into a container, not a package. See if that's possible.
 
-#Build note...when call uv build, want to build into a container, not a package. See if that's possible.
 
 
 import sys

@@ -13,45 +13,38 @@ logger = logging.getLogger(LOGGER)
 def build(dobj):
     
     #construct the navbar by calling a function that recursively builds out components based on dataset_lkup
-    navbar = html.Div([
+    navbar = html.Div(        
         
-        dbc.Row(
-                children=create_dash_layout_navbar_menu(dobj),      
-                style={'margin-left': '1vw', 'margin-right': '1vw', 'display': 'flex', 'vertical-align': 'top' , 'align-items': 'center', 'justify-content': 'center'  }, 
-                className="ml-auto"), #Format the row. This ensurs spill over buttons are also centre aligned
-        
-        dbc.Tooltip(
-                "Randomly select a dataset!",
-                target='random-button',
-                placement='bottom',                
-                ),
-        ], 
+        children=create_dash_layout_navbar_menu(dobj),              
+        className="ml-auto", #Format the row. This ensurs spill over buttons are also centre aligned        
                
         style={"height": INIT_NAVBAR_H,
                "width": INIT_NAVBAR_W,
-               "zIndex":2,
+               #"zIndex":2,
                "backgroundColor": '#3E3F3A',
                'display': 'flex',
                'vertical-align': 'top',
                'align-items': 'center',
                'justify-content': 'center',               
-               "marginBottom": 0,
-               "marginTop": 0,
-               "marginLeft": 0,
-               "marginRight": 0,
+               #"marginBottom": 0,
+               #"marginTop": 0,
+               #"marginLeft": '1vw',
+               #"marginRight": '1vw',               
                #"margin-left": "auto",
                #"margin-right": "auto",               
-               #'backgroundColor':'white',               
+               #'backgroundColor':'yellow',               
                #"position": "absolute",
                #"z-index": "2",
                #"top": INIT_NAVBAR_POSITION, 
                #"left": "5vw",
                
                
-               }, #format the navbar (div)
+               }, 
         
-    ) #end div (navbar)    
+    )    
+
     return navbar
+
 
 def create_dash_layout_navbar_items(nav_cat, dobj):
     
@@ -145,14 +138,18 @@ def create_dash_layout_navbar_menu(dobj):
     
     #construct the entire navbar menu recursively based on master config. Can return a list of dropdown menus, each with children (items) built recursively aswell
     logger.info("Building nav menu...")
-    
-    #define empty list
+       
     menu_list=[]
+
+    # Add tool tip
+    menu_list.append( dbc.Tooltip(
+                "Randomly select a dataset!",
+                target='random-button',
+                placement='bottom',                
+                ),)
     
-    #Use dict of nav_cats to build the nav menu    
-    
-    nav_cats = dobj.config_key_navcat
-    
+    #Grab all navigation categories
+    nav_cats = dobj.config_key_navcat    
     logger.info("Adding %r dataset categories...", len(nav_cats))
     
     #loop through unique nav_cats    
@@ -180,7 +177,9 @@ def create_dash_layout_navbar_menu(dobj):
     
         
         
-    menu_list.append(dbc.Button(INIT_RANDOM_BTN_TEXT,  outline=INIT_BTN_OUTLINE, color="danger", id="random-button", style={'display': 'inline-block', 'opacity':INIT_BUTTON_OPACITY, 'fontSize': INIT_RANDOM_BTN_FONT, "marginBottom": 0, "marginTop": 0, "marginLeft": INIT_DROPDOWNITEM_LPAD, "marginRight": INIT_DROPDOWNITEM_RPAD,}, size=INIT_BUTTON_SIZE),)
+    menu_list.append(dbc.Button(INIT_RANDOM_BTN_TEXT,  outline=INIT_BTN_OUTLINE, color="danger", id="random-button", size=INIT_BUTTON_SIZE,
+                                style={'display': 'inline-block', 'opacity':INIT_BUTTON_OPACITY, 'fontSize': INIT_RANDOM_BTN_FONT, "marginBottom": 0, "marginTop": 0, "marginLeft": INIT_DROPDOWNITEM_LPAD, "marginRight": INIT_DROPDOWNITEM_RPAD,},
+                                ),)
     
     # add search DCC dropdown to list
     
@@ -203,7 +202,7 @@ def create_dash_layout_navbar_menu(dobj):
                 placeholder=f'Search {dobj.dataset_count:>3,} datasets and {dobj.observation_count:>3,} data points',
                 clearable=True,
                 style={'width':INIT_NAVBAR_SEARCH_WIDTH, "fontSize": INIT_NAVBAR_SEARCH_FONT},
-                #className='ml-auto',
+                className='ml-auto',
                 
             ),
         ),

@@ -27,7 +27,7 @@ def build():
                                 
                             dbc.Row([                                                                 
                                 html.Div([
-                                    dbc.Button("USER GUIDE", color="primary", className="me-1", id="uguide-button", size=INIT_BUTTON_SIZE,style=STYLE_BUTTON),
+                                    dbc.Button("USER GUIDE", outline=INIT_BTN_OUTLINE, color="primary", className="me-1", id="uguide-button", size=INIT_BUTTON_SIZE,style=STYLE_BUTTON),
                                     dbc.Button("SETTINGS", outline=INIT_BTN_OUTLINE, color="warning", className="me-1", id="settings-button", style=STYLE_BUTTON, size=INIT_BUTTON_SIZE),                                                                                                                                             
                                     dbc.Button("DOWNLOAD", outline=INIT_BTN_OUTLINE, color="success", className="me-1", id="download-button", disabled=False,style=STYLE_BUTTON, size=INIT_BUTTON_SIZE), #disabled on initial
                                     dcc.Download(id='download_dataset_main'),   
