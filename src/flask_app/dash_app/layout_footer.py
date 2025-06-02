@@ -17,10 +17,10 @@ def build():
     nav_footer = html.Div(
         [                  
                          
-            # 1 main row
+            # 1 main row with 3 columns
             dbc.Row([
                              
-                    #Button column
+                    #Button panel
                     dbc.Col(                    
 
                         html.Div([                                     
@@ -156,7 +156,7 @@ def build():
                     layout_downloads_modal.build(), #Download land (not active)            
                     
                                
-                    #year Slider Column
+                    #year Slider 
                     dbc.Col([
                     #html.Div([ 
                         
@@ -184,12 +184,12 @@ def build():
                         ),
                         ], 
                         style={"marginTop": 15, "marginLeft": 0, 'backgroundColor': 'transparent', 'width':'33%', 'display':'inline-block', 'minWidth':INIT_NAVFOOTER_COMPONENT_MINWIDTH}, #use col to move slider down
-                        #align='end', #this fucks shit
+                        align='end', 
                     ),
                     
                         
 
-                    #Data source column
+                    #Data source 
                     dbc.Col(                    
 
                         [
@@ -217,7 +217,7 @@ def build():
                        ],
                     id = 'data-source-style',
                     #style = {'display': 'none'}, #default hidden 
-                    #align='end',               
+                    align='end',               
                     
                     ),                                                      
                 ],                
