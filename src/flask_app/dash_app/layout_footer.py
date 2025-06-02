@@ -1,7 +1,8 @@
 from dash import dash, html, dcc
 import dash_bootstrap_components as dbc
 from . global_constants import *
-from . import layout_globe_modal, layout_geobar_modal, layout_bargraph_modal, layout_linegraph_modal, layout_bubblegraph_modal, layout_sunburst_modal
+from . import layout_globe_modal, layout_geobar_modal, layout_bargraph_modal, layout_linegraph_modal, layout_bubblegraph_modal, layout_sunburst_modal, layout_about_modal
+from . import layout_userguide_modal, layout_settings_modal, layout_downloads_modal
 
 
 def build_footer():
@@ -128,39 +129,26 @@ def build_footer():
                         style={},
                     ),
                     
-                    
-                    #Globe view modal                
-                    layout_globe_modal.build(),                    
-                    
-                    #Jigsaw view modal                
-                    layout_geobar_modal.build(),                    
-                    
-                    #Bar graph modal                     
+                                       
+                    layout_globe_modal.build(), 
+               
+                    layout_geobar_modal.build(), 
+                                  
                     layout_bargraph_modal.build(),
-                    
-                    #Line graph modal                     
-                    layout_linegraph_modal.build(),
-                    
-                    #bubble graph modal                     
+                                     
+                    layout_linegraph_modal.build(),                    
+                                    
                     layout_bubblegraph_modal.build(),
+                  
+                    layout_sunburst_modal.build(),  
+                   
+                    layout_about_modal.build(),                    
+                   
+                    layout_userguide_modal.build(),
                     
-                    #Sunburst Modal
-                    layout_sunburst_modal.build(),   
+                    layout_settings_modal.build(),
                     
-                    #About modal
-                    #create_dash_layout_about_modal(),
-                    
-                    #User guide modal
-                    #create_dash_layout_userguide_modal(),
-                    
-                    #Settings modal
-                    #create_dash_layout_settings_modal(),
-
-                    #Download land
-                    #create_dash_layout_downloads_modal(), 
-
-                    #Experimental modal
-                    #create_dash_layout_experiments_modal(),                   
+                    layout_downloads_modal.build(), #Download land (not active)            
                     
                                
                     #year Slider Column

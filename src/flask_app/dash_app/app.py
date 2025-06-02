@@ -22,12 +22,11 @@
 # layout_body
 # callback logic might live here, but definitely not layout bullshit. It's too messy.
 
-# Continue work L151 layout_footer.py.... adding in each modal as sep files.
 
 import sys
 sys.path.append('/usr/src/app/data') #working dir for built container (see /Dockerfile)
 sys.path.append('/home/dan/atlas/data') #testing on local machine (no docker)
-import logging
+import logging, os
 from . global_constants import *
 from . import data  # run-time helpers
 from src.data_pipeline.data_paths import * 
@@ -48,6 +47,10 @@ logger = logging.getLogger(LOGGER)
 
 # load all run-time data
 dobj = data.load(debug_mode)
+
+# setup system
+if os.path.exists("tmp") == False: 
+    os.mkdir("tmp")  # this is used to store charts and zip files on server OS until in memory solution is found
 
 # initialise dash layout and callbacks
 def init_dashboard(server):
