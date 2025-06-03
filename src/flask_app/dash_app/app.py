@@ -23,10 +23,11 @@ sys.path.append('/usr/src/app/data') #working dir for built container (see /Dock
 sys.path.append('/home/dan/atlas/data') #testing on local machine (no docker)
 import logging, os
 from . global_constants import *
+from . layout_navmenu import *
 from . import data  # run-time helpers
 from src.data_pipeline.data_paths import * 
 import dash_bootstrap_components as dbc
-from dash import dash, html, dcc
+from dash import Dash, html, Input, Output, ctx, callback, dcc
 import plotly.express as px
 import plotly.graph_objs as go
 from . import layout_html, layout_footer, layout_body, layout_header, layout_navmenu
@@ -64,9 +65,34 @@ def init_dashboard(server):
 
     create_dash_layout(dash_app) 
 
-    #init_callbacks(dash_app)
+    init_callbacks(dash_app)
+
+    #testing
+    all_ids = get_component_ids(dash_app.layout)
+    print(all_ids)
+    if "random-button" in all_ids:
+        print("FOUND!!!")
+
+
 
     return dash_app.server
+
+
+def get_component_ids(layout):
+    #Helper to return all component ids in the dash layout (for testing)
+    ids = []
+    if hasattr(layout, "id") and layout.id:
+        ids.append(layout.id)
+    if hasattr(layout, "children"):
+        if isinstance(layout.children, list):
+            for child in layout.children:
+                ids.extend(get_component_ids(child))
+        else:
+            ids.extend(get_component_ids(layout.children))
+    return ids
+
+
+
 
 
 def create_dash_layout(app):
@@ -105,6 +131,24 @@ def create_dash_layout(app):
     
     
     return app
+
+def init_callbacks(app):
+    #Do some shit.Detect button push
+
+    
+    @app.callback(Input("random-button","n_clicks"),                  
+                  prevent_initial_call=True
+                  )
+    def callback_test(n_clicks):
+        
+        print("Callback!")
+        print(ctx.triggered_id)
+
+        #trigger = ctx.triggered[0]["prop_id"].split(".")[0] #this is the series selection (component id from navbar top), except if the year slider is the trigger!!
+        #logger.info(f"Trigger is {trigger}")   
+   
+        
+
 
 
 
