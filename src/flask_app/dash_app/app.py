@@ -2,13 +2,7 @@
 # run app
 # uv run atlas.py
 
-# script: pull titanium subfolders to new folder location called snapshot in /data/data_snapshot
-
-# 1. Get snapshot of processed data into repo [DONE]
-# 2 Test debug mode can succesfully pull from different sources [DONE]
-# See if can do this via docker (i.e. can I run docker image in debug mode from cmd line? for other users) [DONE]
-
-# Get overhead menu working.It's close. Do a dummy one and work out what style is needed so they float. It's like eachone added is an inlineblock so it takes a new row rather than flex. PRetty sure it's just css style.
+# Get overhead menu working. Create callbacks file. All prop ids are global (good)
 
 # Get footer running ok
 # Port rest of app_old.py across
@@ -16,6 +10,7 @@
 # Refactor and make nice.
 # Build note...when call uv build, want to build into a container, not a package. See if that's possible.
 
+#currently: refactoring and fixing callbacks.py main callback. Apply fixes. Need to find the apilookup bs. Add to dobj??
 
 
 import sys
@@ -24,6 +19,7 @@ sys.path.append('/home/dan/atlas/data') #testing on local machine (no docker)
 import logging, os
 from . global_constants import *
 from . layout_navmenu import *
+from . callbacks import *
 from . import data  # run-time helpers
 from src.data_pipeline.data_paths import * 
 import dash_bootstrap_components as dbc
@@ -65,15 +61,17 @@ def init_dashboard(server):
 
     create_dash_layout(dash_app) 
 
-    init_callbacks(dash_app)
+    init_callbacks(dash_app, dobj)
 
     #testing
-    all_ids = get_component_ids(dash_app.layout)
-    print(all_ids)
-    if "random-button" in all_ids:
-        print("FOUND!!!")
+    #all_ids = get_component_ids(dash_app.layout)
+    #print(all_ids)
+    #if "random-button" in all_ids:
+        #print("Random button is FOUND!!!")
 
-
+    #Testing
+    #print('url dict example below')
+    #print(dobj.api_dict_label_to_raw)
 
     return dash_app.server
 
@@ -127,26 +125,12 @@ def create_dash_layout(app):
     
     # Assemble dash layout 
     #app.layout = html.Div([navbar, header, body, nav_footer, dcc_stores, hidden_div_triggers, api]) 
-    app.layout = html.Div([navmenu, header, body, footer])     
+    app.layout = html.Div([navmenu, header, body, footer])         
     
-    
+
     return app
 
-def init_callbacks(app):
-    #Do some shit.Detect button push
 
-    
-    @app.callback(Input("random-button","n_clicks"),                  
-                  prevent_initial_call=True
-                  )
-    def callback_test(n_clicks):
-        
-        print("Callback!")
-        print(ctx.triggered_id)
-
-        #trigger = ctx.triggered[0]["prop_id"].split(".")[0] #this is the series selection (component id from navbar top), except if the year slider is the trigger!!
-        #logger.info(f"Trigger is {trigger}")   
-   
         
 
 

@@ -21,179 +21,6 @@ from src.data_pipeline.data_paths import *
 
 
 
-def get_list_of_dataset_labels_and_raw(master_config,var_type):
-
-    # build and return list of dictionaries containing var_type, datset_raw, dataset_label
-    # Special condition if var_type specified as "all" at calling, return all.
-    # This is used heabily to subset datasets to build lots of the modal drop downs for charts.
-    
-    config_list=[]
-    for i in master_config:
-        config_list.append({"dataset_raw":master_config[i].get("dataset_raw"),
-                            "dataset_label":master_config[i].get("dataset_label"),
-                            "dataset_id":master_config[i].get("dataset_id"),
-                            "var_type":master_config[i].get("var_type"),
-                            "nav_cat":master_config[i].get("nav_cat"),
-                            "nav_cat_nest":master_config[i].get("nav_cat_nest")
-                            
-                            })
-    
-    # convert this to a df (so can sort and subset)
-    df = pd.DataFrame(config_list).sort_values(by="dataset_label") 
-    
-    # subset based on var_type argument
-    if var_type != "all": df = df[df["var_type"] == var_type]
-    
-    # convert df to list of dicts
-    dict_list = df.to_dict('records')
-    
-    return dict_list
-
-
-
-def build_config_dicts(set_key_list: list, master_config: pd.DataFrame):
-    #The successor to read_dataset_metadata using new master_config.csv
-    #Returns a dictionary of dictionaries, with a specified parent key (for rapid lookup)
-  
-    #master_config = d.read_master_config("dataset_raw") #used to lookup metadata based on dataset raw (often thru the app)
-    #master_config_key_datasetid = d.read_master_config("dataset_id") #used by main callback upon user selection from navbar and key is datasetID (integer)
-    #master_config_key_nav_cat = d.read_master_config("nav_cat") #used to lookup colour when constructing nav menu
-    
-    print('Building configuration dictionaries...')    
-    
-    # Remove all rows with unprocessed configurations (i.e. pipeline has run but not updated by human yet)
-    master_config = master_config[~master_config['dataset_label'].isin(["TODO"])]
-    master_config = master_config[~master_config['var_type'].isin(["TODO"])]
-    master_config = master_config[~master_config['nav_cat'].isin(["TODO"])]
-    master_config = master_config[~master_config['colour'].isin(["TODO"])]
-    master_config = master_config[~master_config['nav_cat_nest'].isin(["TODO"])]
-    
-    # Remove any NaN's in config variables (human error may create these)    
-    master_config = master_config.dropna(subset=['dataset_label','var_type','nav_cat','colour','nav_cat_nest']) #specify cols to drop rows with NaN in them
-        
-    # transform df into dictionary of dictionaries
-     
-    # convert df to list of dicts as records 
-    dict_list = master_config.to_dict('records')
-    
-    # now build a new dict setting keys based on the passed in list
-    config_dict1 = {}
-    for i in range(len(dict_list)):             
-        # set key and values from this item on the list of dicts
-        key = dict_list[i].get(set_key_list[0]) #e.g set dataset_raw as key for parent dictionary
-        value = dict_list[i] #value is the whole dictionary     
-        # insert item to dictionary (if duplicate dataset_raw in csv, it will only add 1, so this kind of filters crud)
-        config_dict1[key]=value
-        
-    config_dict2 = {}
-    for i in range(len(dict_list)):             
-        # set key and values from this item on the list of dicts
-        key = dict_list[i].get(set_key_list[1]) #e.g set dataset_id as key for parent dictionary
-        value = dict_list[i] #value is the whole dictionary     
-        # insert item to dictionary (if duplicate dataset_raw in csv, it will only add 1, so this kind of filters crud)
-        config_dict2[key]=value
-        
-    config_dict3 = {}
-    for i in range(len(dict_list)):             
-        # set key and values from this item on the list of dicts
-        key = dict_list[i].get(set_key_list[2]) #e.g set nav_cat as key for parent dictionary
-        value = dict_list[i] #value is the whole dictionary     
-        # insert item to dictionary (if duplicate dataset_raw in csv, it will only add 1, so this kind of filters crud)
-        config_dict3[key]=value  
-   
-    return config_dict1, config_dict2, config_dict3
-
-
-
-def read_blob(account_name, account_key, container_name, filepath, data_format, return_format):
-    # A generic function for reading files from blob
-    print("Attempting to read file:",filepath,"from Azure blob container:",container_name)
-    
-    
-    
-    if data_format == 'json':
-        # presently all json files are returned as json
-        constr = 'DefaultEndpointsProtocol=https;AccountName=' + account_name + ';AccountKey=' + account_key + ';EndpointSuffix=core.windows.net'
-        blob_service_client = BlobServiceClient.from_connection_string(constr)
-        container_client = blob_service_client.get_container_client(container_name)
-        blob_client = container_client.get_blob_client(filepath)
-        streamdownloader = blob_client.download_blob()
-        file = json.loads(streamdownloader.readall())
-        return file
-    
-    elif data_format == 'parquet' and return_format == 'dataframe':
-        # read parquet, return dataframe
-        #generate a shared access signature for the file
-        sas_i = generate_blob_sas(account_name = account_name,
-                                     container_name = container_name,
-                                     blob_name = filepath,  # statistics/master_stats.parquet
-                                     account_key=account_key,
-                                     permission=BlobSasPermissions(read=True),
-                                     expiry=datetime.utcnow() + timedelta(hours=1))
-
-        #build sas URL using new sas sig
-        sas_url = 'https://' + account_name+'.blob.core.windows.net/' + container_name + '/' + filepath + '?' + sas_i            
-        df = pd.read_parquet(sas_url)
-        return df
-    
-    elif data_format == 'csv' and return_format == 'dataframe':
-        #read csv, return parquet
-        
-        #generate a shared access signature for the file
-        sas_i = generate_blob_sas(account_name = account_name,
-                                     container_name = container_name,
-                                     blob_name = filepath,  # statistics/master_stats.parquet
-                                     account_key=account_key,
-                                     permission=BlobSasPermissions(read=True),
-                                     expiry=datetime.utcnow() + timedelta(hours=1))
-
-        #build sas URL using new sas sig
-        sas_url = 'https://' + account_name+'.blob.core.windows.net/' + container_name + '/' + filepath + '?' + sas_i
-        df = pd.read_csv(sas_url)
-        return df
- 
-    else:
-        print('ERROR trying to open file on blob')
-        
-    
-    
-
-def create_api_lookup_dicts(master_config):
-    
-    # The goal of this is to modify the dataset raw and label strings to be URL path friendly
-    # These are then put into dictionaries that are used to confert a URL path (api_label) to the original
-    # At runtime, so queries can be performed on the master dataset.
-        
-    # get list of master config dictionaries
-    config_list = get_list_of_dataset_labels_and_raw(master_config,"all")
-    
-    # convert this to a df
-    df = pd.DataFrame(config_list)
-    
-    # subset it into a 3 col format
-    df = df[['dataset_raw', 'dataset_label', 'dataset_label']].copy()
-        
-    # rename cols
-    df.columns=['dataset_raw', 'dataset_label', 'api_label']       
-    
-    # make api labels URL path friendly
-    df['api_label'] = df['api_label'].str.replace(' ','-', regex=True)
-    df['api_label'] = df['api_label'].str.replace('%','percent', regex=True)
-    df['api_label'] = df['api_label'].str.replace('?','-', regex=False) 
-    df['api_label'] = df['api_label'].str.replace('+','-', regex=False) 
-    df['api_label'] = df['api_label'].str.replace(',','-', regex=False)
-    
-    # declare new global dicts
-    api_dict_raw_to_label={}
-    api_dict_label_to_raw={}
-    
-    # build lookup dictionaries by iterating the DF (ineffecient but will do for now)
-    for index,row in df.iterrows():
-        api_dict_raw_to_label[row['dataset_raw']]=row['api_label']
-        api_dict_label_to_raw[row['api_label']]=row['dataset_raw']
-        
-    return api_dict_raw_to_label, api_dict_label_to_raw
-
 
         
 def check_year(pop, series, year):
@@ -538,6 +365,182 @@ def extractColorPositions(colorscale, val):
 ################# New abstraction work ######################
 
 
+
+
+
+
+
+
+
+def read_blob(account_name, account_key, container_name, filepath, data_format, return_format):
+    # A generic function for reading files from blob
+    print("Attempting to read file:",filepath,"from Azure blob container:",container_name)
+    
+    
+    
+    if data_format == 'json':
+        # presently all json files are returned as json
+        constr = 'DefaultEndpointsProtocol=https;AccountName=' + account_name + ';AccountKey=' + account_key + ';EndpointSuffix=core.windows.net'
+        blob_service_client = BlobServiceClient.from_connection_string(constr)
+        container_client = blob_service_client.get_container_client(container_name)
+        blob_client = container_client.get_blob_client(filepath)
+        streamdownloader = blob_client.download_blob()
+        file = json.loads(streamdownloader.readall())
+        return file
+    
+    elif data_format == 'parquet' and return_format == 'dataframe':
+        # read parquet, return dataframe
+        #generate a shared access signature for the file
+        sas_i = generate_blob_sas(account_name = account_name,
+                                     container_name = container_name,
+                                     blob_name = filepath,  # statistics/master_stats.parquet
+                                     account_key=account_key,
+                                     permission=BlobSasPermissions(read=True),
+                                     expiry=datetime.utcnow() + timedelta(hours=1))
+
+        #build sas URL using new sas sig
+        sas_url = 'https://' + account_name+'.blob.core.windows.net/' + container_name + '/' + filepath + '?' + sas_i            
+        df = pd.read_parquet(sas_url)
+        return df
+    
+    elif data_format == 'csv' and return_format == 'dataframe':
+        #read csv, return parquet
+        
+        #generate a shared access signature for the file
+        sas_i = generate_blob_sas(account_name = account_name,
+                                     container_name = container_name,
+                                     blob_name = filepath,  # statistics/master_stats.parquet
+                                     account_key=account_key,
+                                     permission=BlobSasPermissions(read=True),
+                                     expiry=datetime.utcnow() + timedelta(hours=1))
+
+        #build sas URL using new sas sig
+        sas_url = 'https://' + account_name+'.blob.core.windows.net/' + container_name + '/' + filepath + '?' + sas_i
+        df = pd.read_csv(sas_url)
+        return df
+ 
+    else:
+        print('ERROR trying to open file on blob')
+
+def build_config_dicts(set_key_list: list, master_config: pd.DataFrame):
+    #The successor to read_dataset_metadata using new master_config.csv
+    #Returns a dictionary of dictionaries, with a specified parent key (for rapid lookup)
+  
+    #master_config = d.read_master_config("dataset_raw") #used to lookup metadata based on dataset raw (often thru the app)
+    #master_config_key_datasetid = d.read_master_config("dataset_id") #used by main callback upon user selection from navbar and key is datasetID (integer)
+    #master_config_key_nav_cat = d.read_master_config("nav_cat") #used to lookup colour when constructing nav menu
+    
+    print('Building configuration dictionaries...')    
+    
+    # Remove all rows with unprocessed configurations (i.e. pipeline has run but not updated by human yet)
+    master_config = master_config[~master_config['dataset_label'].isin(["TODO"])]
+    master_config = master_config[~master_config['var_type'].isin(["TODO"])]
+    master_config = master_config[~master_config['nav_cat'].isin(["TODO"])]
+    master_config = master_config[~master_config['colour'].isin(["TODO"])]
+    master_config = master_config[~master_config['nav_cat_nest'].isin(["TODO"])]
+    
+    # Remove any NaN's in config variables (human error may create these)    
+    master_config = master_config.dropna(subset=['dataset_label','var_type','nav_cat','colour','nav_cat_nest']) #specify cols to drop rows with NaN in them
+        
+    # transform df into dictionary of dictionaries
+     
+    # convert df to list of dicts as records 
+    dict_list = master_config.to_dict('records')
+    
+    # now build a new dict setting keys based on the passed in list
+    config_dict1 = {}
+    for i in range(len(dict_list)):             
+        # set key and values from this item on the list of dicts
+        key = dict_list[i].get(set_key_list[0]) #e.g set dataset_raw as key for parent dictionary
+        value = dict_list[i] #value is the whole dictionary     
+        # insert item to dictionary (if duplicate dataset_raw in csv, it will only add 1, so this kind of filters crud)
+        config_dict1[key]=value
+        
+    config_dict2 = {}
+    for i in range(len(dict_list)):             
+        # set key and values from this item on the list of dicts
+        key = dict_list[i].get(set_key_list[1]) #e.g set dataset_id as key for parent dictionary
+        value = dict_list[i] #value is the whole dictionary     
+        # insert item to dictionary (if duplicate dataset_raw in csv, it will only add 1, so this kind of filters crud)
+        config_dict2[key]=value
+        
+    config_dict3 = {}
+    for i in range(len(dict_list)):             
+        # set key and values from this item on the list of dicts
+        key = dict_list[i].get(set_key_list[2]) #e.g set nav_cat as key for parent dictionary
+        value = dict_list[i] #value is the whole dictionary     
+        # insert item to dictionary (if duplicate dataset_raw in csv, it will only add 1, so this kind of filters crud)
+        config_dict3[key]=value  
+   
+    return config_dict1, config_dict2, config_dict3
+
+
+def create_api_lookup_dicts(master_config):
+    
+    # The goal of this is to modify the dataset raw and label strings to be URL path friendly
+    # These are then put into dictionaries that are used to confert a URL path (api_label) to the original
+    # At runtime, so queries can be performed on the master dataset.
+        
+    # get list of master config dictionaries
+    config_list = get_list_of_dataset_labels_and_raw(master_config,"all")
+    
+    # convert this to a df
+    df = pd.DataFrame(config_list)
+    
+    # subset it into a 3 col format
+    df = df[['dataset_raw', 'dataset_label', 'dataset_label']].copy()
+        
+    # rename cols
+    df.columns=['dataset_raw', 'dataset_label', 'api_label']       
+    
+    # make api labels URL path friendly
+    df['api_label'] = df['api_label'].str.replace(' ','-', regex=True)
+    df['api_label'] = df['api_label'].str.replace('%','percent', regex=True)
+    df['api_label'] = df['api_label'].str.replace('?','-', regex=False) 
+    df['api_label'] = df['api_label'].str.replace('+','-', regex=False) 
+    df['api_label'] = df['api_label'].str.replace(',','-', regex=False)
+    
+    # declare new global dicts
+    api_dict_raw_to_label={}
+    api_dict_label_to_raw={}
+    
+    # build lookup dictionaries by iterating the DF (ineffecient but will do for now)
+    for index,row in df.iterrows():
+        api_dict_raw_to_label[row['dataset_raw']]=row['api_label']
+        api_dict_label_to_raw[row['api_label']]=row['dataset_raw']
+        
+    return api_dict_raw_to_label, api_dict_label_to_raw
+
+
+def get_list_of_dataset_labels_and_raw(master_config,var_type):
+
+    # build and return list of dictionaries containing var_type, datset_raw, dataset_label
+    # Special condition if var_type specified as "all" at calling, return all.
+    # This is used heabily to subset datasets to build lots of the modal drop downs for charts.
+    
+    config_list=[]
+    for i in master_config:
+        config_list.append({"dataset_raw":master_config[i].get("dataset_raw"),
+                            "dataset_label":master_config[i].get("dataset_label"),
+                            "dataset_id":master_config[i].get("dataset_id"),
+                            "var_type":master_config[i].get("var_type"),
+                            "nav_cat":master_config[i].get("nav_cat"),
+                            "nav_cat_nest":master_config[i].get("nav_cat_nest")
+                            
+                            })
+    
+    # convert this to a df (so can sort and subset)
+    df = pd.DataFrame(config_list).sort_values(by="dataset_label") 
+    
+    # subset based on var_type argument
+    if var_type != "all": df = df[df["var_type"] == var_type]
+    
+    # convert df to list of dicts
+    dict_list = df.to_dict('records')
+    
+    return dict_list
+
+
 @dataclass
 class Data:
     # abstract all static data used by app at run-time (load once)
@@ -567,6 +570,10 @@ class Data:
     dataset_count: int
     observation_count: int
     dataset_list: list
+
+    # URL dicts    
+    api_dict_raw_to_label: dict
+    api_dict_label_to_raw: dict 
 
 
 def load(debug_mode: bool) -> Data:
@@ -640,6 +647,9 @@ def load(debug_mode: bool) -> Data:
     observation_count = len(stats.index)
     dataset_list = pd.unique(stats['dataset_raw']) 
 
+    # build global api lookup dicts (for url path operations)
+    api_dict_raw_to_label, api_dict_label_to_raw = create_api_lookup_dicts(config_key_dsraw)
+
     # build data object
     data_obj = Data(map_lowres=map_lowres,
                     map_medres=map_medres,
@@ -655,7 +665,9 @@ def load(debug_mode: bool) -> Data:
                     config_key_navcat=config_key_navcat,
                     dataset_count=dataset_count,
                     observation_count=observation_count,
-                    dataset_list=dataset_list
+                    dataset_list=dataset_list,
+                    api_dict_raw_to_label=api_dict_raw_to_label,
+                    api_dict_label_to_raw=api_dict_label_to_raw
                     )    
     
     return data_obj
