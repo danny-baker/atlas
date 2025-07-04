@@ -27,7 +27,7 @@ import dash_bootstrap_components as dbc
 from dash import Dash, html, Input, Output, ctx, callback, dcc
 import plotly.express as px
 import plotly.graph_objs as go
-from . import layout_html, layout_footer, layout_body, layout_header, layout_navmenu, layout_dcc_stores
+from . import layout_html, layout_footer, layout_body, layout_header, layout_navmenu, layout_dcc_stores, layout_hidden_divs
 import pandas as pd
 
 # Get debug flag 
@@ -92,8 +92,6 @@ def get_component_ids(layout):
 
 
 
-
-
 def create_dash_layout(app):
 
     #CONSTRUCT DASH LAYOUT
@@ -111,21 +109,18 @@ def create_dash_layout(app):
     footer = layout_footer.build()
     
     dcc_stores = layout_dcc_stores.build()        
-        
-    #hidden div triggers (for chaining callbacks)
-    #hidden_div_triggers = create_dash_hidden_div_triggers()
+           
+    hidden_div_triggers = layout_hidden_divs.build() # (for chaining callbacks)
     
+    url = dcc.Location(id='url', refresh=False) # enable pathname API queries
+
     #enable special clientside callbacks
     #js_callback_clientside_blur(app)
     #js_callback_clientside_share(app)
     #js_callback_clientside_viewport(app) 
-
-    # enable pathname API queries
-    #api = dcc.Location(id='url', refresh=False) 
     
-    # Assemble dash layout 
-    #app.layout = html.Div([navbar, header, body, nav_footer, dcc_stores, hidden_div_triggers, api]) 
-    app.layout = html.Div([navmenu, header, body, footer, dcc_stores])         
+    # Assemble dash layout    
+    app.layout = html.Div([navmenu, header, body, footer, dcc_stores, hidden_div_triggers, url])         
     
 
     return app

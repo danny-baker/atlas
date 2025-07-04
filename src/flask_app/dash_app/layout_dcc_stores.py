@@ -1,4 +1,4 @@
-from dash import dash, html, dcc
+from dash import html, dcc
 from . global_constants import *
 import logging
 
