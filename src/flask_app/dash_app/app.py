@@ -3,7 +3,7 @@
 # uv run atlas.py
 # Get overhead menu working. Create callbacks file. All prop ids are global (good)
 
-# Get main callback running
+# Get main callback running (bring in states, they should all be defined now. then slowly refactor main callback)
 
 # Get footer running ok
 # Port rest of app_old.py across
@@ -40,7 +40,7 @@ logger = logging.getLogger(LOGGER)
 
 # load all run-time data
 dobj = data.load(debug_mode)
-print(dobj.dataset_count, dobj.observation_count)
+print(f"dobj: dataset count: {dobj.dataset_count}, observations: {dobj.observation_count}")
 
 # setup system
 if os.path.exists("tmp") == False: 
@@ -110,17 +110,16 @@ def create_dash_layout(app):
     
     dcc_stores = layout_dcc_stores.build()        
            
-    hidden_div_triggers = layout_hidden_divs.build() # (for chaining callbacks)
+    hidden_div_triggers = layout_hidden_divs.build() # for chaining callbacks
     
-    url = dcc.Location(id='url', refresh=False) # enable pathname API queries
+    url = dcc.Location(id='url', refresh=False) # enable pathname API queries    
+  
+    app.layout = html.Div([navmenu, header, body, footer, dcc_stores, hidden_div_triggers, url])    
 
     #enable special clientside callbacks
     #js_callback_clientside_blur(app)
     #js_callback_clientside_share(app)
-    #js_callback_clientside_viewport(app) 
-    
-    # Assemble dash layout    
-    app.layout = html.Div([navmenu, header, body, footer, dcc_stores, hidden_div_triggers, url])         
+    #js_callback_clientside_viewport(app)      
     
 
     return app

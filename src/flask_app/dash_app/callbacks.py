@@ -38,14 +38,14 @@ def init_callbacks(dash_app, dobj):
         c.append(Input('nav-search-menu', 'value'))
         
         # add api
-        #c.append(Input('my-url-map-trigger', 'data'))        
+        c.append(Input('my-url-map-trigger', 'data'))        
 
         # input triggers for timeslider and settings changes   
-        #c.append(Input("timeslider-hidden-div", "children"))        
-        #c.append(Input('my-settings_json_store', 'data')) #these act purely as triggers after apply button pushed (like the hidden div), to call the main callback
-        #c.append(Input('my-settings_mapstyle_store', 'data')) #these act purely as triggers after apply button pushed (like the hidden div), to call the main callback
+        c.append(Input("timeslider-hidden-div", "children"))        
+        c.append(Input('my-settings_json_store', 'data')) #these act purely as triggers after apply button pushed (like the hidden div), to call the main callback
+        c.append(Input('my-settings_mapstyle_store', 'data')) #these act purely as triggers after apply button pushed (like the hidden div), to call the main callback
         
-        print(c)
+        #print(c)
         return c
 
 
