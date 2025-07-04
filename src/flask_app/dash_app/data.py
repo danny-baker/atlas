@@ -17,7 +17,7 @@ from dataclasses import dataclass
 # add atlas/data folder to path (so we can access paths in /data/data_paths.py)
 sys.path.append('/usr/src/app/data') #working dir for built container (see /Dockerfile)
 sys.path.append('/home/dan/atlas/data') #testing on local machine (no docker)
-from src.data_pipeline.data_paths import * 
+from data_pipeline.data_paths import * 
 
 
 

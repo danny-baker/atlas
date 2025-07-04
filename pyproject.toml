@@ -29,4 +29,4 @@ dependencies = [
 ]
 
 [project.scripts]
-atlas = "atlas.py:__main__" #not working
+atlas = "flask_app.__init__:main" 

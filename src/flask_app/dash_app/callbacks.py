@@ -17,120 +17,109 @@ logger = logging.getLogger(LOGGER)
 def init_callbacks(dash_app, dobj):
     
 
-    """
-    @dash_app.callback(Input("random-button","n_clicks"),                  
-                  prevent_initial_call=True
-                  )
-    def callback_test(n_clicks):
+    #INPUTS
+    def callback_main_create_inputs() -> list:
+        #Return a list of type callback Input representing all inputs for main callback
         
-        print("Callback!")
-        print(ctx.triggered_id)
-    """
+        c=[]                 
+                   
+        # get all dataset ids as list of strings
+        keys_list = list(dobj.config_key_dsid.keys())
+        keys_list_str = [str(id) for id in keys_list]    
 
-
-    #COMPLETE INPUT LIST FOR MAIN CALLBACK
-    def callback_main_create_inputs():
-        #this should return the input chain for this callback
+        # recursively add input ids for all datasets in dataset_lkup
+        for id in keys_list_str:         
+            c.append(Input(id,"n_clicks"))     
         
-        c=[]
-        
-        #construct input triggers for timeslider and settings changes   
-        c.append(Input("timeslider-hidden-div", "children"))
-        #c.append(Input('geomap_figure', 'clickData'))
-        c.append(Input('my-settings_json_store', 'data')) #these act purely as triggers after apply button pushed (like the hidden div), to call the main callback
-        c.append(Input('my-settings_mapstyle_store', 'data')) #these act purely as triggers after apply button pushed (like the hidden div), to call the main callback
-              
-        # Don't fuck with this. Some odd parsing going on. Need to cast df to string and then back to numpy.Dash parser issue.
-                
-        # get all dataset ids from master config
-        keysList = list(dobj.config_key_dsid.keys())        
-        df = pd.DataFrame(keysList, columns=['dataset_id'])
-        df['dataset_id'] = df['dataset_id'].astype(str)
-        ids=df['dataset_id'].to_numpy()     #critical   
-               
-        #recursively add input ids for all datasets in dataset_lkup
-        for i in range(0,len(ids)):         
-            c.append(Input(ids[i],"n_clicks"))                        
-        print(c)
-        
-        #add random button
+        # add random button
         c.append(Input('random-button', "n_clicks"))
         
-        #add search menu
+        # add search menu
         c.append(Input('nav-search-menu', 'value'))
         
-        #add api
-        c.append(Input('my-url-map-trigger', 'data'))        
+        # add api
+        #c.append(Input('my-url-map-trigger', 'data'))        
+
+        # input triggers for timeslider and settings changes   
+        #c.append(Input("timeslider-hidden-div", "children"))        
+        #c.append(Input('my-settings_json_store', 'data')) #these act purely as triggers after apply button pushed (like the hidden div), to call the main callback
+        #c.append(Input('my-settings_mapstyle_store', 'data')) #these act purely as triggers after apply button pushed (like the hidden div), to call the main callback
         
+        print(c)
         return c
 
 
-    #Main callback for handling dataset selection change
+    # MAIN CALLBACK
     @dash_app.callback(
-        [
-            Output("my-series","data"),
-            Output("my-series-label","data"),
-            Output("geomap_figure", "figure"),
-            Output("my-source", "children"),
-            Output("my-source-link", "href"),         
-            Output("download-button", "style"),                       
-            Output("bar-button", "style"),
-            Output("line-button", "style"),
-            Output("geobar-button", "style"),
-            Output("sunburst-button", "style"),
-            Output("globe-button", "style"),
-            Output("bubble-button", "style"),        
-            Output('my-year', "data"),
-            Output('my-loader-main', "children"), #used to trigger loader. Use null string "" as output
-            Output('button-panel-style', "style"), #used to hide initially
-            Output('year-slider-style', "style"), #used to hide initially
-            Output('data-source-style', 'style'), #used to hide initially         
-            Output("year-slider", "max"),         
-            Output("year-slider", "marks"),
-            Output("year-slider", "value"),         
-            Output("year-slider-title","style"),
-            Output("year-slider-title","children"),
-            Output("my-selection-m49", "data"), #NEW, to save the m49 location of the selected map
-            #Output("my-series-data","data"),         
-            Output("my-url-main-callback","data"), #to set url in another callback
-            Output("my-url-bar-trigger", "data"),  # chain to bar
-            Output("my-url-line-trigger", "data"), # chain to line
-            Output("my-url-globe-trigger", "data"),# chain to globe
-            Output("my-url-jigsaw-trigger", "data"),# chain to globe
-            Output("source-popover","children"), #popover with explanatory notes
-            Output("my-experimental-trigger", "data") #trigger for experimental modal  
+        #OUTPUTS
+        #[
+        #    Output("my-series","data"),
+        #    Output("my-series-label","data"),
+        #    Output("geomap_figure", "figure"),
+        #    Output("my-source", "children"),
+        #    Output("my-source-link", "href"),         
+        #    Output("download-button", "style"),                       
+        #    Output("bar-button", "style"),
+        #    Output("line-button", "style"),
+        #    Output("geobar-button", "style"),
+        #    Output("sunburst-button", "style"),
+        #    Output("globe-button", "style"),
+        #    Output("bubble-button", "style"),        
+        #    Output('my-year', "data"),
+        #    Output('my-loader-main', "children"), #used to trigger loader. Use null string "" as output
+        #    Output('button-panel-style', "style"), #used to hide initially
+        #    Output('year-slider-style', "style"), #used to hide initially
+        #    Output('data-source-style', 'style'), #used to hide initially         
+        #    Output("year-slider", "max"),         
+        #    Output("year-slider", "marks"),
+        #    Output("year-slider", "value"),         
+        #    Output("year-slider-title","style"),
+        #    Output("year-slider-title","children"),
+        #    Output("my-selection-m49", "data"), #NEW, to save the m49 location of the selected map
+        #    #Output("my-series-data","data"),         
+        #    Output("my-url-main-callback","data"), #to set url in another callback
+        #    Output("my-url-bar-trigger", "data"),  # chain to bar
+        #    Output("my-url-line-trigger", "data"), # chain to line
+        #    Output("my-url-globe-trigger", "data"),# chain to globe
+        #    Output("my-url-jigsaw-trigger", "data"),# chain to globe
+        #    Output("source-popover","children"), #popover with explanatory notes
+        #    Output("my-experimental-trigger", "data") #trigger for experimental modal          
+        #]
         
-        ],
         
+        #INPUTS
         callback_main_create_inputs(), #build list of input items programmatically 
         
-        [
-            State("geomap_figure", "figure"),
-            State("year-slider", "marks"),
-            State("year-slider", "max"),
-            State("year-slider", "value"),
-            State("my-series","data"),        
-            State("my-series-label","data"),        
-            State('my-settings_json_store', 'data'), #allows data intself to be extracted
-            State('my-settings_mapstyle_store', 'data'), #allows data intself to be extracted
-            State("my-settings_colorbar_store", 'data'),
-            State("my-settings_colorbar_reverse_store", 'data'),
-            State('nav-search-menu', 'value'), #new
-            State("my-selection-m49", "data"), #NEW, to save the m49 location of the selected map
-            State("my-url-path", "data"),        
-            State("my-url-root", 'data'),
-            State('my-url-map-trigger', 'data'),
-            State("my-url-series", 'data'),
-            State("my-url-year", 'data'),
-            State("my-url-view", 'data'),
-            State("js-detected-viewport", 'data'),         
-    
-        ],
+        #STATE
+        #[
+        #    State("geomap_figure", "figure"),
+        #    State("year-slider", "marks"),
+        #    State("year-slider", "max"),
+        #    State("year-slider", "value"),
+        #    State("my-series","data"),        
+        #    State("my-series-label","data"),        
+        #    State('my-settings_json_store', 'data'), #allows data intself to be extracted
+        #    State('my-settings_mapstyle_store', 'data'), #allows data intself to be extracted
+        #    State("my-settings_colorbar_store", 'data'),
+        #    State("my-settings_colorbar_reverse_store", 'data'),
+        #    State('nav-search-menu', 'value'), #new
+        #    State("my-selection-m49", "data"), #NEW, to save the m49 location of the selected map
+        #   State("my-url-path", "data"),        
+        #    State("my-url-root", 'data'),
+        #    State('my-url-map-trigger', 'data'),
+        #    State("my-url-series", 'data'),
+        #    State("my-url-year", 'data'),
+        #    State("my-url-view", 'data'),
+        #    State("js-detected-viewport", 'data'),             
+        #],
+        
         prevent_initial_call=True
     )    
-    def callback_main(*args):
-        logger.info("MAIN CALLBACK") 
+    def callback_main(*args):  
+        logger.info("MAIN CALLBACK")
+        print(ctx.triggered_id) 
         
+        """
         #first check triggers and context 
         #ctx = dash.callback_context 
         #selection = ctx.triggered[0]["prop_id"].split(".")[0] #this is the series selection (component id from navbar top), except if the year slider is the trigger!!
@@ -144,7 +133,6 @@ def init_callbacks(dash_app, dobj):
         api_dict_label_to_raw = dobj.api_dict_label_to_raw
         api_dict_raw_to_label = dobj.api_dict_raw_to_label      
         SERIES = dobj.dataset_list
-
 
 
         # retrieve dcc component states from states dict
@@ -411,4 +399,6 @@ def init_callbacks(dash_app, dobj):
         maptrigger, maptrigger, maptrigger, maptrigger, \
         popover_children, \
         experiment_trigger
+        """
+        return
    

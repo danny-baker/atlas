@@ -11,6 +11,7 @@
 # Build note...when call uv build, want to build into a container, not a package. See if that's possible.
 
 #currently: refactoring and fixing callbacks.py main callback. Apply fixes. Need to find the apilookup bs. Add to dobj??
+# removed linting errors. Need to trace build out entire main callback step by step to check why it's silently failing (it's not running likely due to error in loading inputs before it actually gets created)
 
 
 import sys
@@ -21,7 +22,7 @@ from . global_constants import *
 from . layout_navmenu import *
 from . callbacks import *
 from . import data  # run-time helpers
-from src.data_pipeline.data_paths import * 
+from data_pipeline.data_paths import * 
 import dash_bootstrap_components as dbc
 from dash import Dash, html, Input, Output, ctx, callback, dcc
 import plotly.express as px
