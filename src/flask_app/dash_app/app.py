@@ -1,17 +1,17 @@
 
 # run app
 # uv run atlas.py
-
 # Get overhead menu working. Create callbacks file. All prop ids are global (good)
+
+# Get main callback running
 
 # Get footer running ok
 # Port rest of app_old.py across
 # Get a map displaying data (see what free tilemaps are now available. Xp here.)
 # Refactor and make nice.
+
 # Build note...when call uv build, want to build into a container, not a package. See if that's possible.
 
-#currently: refactoring and fixing callbacks.py main callback. Apply fixes. Need to find the apilookup bs. Add to dobj??
-# removed linting errors. Need to trace build out entire main callback step by step to check why it's silently failing (it's not running likely due to error in loading inputs before it actually gets created)
 
 
 import sys
@@ -27,7 +27,7 @@ import dash_bootstrap_components as dbc
 from dash import Dash, html, Input, Output, ctx, callback, dcc
 import plotly.express as px
 import plotly.graph_objs as go
-from . import layout_html, layout_footer, layout_body, layout_header, layout_navmenu
+from . import layout_html, layout_footer, layout_body, layout_header, layout_navmenu, layout_dcc_stores
 import pandas as pd
 
 # Get debug flag 
@@ -110,8 +110,7 @@ def create_dash_layout(app):
        
     footer = layout_footer.build()
     
-    # dcc stores for settings
-    #dcc_stores = create_dash_layout_dcc_stores()        
+    dcc_stores = layout_dcc_stores.build()        
         
     #hidden div triggers (for chaining callbacks)
     #hidden_div_triggers = create_dash_hidden_div_triggers()
@@ -126,7 +125,7 @@ def create_dash_layout(app):
     
     # Assemble dash layout 
     #app.layout = html.Div([navbar, header, body, nav_footer, dcc_stores, hidden_div_triggers, api]) 
-    app.layout = html.Div([navmenu, header, body, footer])         
+    app.layout = html.Div([navmenu, header, body, footer, dcc_stores])         
     
 
     return app
