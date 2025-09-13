@@ -1,10 +1,15 @@
 
-# run app
-# uv run atlas.py
-# Get overhead menu working. Create callbacks file. All prop ids are global (good)
+# RUN
+# uv run atlas
+
+# TASKS
+# Get overhead menu working. [DONE]
+# Create callbacks file. [DONE]
+# All prop ids are global (good) [DONE]
 
 # Get main callback running (bring in states, they should all be defined now. then slowly refactor main callback)
 
+# Can select dataset and map displays
 # Get footer running ok
 # Port rest of app_old.py across
 # Get a map displaying data (see what free tilemaps are now available. Xp here.)
@@ -27,7 +32,7 @@ import dash_bootstrap_components as dbc
 from dash import Dash, html, Input, Output, ctx, callback, dcc
 import plotly.express as px
 import plotly.graph_objs as go
-from . import layout_html, layout_footer, layout_body, layout_header, layout_navmenu, layout_dcc_stores, layout_hidden_divs
+from . import layout_html, layout_footer, layout_body, layout_header, layout_navmenu, layout_dcc_stores, layout_hidden_divs, callbacks
 import pandas as pd
 
 # Get debug flag 
@@ -119,7 +124,7 @@ def create_dash_layout(app):
     #enable special clientside callbacks
     #js_callback_clientside_blur(app)
     #js_callback_clientside_share(app)
-    #js_callback_clientside_viewport(app)      
+    #callbacks.js_callback_clientside_viewport(app)      
     
 
     return app

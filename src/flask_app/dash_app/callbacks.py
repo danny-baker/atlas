@@ -91,51 +91,67 @@ def init_callbacks(dash_app, dobj):
         callback_main_create_inputs(), #build list of input items programmatically 
         
         #STATE
-        #[
-        #    State("geomap_figure", "figure"),
-        #    State("year-slider", "marks"),
-        #    State("year-slider", "max"),
-        #    State("year-slider", "value"),
-        #    State("my-series","data"),        
-        #    State("my-series-label","data"),        
-        #    State('my-settings_json_store', 'data'), #allows data intself to be extracted
-        #    State('my-settings_mapstyle_store', 'data'), #allows data intself to be extracted
-        #    State("my-settings_colorbar_store", 'data'),
-        #    State("my-settings_colorbar_reverse_store", 'data'),
-        #    State('nav-search-menu', 'value'), #new
-        #    State("my-selection-m49", "data"), #NEW, to save the m49 location of the selected map
-        #   State("my-url-path", "data"),        
-        #    State("my-url-root", 'data'),
-        #    State('my-url-map-trigger', 'data'),
-        #    State("my-url-series", 'data'),
-        #    State("my-url-year", 'data'),
-        #    State("my-url-view", 'data'),
-        #    State("js-detected-viewport", 'data'),             
-        #],
+        [
+            State("geomap_figure", "figure"),
+            State("year-slider", "marks"),
+            State("year-slider", "max"),
+            State("year-slider", "value"),
+            State("my-series","data"),        
+            State("my-series-label","data"),        
+            State('my-settings_json_store', 'data'), #allows data intself to be extracted
+            State('my-settings_mapstyle_store', 'data'), #allows data intself to be extracted
+            State("my-settings_colorbar_store", 'data'),
+            State("my-settings_colorbar_reverse_store", 'data'),
+            State('nav-search-menu', 'value'), #new
+            State("my-selection-m49", "data"), #NEW, to save the m49 location of the selected map
+            State("my-url-path", "data"),        
+            State("my-url-root", 'data'),
+            State('my-url-map-trigger', 'data'),
+            State("my-url-series", 'data'),
+            State("my-url-year", 'data'),
+            State("my-url-view", 'data'),
+            State("js-detected-viewport", 'data'),             
+        ],
         
         prevent_initial_call=True
     )    
     def callback_main(*args):  
         logger.info("MAIN CALLBACK")
-        print(ctx.triggered_id) 
+                
+        # user selection
+        selection = ctx.triggered_id
+        logger.info(f"Selection is {selection}")
+
+        # CASE: navmenu selection        
+        if selection.isnumeric():
+            print("Navmenu selection")            
+
+        # CASE: random button selection
+        if selection == 'random-button':
+            print("Random!")
+
+        # CASE: search menu
+        if selection == 'nav-search-menu':
+            print("Searching!")
+
         
+
+       
+
+
+
         """
-        #first check triggers and context 
-        #ctx = dash.callback_context 
-        #selection = ctx.triggered[0]["prop_id"].split(".")[0] #this is the series selection (component id from navbar top), except if the year slider is the trigger!!
-        print("Selection triggered is", ctx.triggered_id)
-        
-        #fix
+
+
+        # data object vars (substituted. fix later)
         master_config = dobj.config_key_dsraw
-        pop = dobj.stats
-        selection = "blah" #get from ctx
+        pop = dobj.stats        
         master_config_key_datasetid = dobj.config_key_dsid
         api_dict_label_to_raw = dobj.api_dict_label_to_raw
         api_dict_raw_to_label = dobj.api_dict_raw_to_label      
         SERIES = dobj.dataset_list
 
-
-        # retrieve dcc component states from states dict
+        # dcc states
         states = ctx.states
         zoom = states["geomap_figure.figure"]["layout"]["mapbox"]["zoom"]
         center = states["geomap_figure.figure"]["layout"]["mapbox"]["center"]
@@ -150,18 +166,12 @@ def init_callbacks(dash_app, dobj):
         settings_colorpalette = states['my-settings_colorbar_store.data']
         settings_colorpalette_reverse = states['my-settings_colorbar_reverse_store.data']
         selection_m49 = states['my-selection-m49.data'] #Map selection state (For later feature)        
-        search_query = states['my-url-path.data']              #api
-        #maptrigger = states['my-url-map-trigger.data']  #api signal
-        #url_view = states['my-url-view.data']  #api
+        search_query = states['my-url-path.data']  #url 
         maptrigger = 'map'
         url_view = 'map' #override when necessary
-        url_year = states['my-url-year.data']  #api        
-        viewport = states['js-detected-viewport.data'] 
-        logger.info('DETECTED VIEWPORT: %r x %r',viewport['width'], viewport['height'])           
-        
-        # special trigger for experimental data                
+        url_year = states['my-url-year.data']  #api   
         experiment_trigger = "" # trigger for experiments (i.e. the power station globe)
-
+        
         # load settings data: border 
         if settings_json is None: geojson = dobj.map_lowres                 
         else:             
@@ -203,12 +213,12 @@ def init_callbacks(dash_app, dobj):
         else:            
             source = dobj.config_key_dsraw[series].get("source") 
             link = master_config[series].get("link")    
-            year = int(data.get_years(pop.loc[(pop['dataset_raw'] == series)])[year_slider_selected]) #expensive            
-            
+            year = int(data.get_years(pop.loc[(pop['dataset_raw'] == series)])[year_slider_selected]) #expensive                       
+               
         
-        #MAIN CALLBACK LOGIC pt1 (Determine what the event was)
+        # MAIN CALLBACK LOGIC pt1 (Determine what the event was)
         
-        #MAP CLICK (PRESENTLY DISABLED: CHECK CALLBACK INPUT TO SWITCH BACK ON)
+        # MAP CLICK (PRESENTLY DISABLED: CHECK CALLBACK INPUT TO SWITCH BACK ON)
         if selection == "geomap_figure":
             #Grab some shit about the click data, yeeeh baby. We got some click data. We gonna do shit with it. Yeeh.
             selected_map_location = ctx.triggered[0]['value']['points'][0]['location'] #this is the M49 code of selected country
@@ -219,7 +229,7 @@ def init_callbacks(dash_app, dobj):
             #return series, create_map_geomap(pop, geojson, series, years[year], zoom, center, selected_map_location), d.get_source(logger, pop, series, years[year]), "https://www.google.com"
             #This still needs work
         
-        #year SLIDER CHANGE
+        # YEAR SLIDER CHANGE
         elif selection == "timeslider-hidden-div":  
             # reset fonts
             for i in range(0,len(year_slider_marks)):
@@ -227,7 +237,7 @@ def init_callbacks(dash_app, dobj):
             year_slider_marks[str(year_slider_selected)]['style']['fontWeight']='bold'
             
             
-        #SETTINGS CHANGE
+        # SETTINGS CHANGE
         elif selection == "my-settings_json_store":   
             #Check if there is a dataset and hide source, slider and buttons if not
             if series == None:
@@ -296,10 +306,10 @@ def init_callbacks(dash_app, dobj):
             year_slider_marks[year_slider_selected]['style']['fontWeight']='bold' #mark selected year bold          
         
         
-        #NAVBAR SELECTION
+        # NAVBAR SELECTION
         else:
             #New dataset is selected, query available years and rebuild year slider vals        
-            #logger.info("Main callback: navbar selection logic, or search pressed") 
+            logger.info("Main callback: navbar selection logic, or search pressed") 
                    
             # first check if search menu input, and override series variable if so
             if selection == 'nav-search-menu':            
@@ -334,7 +344,7 @@ def init_callbacks(dash_app, dobj):
                 year_slider_selected = year_slider_max #select the most recent year by default
                 year_slider_marks[year_slider_selected]['style']['fontWeight']='bold' #mark selected year bold          
             
-        #MAIN CALLBACK LOGIC Pt2 (Get ready to return) 
+        # MAIN CALLBACK LOGIC Pt2 (Get ready to return) 
                         
         # Check what datatype is selected and hide buttons not applicable for discrete data   
         if series != None:       
@@ -384,7 +394,9 @@ def init_callbacks(dash_app, dobj):
         else:
             #subset master dataset to selected series and selected year (used to build new geomap) being careful to avoid experimental datasets      
             df = pop.loc[(pop['dataset_raw'] == series) & (pop['year'] == int(year))].sort_values('country')   
+        """
         
+        """    
         return \
         series, series_label, \
         charts.create_map_geomap(df, geojson, series, zoom, center, selected_map_location, mapstyle, colorbarstyle, settings_colorpalette_reverse), \
@@ -402,3 +414,4 @@ def init_callbacks(dash_app, dobj):
         """
         return
    
+
