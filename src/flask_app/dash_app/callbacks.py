@@ -52,12 +52,12 @@ def init_callbacks(dash_app, dobj):
     # MAIN CALLBACK
     @dash_app.callback(
         #OUTPUTS
-        #[
+        [
         #    Output("my-series","data"),
         #    Output("my-series-label","data"),
             Output("geomap_figure", "figure"),
-        #    Output("my-source", "children"),
-        #    Output("my-source-link", "href"),         
+            Output("my-source", "children"),
+            Output("my-source-link", "href"),         
         #    Output("download-button", "style"),                       
         #    Output("bar-button", "style"),
         #    Output("line-button", "style"),
@@ -66,7 +66,7 @@ def init_callbacks(dash_app, dobj):
         #    Output("globe-button", "style"),
         #    Output("bubble-button", "style"),        
         #    Output('my-year', "data"),
-        #    Output('my-loader-main', "children"), #used to trigger loader. Use null string "" as output
+            Output('my-loader-main', "children"), #used to trigger loader. Use null string "" as output
         #    Output('button-panel-style', "style"), #used to hide initially
         #    Output('year-slider-style', "style"), #used to hide initially
         #    Output('data-source-style', 'style'), #used to hide initially         
@@ -82,9 +82,9 @@ def init_callbacks(dash_app, dobj):
         #    Output("my-url-line-trigger", "data"), # chain to line
         #    Output("my-url-globe-trigger", "data"),# chain to globe
         #    Output("my-url-jigsaw-trigger", "data"),# chain to globe
-        #    Output("source-popover","children"), #popover with explanatory notes
+            Output("source-popover","children"), #popover with explanatory notes
         #    Output("my-experimental-trigger", "data") #trigger for experimental modal          
-        #],        
+        ],        
         
         #INPUTS
         callback_main_create_inputs(), #build list of input items programmatically 
@@ -141,8 +141,14 @@ def init_callbacks(dash_app, dobj):
         if selection.isnumeric() or selection == 'random-button' or selection == 'nav-search-menu':
             #return out and build main map
             fig = charts.create_map_geomap(dobj, series)
-            print(type(fig))
-            return fig
+            year = dobj.get_latest_year(series['dataset_raw'])
+            series_label = f"{series['dataset_label']} in {year}"
+            series_source = series['source']
+            link = series['link']
+            note = series['note']
+            print(series_label)
+
+            return fig, series_source, link, series_label, note
             
             
        

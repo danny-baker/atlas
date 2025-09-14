@@ -14,11 +14,10 @@ def create_map_geomap_empty():
     logger.info("Creating geomap empty...")
     
     fig = go.Figure(
-        go.Choroplethmapbox(        
-        )
+        go.Choroplethmapbox(),
+        layout=go.Layout(uirevision='some_constant_value')
     )
     
-    #zoom 1.6637151294876888 and centre {'lon': 27.607108241243623, 'lat': 3.4455217746834705}
     fig.update_layout(
         mapbox_style=mapbox_style[1], #default
         mapbox_zoom=INIT_ZOOM,
@@ -28,17 +27,14 @@ def create_map_geomap_empty():
     return fig
 
 
-def create_map_geomap(dobj, series):
-    logger.info("Create Geomap...")
+def create_map_geomap(dobj, series):    
     
     series_name = series['dataset_raw']
     var_type = series['var_type']
     year = dobj.get_latest_year(series_name)
     stats = dobj.get_stats(series_name=series_name, year=year)
     
-    #print(stats)    
-    #print(series)
-
+ 
     if var_type == 'discrete':
         pass
 
@@ -47,8 +43,8 @@ def create_map_geomap(dobj, series):
                             
         # format numbers in d3 format
         print("Mean value is ",stats['value'].astype(float).mean())
-        #hovertemp = "%{customdata} %{text:,.2f}<extra></extra>" 
-        #if stats["value"].astype(float).mean() > 1000000: hovertemp = "%{customdata} %{text:,d}<extra></extra>" #large number formatting no decmials e.g. 123,000,000                
+        hovertemp = "%{customdata} %{text:,.2f}<extra></extra>" 
+        if stats["value"].astype(float).mean() > 1000000: hovertemp = "%{customdata} %{text:,d}<extra></extra>" #large number formatting no decmials e.g. 123,000,000                
                 
         fig = go.Figure(
             go.Choroplethmapbox(
@@ -59,22 +55,22 @@ def create_map_geomap(dobj, series):
                 text=stats['value'],
                 customdata=stats['country'],                
                 hoverinfo="location+text",
-                #hovertemplate=hovertemp,             
+                hovertemplate=hovertemp,             
                 #colorscale=colorbarstyle,
                 #reversescale=colorpalette_reverse,                
                 colorbar= {'ticks': '', 'title': {'text': 'HIGH', 'side': 'top'}, 'showticklabels': False, 'bgcolor': 'rgba(0,0,0,0)', 'outlinewidth':0 },  #'xpad': 20, 'borderwidth': 10, 'bgcolor': 'blue'
                 zauto=True,
                 marker_opacity=0.5,
                 marker_line_width=1,
-            )
+            ),
+            layout=go.Layout(uirevision='some_constant_value') #this auto preserves zoom state etc.
         )
             
         #add in some extras (needs to be done like this)
         fig.update_layout(
             #mapbox_style=mapstyle,
             #mapbox_zoom=zoom,
-            #mapbox_center=center, #{"lat": -8.7, "lon": 34.5},
-            #margin={"r": 0, "t": 0, "l": 0, "b": 0},              
+            #mapbox_center=center, #{"lat": -8.7, "lon": 34.5},                        
             mapbox_style=mapbox_style[1], #default
             mapbox_zoom=INIT_ZOOM,
             mapbox_center={"lat": INIT_LATITUDE, "lon": INIT_LONGITUDE},   

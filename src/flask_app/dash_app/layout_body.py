@@ -76,7 +76,7 @@ def build():
                 style={"height": INIT_MAP_H, "width": INIT_MAP_W, 'z-index':'2' }, 
                 id="geomap_figure",
                 figure = create_map_geomap_empty(),
-                config={'displayModeBar': False },              
+                config={'displayModeBar': False, 'scrollZoom': True },              
             )
         ],)
     return body
