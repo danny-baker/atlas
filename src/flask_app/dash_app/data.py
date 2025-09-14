@@ -574,6 +574,19 @@ class Data:
     # URL dicts    
     api_dict_raw_to_label: dict
     api_dict_label_to_raw: dict 
+    
+    def get_stats(self, series_name:str, year:int) -> pd.DataFrame:
+        # Query master stats and return a dataframe with all stats for a given dataset_raw name and year        
+        df = self.stats.loc[(self.stats['dataset_raw'] == series_name) & (self.stats['year'] == year)].sort_values('country')       
+        return df
+    
+    def get_latest_year(self, series_name:str) -> int:
+        # Return the most recent year available for the given dataset
+        yr = max(self.stats.loc[(self.stats['dataset_raw'] == series_name), 'year'])
+        return int(yr) 
+     
+
+
 
 
 def load(debug_mode: bool) -> Data:

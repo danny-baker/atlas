@@ -55,7 +55,7 @@ def init_callbacks(dash_app, dobj):
         #[
         #    Output("my-series","data"),
         #    Output("my-series-label","data"),
-        #    Output("geomap_figure", "figure"),
+            Output("geomap_figure", "figure"),
         #    Output("my-source", "children"),
         #    Output("my-source-link", "href"),         
         #    Output("download-button", "style"),                       
@@ -84,8 +84,7 @@ def init_callbacks(dash_app, dobj):
         #    Output("my-url-jigsaw-trigger", "data"),# chain to globe
         #    Output("source-popover","children"), #popover with explanatory notes
         #    Output("my-experimental-trigger", "data") #trigger for experimental modal          
-        #]
-        
+        #],        
         
         #INPUTS
         callback_main_create_inputs(), #build list of input items programmatically 
@@ -120,22 +119,32 @@ def init_callbacks(dash_app, dobj):
                 
         # user selection
         selection = ctx.triggered_id
+        states = ctx.states
         logger.info(f"Selection is {selection}")
 
+        #series: dict of type {dataset_id, dataset_label, dataset_raw, var_type, nav_cat, nav_cat_nest, colour, var_type, source, link, note} 
+
         # CASE: navmenu selection        
-        if selection.isnumeric():
-            print("Navmenu selection")            
+        if selection.isnumeric():                                 
+            series = dobj.config_key_dsid[int(selection)]            
 
         # CASE: random button selection
-        if selection == 'random-button':
-            print("Random!")
+        elif selection == 'random-button':                      
+            series = dobj.config_key_dsid[np.random.randint(0,len(dobj.config_key_dsid))]           
 
         # CASE: search menu
-        if selection == 'nav-search-menu':
-            print("Searching!")
+        elif selection == 'nav-search-menu':            
+            search_menu_dsraw = states["nav-search-menu.value"] #dataset_raw
+            series = dobj.config_key_dsraw[search_menu_dsraw]            
 
-        
-
+        # CASE: series selection (from either navmenu, random btn or search menu) 
+        if selection.isnumeric() or selection == 'random-button' or selection == 'nav-search-menu':
+            #return out and build main map
+            fig = charts.create_map_geomap(dobj, series)
+            print(type(fig))
+            return fig
+            
+            
        
 
 
@@ -412,6 +421,6 @@ def init_callbacks(dash_app, dobj):
         popover_children, \
         experiment_trigger
         """
-        return
+        
    
 
