@@ -27,7 +27,7 @@ def create_map_geomap_empty():
     return fig
 
 
-def create_map_geomap(dobj, series):    
+def create_map_geomap(dobj, series, colorpalette, colorpalette_reverse):    
     
     series_name = series['dataset_raw']
     var_type = series['var_type']
@@ -56,8 +56,8 @@ def create_map_geomap(dobj, series):
                 customdata=stats['country'],                
                 hoverinfo="location+text",
                 hovertemplate=hovertemp,             
-                #colorscale=colorbarstyle,
-                #reversescale=colorpalette_reverse,                
+                colorscale=colorpalette,
+                reversescale=colorpalette_reverse,                
                 colorbar= {'ticks': '', 'title': {'text': 'HIGH', 'side': 'top'}, 'showticklabels': False, 'bgcolor': 'rgba(0,0,0,0)', 'outlinewidth':0 },  #'xpad': 20, 'borderwidth': 10, 'bgcolor': 'blue'
                 zauto=True,
                 marker_opacity=0.5,

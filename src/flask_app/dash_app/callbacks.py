@@ -122,6 +122,12 @@ def init_callbacks(dash_app, dobj):
         states = ctx.states
         logger.info(f"Selection is {selection}")
 
+        # load colour palette
+        colorpalette = states['my-settings_colorbar_store.data']
+        colorpalette_reverse = states['my-settings_colorbar_reverse_store.data']  
+        if colorpalette is None: colorpalette = geomap_colorscale[INIT_COLOR_PALETTE] #39 inferno,  #55 plasma    
+        if colorpalette_reverse is None: colorpalette_reverse = INIT_COLOR_PALETTE_REVERSE # default True        
+
         #series: dict of type {dataset_id, dataset_label, dataset_raw, var_type, nav_cat, nav_cat_nest, colour, var_type, source, link, note} 
 
         # CASE: navmenu selection        
@@ -140,13 +146,12 @@ def init_callbacks(dash_app, dobj):
         # CASE: series selection (from either navmenu, random btn or search menu) 
         if selection.isnumeric() or selection == 'random-button' or selection == 'nav-search-menu':
             #return out and build main map
-            fig = charts.create_map_geomap(dobj, series)
+            fig = charts.create_map_geomap(dobj, series, colorpalette, colorpalette_reverse)
             year = dobj.get_latest_year(series['dataset_raw'])
             series_label = f"{series['dataset_label']} in {year}"
             series_source = series['source']
             link = series['link']
-            note = series['note']
-            print(series_label)
+            note = series['note']            
 
             return fig, series_source, link, series_label, note
             
