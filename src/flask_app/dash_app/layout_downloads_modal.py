@@ -4,7 +4,6 @@
 from dash import dash, html, dcc
 import dash_bootstrap_components as dbc
 from . global_constants import *
-from . import layout_modal
 
 
 def build():

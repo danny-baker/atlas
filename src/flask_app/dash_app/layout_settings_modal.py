@@ -1,7 +1,20 @@
 from dash import dash, html, dcc
 import dash_bootstrap_components as dbc
 from . global_constants import *
-from . import layout_modal
+
+
+
+settings_colour_scheme = html.Div([
+
+    dcc.Markdown(""" 
+    This controls how each region on the main map is coloured. 
+    The main map is a choropleth, which is a type of map where regions are coloured based on the distibution of values in a data series. 
+    You can change the colour scheme any time and there are 184 combinations!
+    The default colour scheme for the site is `Inferno` in `Reverse`. To change the colour scheme select a combination and click the "APPLY SETTINGS" button. 
+    Note that some charts and visualisations are also coloured based on the selected colour scheme.  
+    """),
+])
+
 
 def build():
     
@@ -137,7 +150,7 @@ def build():
         
                 #COLOUR SCHEME
                 dcc.Markdown(""" #### Colour Scheme  """),
-                layout_modal.settings_colour_scheme,
+                settings_colour_scheme,
                                 
                 #Create colorscale buttons recursively by calling a special function
                 html.Div(children=[create_dash_layout_settings_modal_colorscale_button(i) for i in range(0,93)]),
