@@ -562,6 +562,7 @@ class Data:
     
     # config dicts
     # prev known as master_config, master_config_key_datasetid, master_config_key_nav_cat
+    # dict of type {dataset_id, dataset_label, dataset_raw, var_type, nav_cat, nav_cat_nest, colour, var_type, source, link, note} 
     config_key_dsraw: dict
     config_key_dsid: dict
     config_key_navcat: dict
@@ -578,6 +579,29 @@ class Data:
     def get_stats(self, series_name:str, year:int) -> pd.DataFrame:
         # Query master stats and return a dataframe with all stats for a given dataset_raw name and year        
         df = self.stats.loc[(self.stats['dataset_raw'] == series_name) & (self.stats['year'] == year)].sort_values('country')       
+        return df
+    
+    def get_stats_for_dl(self, series_name:str) -> pd.DataFrame:
+        # Prepare a cleaned DF suitable for download
+
+        # gather userful vars    
+        series = self.config_key_dsraw[series_name]          
+        series_label = series['dataset_label']      
+        source = series['source']      
+        link = series['link']
+        
+        # Query master stats and return a dataframe with all stats for a given dataset_raw name      
+        df = self.stats.loc[(self.stats['dataset_raw'] == series_name)].sort_values(['year','country'])     
+        
+        # make it pretty
+        df['m49_un_a3'] = df['m49_un_a3'].astype(str).str.zfill(3) 
+        df['United Nations m49 country code'] = df['m49_un_a3']        
+        df = df.rename(columns={'value':series_label}) 
+        df = df.drop(columns=['dataset_raw', 'm49_un_a3', 'continent'])        
+                        
+        #merge in source information     
+        df['Source'] = source+" "+link
+  
         return df
     
     def get_latest_year(self, series_name:str) -> int:

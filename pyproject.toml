@@ -17,6 +17,8 @@ dependencies = [
     "dash==2.18.2",
     "dash-bootstrap-components==1.7.1",
     "gunicorn==23.0.0", 
+    "xlsxwriter==3.2.9",
+    
     #kaleido==0.2.1 #pdf export
     #dash-deck==0.0.1
     #pydeck==0.4.1 #Had to lock this as updates are breaking. Might be cool new features though.
