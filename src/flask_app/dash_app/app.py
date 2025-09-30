@@ -1,4 +1,3 @@
-
 # RUN
 # uv run atlas
 
@@ -6,14 +5,19 @@
 # Get overhead menu working. [DONE]
 # Create callbacks file. [DONE]
 # All prop ids are global (good) [DONE]
+# Get main callback running (bring in states, they should all be defined now.) Basic run [DONE]
+# Can select dataset and map displays [DONE]
+# Get footer running ok [DONE]
+# about modal [DONE]
+# user guide modal [DONE]
 
-# Get main callback running (bring in states, they should all be defined now. then slowly refactor main callback)
+# Get timeslider working (current)
 
-# Can select dataset and map displays
-# Get footer running ok
-# Port rest of app_old.py across
-# Get a map displaying data (see what free tilemaps are now available. Xp here.)
-# Refactor and make nice.
+# Bar chart
+# Line chart ... etc
+# Settings
+# URL
+# Port rest of app_old.py across. i.e. delete app_old.py
 
 # Build note...when call uv build, want to build into a container, not a package. See if that's possible.
 

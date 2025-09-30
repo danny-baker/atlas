@@ -9,8 +9,7 @@ from . global_constants import *
 from . import data
 from . import charts
 from dash.exceptions import PreventUpdate #for raising exception to break out of callbacks
-#from dash_extensions import Download
-#from dash_extensions.snippets import send_data_frame, send_bytes, send_file
+
 
 #Obtain the root logger
 logger = logging.getLogger(LOGGER)
@@ -72,9 +71,9 @@ def init_callbacks(dash_app, dobj):
         #    Output('button-panel-style', "style"), #used to hide initially
         #    Output('year-slider-style', "style"), #used to hide initially
         #    Output('data-source-style', 'style'), #used to hide initially         
-        #    Output("year-slider", "max"),         
-        #    Output("year-slider", "marks"),
-        #    Output("year-slider", "value"),         
+            Output("year-slider", "max"),         
+            Output("year-slider", "marks"),
+            Output("year-slider", "value"),         
         #    Output("year-slider-title","style"),
         #    Output("year-slider-title","children"),
         #    Output("my-selection-m49", "data"), #NEW, to save the m49 location of the selected map
@@ -122,6 +121,7 @@ def init_callbacks(dash_app, dobj):
         # user selection
         selection = ctx.triggered_id
         states = ctx.states
+        #print(states)
         logger.info(f"Selection is {selection}")
 
         # load colour palette
@@ -153,12 +153,17 @@ def init_callbacks(dash_app, dobj):
             series_label = f"{series['dataset_label']} in {year}"
             series_source = series['source']
             link = series['link']
-            note = series['note'] 
-            return series['dataset_raw'], fig, series_source, link, series_label, note
-            
+            note = series['note']            
+            time_slider = data.get_time_slider(dobj, series['dataset_raw'])
+            #print(time_slider)
+            #print(time_slider['max'], time_slider['value'], time_slider['marks'])
+            return series['dataset_raw'], fig, series_source, link, series_label, time_slider['max'], time_slider['marks'], time_slider['value'], note
+
+
+
         # CASE: year slider change
-        if selection == "timeslider-hidden-div":      
-            print("Time slider!")
+        #if selection == "timeslider-hidden-div":      
+        #    print("Time slider!")
 
         
        

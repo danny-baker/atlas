@@ -35,7 +35,7 @@ def check_year(pop, series, year):
     # return bool if year found
     return int(year) in years
     
-
+"""
 def get_years(df):
     # strip out years from dataset and return as dictionary (for control input)
     df = df.sort_values('year')
@@ -43,6 +43,7 @@ def get_years(df):
     years = years["value"].to_dict()
     #print(years)
     return years
+"""
 
 
 def get_year_slider_index(pop, series, year):
@@ -608,9 +609,46 @@ class Data:
         # Return the most recent year available for the given dataset
         yr = max(self.stats.loc[(self.stats['dataset_raw'] == series_name), 'year'])
         return int(yr) 
-     
+    
+    def get_years(self, series_name:str) -> list[str]:
+        # strip out avail years from dataset and return as list of str ['2012', '2013', '2014'] etc
+        years = pd.unique(self.stats.loc[(self.stats['dataset_raw'] == series_name), 'year']).astype(str).tolist()
+        return years
 
 
+def get_time_slider(dobj, series_name:str) -> dict:
+    # return a dictionary of type..... representing time slider vals to set for a given series, selecting most recent year
+    # use case: normal dataset selection 
+    
+    years = dobj.get_years(series_name)       
+
+    if not len(years) > 0:
+        print("ERROR time slider years fucked")
+        return
+    
+    marks = {index: value for index, value in enumerate(years)} 
+    max = len(marks)-1  
+    value = max
+    time_slider = {'max':max, 'marks':marks, 'value':value}
+
+    #TODO: get whole thing working properly. Need to refactor get_year_slider_marks and add all the formatting etc.
+    # it's cunted basically. Also seems to have options between points...need to stop that happening.
+
+    return time_slider
+
+
+   
+    
+    
+    #if len(year_dict) > 0:
+    #    year_index = list(year_dict)[-1]
+    #    year = year_dict[year_index] #what is returned
+    #   year_slider_marks = data.get_year_slider_marks(series, pop, INIT_year_SLIDER_FONTSIZE, INIT_year_SLIDER_FONTCOLOR, year_slider_selected)
+    #   year_slider_max = len(year_slider_marks)-1
+    #   year_slider_selected = year_slider_max #select the most recent year by default
+    #    year_slider_marks[year_slider_selected]['style']['fontWeight']='bold' #mark selected year bold  
+
+    pass
 
 
 def load(debug_mode: bool) -> Data:
