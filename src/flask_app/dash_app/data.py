@@ -43,7 +43,7 @@ def get_years(df):
     years = years["value"].to_dict()
     #print(years)
     return years
-"""
+
 
 
 def get_year_slider_index(pop, series, year):
@@ -149,6 +149,7 @@ def get_year_slider_marks(series, pop, INIT_year_SLIDER_FONTSIZE, INIT_year_SLID
     
     
     return year_slider_marks
+"""
 
 
 def get_series_and_year(df, year, series, ascending):
@@ -617,7 +618,8 @@ class Data:
 
 
 def get_time_slider(dobj, series_name:str) -> dict:
-    # return a dictionary of type..... representing time slider vals to set for a given series, selecting most recent year
+    # return a dictionary representing time slider properties to set for a given series, selecting most recent year
+    # marks {0: '2000', 1: '2001', 2: '2002', ... }
     # use case: normal dataset selection 
     
     years = dobj.get_years(series_name)       
@@ -631,8 +633,58 @@ def get_time_slider(dobj, series_name:str) -> dict:
     value = max
     time_slider = {'max':max, 'marks':marks, 'value':value}
 
-    #TODO: get whole thing working properly. Need to refactor get_year_slider_marks and add all the formatting etc.
-    # it's cunted basically. Also seems to have options between points...need to stop that happening.
+    print(marks)
+
+    # CASE: display every 5th year    
+    if len(marks) > 20 and len(marks) <= 50: 
+        counter = 0
+        for i in range(0,len(marks)):   
+            if i == 0 or i == len(marks)-1:                              
+                continue # Ensure 1st and last mark are displayed
+            if counter != 4:
+                marks[i] = ""               
+                counter += 1
+            else:                
+                counter = 0
+    
+    # CASE: display every 10th year
+    elif len(marks) > 50 and len(marks) <= 100: 
+        counter = 0
+        for i in range(0,len(marks)):   
+            if i == 0 or i == len(marks)-1:                              
+                continue # Ensure 1st and last mark are displayed
+            if counter != 9:
+                marks[i] = ""               
+                counter += 1
+            else:                
+                counter = 0
+
+    # CASE: display every 20th year
+    elif len(marks) > 100 and len(marks) <= 200: 
+        counter = 0
+        for i in range(0,len(marks)):   
+            if i == 0 or i == len(marks)-1:                              
+                continue # Ensure 1st and last mark are displayed
+            if counter != 19:
+                marks[i] = ""               
+                counter += 1
+            else:                
+                counter = 0
+
+    # CASE: display every 50th year
+    elif len(marks) > 200:
+        counter = 0
+        for i in range(0,len(marks)):   
+            if i == 0 or i == len(marks)-1:                              
+                continue # Ensure 1st and last mark are displayed
+            if counter != 49:
+                marks[i] = ""               
+                counter += 1
+            else:                
+                counter = 0
+
+    print(marks)
+
 
     return time_slider
 
