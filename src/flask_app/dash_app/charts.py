@@ -28,11 +28,11 @@ def create_map_geomap_empty():
     return fig
 
 
-def create_map_geomap(dobj, series, colorpalette, colorpalette_reverse):    
+def create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year):    
     
     series_name = series['dataset_raw']
     var_type = series['var_type']
-    year = dobj.get_latest_year(series_name)
+    #year = dobj.get_latest_year(series_name)
     stats = dobj.get_stats(series_name=series_name, year=year)
     geojson = dobj.map_lowres
     mapstyle = mapbox_style[1] #default for now

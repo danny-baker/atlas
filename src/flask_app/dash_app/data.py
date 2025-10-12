@@ -617,9 +617,10 @@ class Data:
         return years
 
 
-def get_time_slider(dobj, series_name:str) -> dict:
+def get_time_slider(dobj, series_name:str, year=None) -> dict:
     # return a dictionary representing time slider properties to set for a given series, selecting most recent year
-    # marks [[val,mark], ...]  i.e. [['2000: '2000'], ['2001: '2001'], ['2002: '2002'], ... ]
+    # marks [[val,mark], ...]  i.e. [[2000: '2000'], [2001: '2001'], [2002: '2002'], ... ]
+    # marks_dict {2000: '2000', 2001:'2001', 2003:'' ...}
     # use case: normal dataset selection 
     
     years = dobj.get_years(series_name)       
@@ -641,6 +642,9 @@ def get_time_slider(dobj, series_name:str) -> dict:
                 counter += 1
             else:                
                 counter = 0
+
+        #stop overlay
+        marks[-2][1]=''        
     
     # CASE: display every 10th year
     elif len(marks) > 50 and len(marks) <= 100: 
@@ -653,6 +657,12 @@ def get_time_slider(dobj, series_name:str) -> dict:
                 counter += 1
             else:                
                 counter = 0
+        
+        #stop overlay
+        marks[-2][1]=''
+        marks[-3][1]=''        
+        marks[-4][1]=''
+        marks[-5][1]=''
 
     # CASE: display every 20th year
     elif len(marks) > 100 and len(marks) <= 200: 
@@ -665,6 +675,16 @@ def get_time_slider(dobj, series_name:str) -> dict:
                 counter += 1
             else:                
                 counter = 0
+        
+        #stop overlay
+        marks[-2][1]=''
+        marks[-3][1]=''        
+        marks[-4][1]=''
+        marks[-5][1]=''        
+        marks[-6][1]=''
+        marks[-7][1]=''        
+        marks[-8][1]=''
+        marks[-9][1]=''
 
     # CASE: display every 50th year
     elif len(marks) > 200:
@@ -678,8 +698,16 @@ def get_time_slider(dobj, series_name:str) -> dict:
             else:                
                 counter = 0
 
-    # Convert marks to dict     
-    value = marks[-1][0] #most recent yr
+    # clean up if 2nd last val too close to final (stop years overlaying)
+
+    
+    # set selection
+    if year == None:
+        value = marks[-1][0] #most recent yr
+    else:
+        value = year
+
+    # Convert marks to dict 
     marks_dict = {item[0]:item[1] for item in marks }  
 
     time_slider = {'marks':marks_dict, 'value':value}
@@ -698,7 +726,7 @@ def get_time_slider(dobj, series_name:str) -> dict:
     #   year_slider_selected = year_slider_max #select the most recent year by default
     #    year_slider_marks[year_slider_selected]['style']['fontWeight']='bold' #mark selected year bold  
 
-    pass
+   
 
 
 def load(debug_mode: bool) -> Data:

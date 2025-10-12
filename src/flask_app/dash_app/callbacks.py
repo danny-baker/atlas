@@ -9,7 +9,7 @@ from . global_constants import *
 from . import data
 from . import charts
 from dash.exceptions import PreventUpdate #for raising exception to break out of callbacks
-
+import sys
 
 #Obtain the root logger
 logger = logging.getLogger(LOGGER)
@@ -150,27 +150,30 @@ def init_callbacks(dash_app, dobj):
         # CASE: series selection (from either navmenu, random btn or search menu) 
         if selection.isnumeric() or selection == 'random-button' or selection == 'nav-search-menu':
             #return out and build main map
-            fig = charts.create_map_geomap(dobj, series, colorpalette, colorpalette_reverse)
             year = dobj.get_latest_year(series['dataset_raw'])
+            fig = charts.create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year)
             series_label = f"{series['dataset_label']} in {year}"
             series_source = series['source']
             link = series['link']
             note = series['note']            
-            time_slider = data.get_time_slider(dobj, series['dataset_raw'])
-            #print(time_slider)
-            #print(time_slider['max'], time_slider['value'], time_slider['marks'])
+            time_slider = data.get_time_slider(dobj, series['dataset_raw'], year=None)
             return series['dataset_raw'], fig, series_source, link, series_label, time_slider['marks'], time_slider['value'], note
 
         # CASE: year slider
         if selection == 'year-slider':
-            print(f"Year selected is {states['year-slider.value'] }")    
-
-        # CASE: year slider change
-        #if selection == "timeslider-hidden-div":      
-        #    print("Time slider!")
-
+            year = int(states['year-slider.value'])
+            print(f"Year selected is {year}")
+            series_name = states['my-series.data']
+            series = dobj.config_key_dsraw[series_name]   
+            fig = charts.create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year)
+            series_label = f"{series['dataset_label']} in {year}"
+            series_source = series['source']
+            link = series['link']
+            note = series['note']            
+            time_slider = data.get_time_slider(dobj, series['dataset_raw'], year=year)
+            return series['dataset_raw'], fig, series_source, link, series_label, time_slider['marks'], time_slider['value'], note  
         
-       
+ 
 
 
 
