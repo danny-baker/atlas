@@ -22,7 +22,7 @@ from data_pipeline.data_paths import *
 
 
 
-        
+"""        
 def check_year(pop, series, year):
            
     # get unique years from series
@@ -35,7 +35,7 @@ def check_year(pop, series, year):
     # return bool if year found
     return int(year) in years
     
-"""
+
 def get_years(df):
     # strip out years from dataset and return as dictionary (for control input)
     df = df.sort_values('year')
@@ -619,7 +619,7 @@ class Data:
 
 def get_time_slider(dobj, series_name:str) -> dict:
     # return a dictionary representing time slider properties to set for a given series, selecting most recent year
-    # marks {0: '2000', 1: '2001', 2: '2002', ... }
+    # marks [[val,mark], ...]  i.e. [['2000: '2000'], ['2001: '2001'], ['2002: '2002'], ... ]
     # use case: normal dataset selection 
     
     years = dobj.get_years(series_name)       
@@ -628,13 +628,8 @@ def get_time_slider(dobj, series_name:str) -> dict:
         print("ERROR time slider years fucked")
         return
     
-    marks = {index: value for index, value in enumerate(years)} 
-    max = len(marks)-1  
-    value = max
-    time_slider = {'max':max, 'marks':marks, 'value':value}
-
-    print(marks)
-
+    marks = [[int(item),item] for item in years]  
+    
     # CASE: display every 5th year    
     if len(marks) > 20 and len(marks) <= 50: 
         counter = 0
@@ -642,7 +637,7 @@ def get_time_slider(dobj, series_name:str) -> dict:
             if i == 0 or i == len(marks)-1:                              
                 continue # Ensure 1st and last mark are displayed
             if counter != 4:
-                marks[i] = ""               
+                marks[i][1] = ""               
                 counter += 1
             else:                
                 counter = 0
@@ -654,7 +649,7 @@ def get_time_slider(dobj, series_name:str) -> dict:
             if i == 0 or i == len(marks)-1:                              
                 continue # Ensure 1st and last mark are displayed
             if counter != 9:
-                marks[i] = ""               
+                marks[i][1] = ""               
                 counter += 1
             else:                
                 counter = 0
@@ -666,7 +661,7 @@ def get_time_slider(dobj, series_name:str) -> dict:
             if i == 0 or i == len(marks)-1:                              
                 continue # Ensure 1st and last mark are displayed
             if counter != 19:
-                marks[i] = ""               
+                marks[i][1] = ""               
                 counter += 1
             else:                
                 counter = 0
@@ -678,13 +673,16 @@ def get_time_slider(dobj, series_name:str) -> dict:
             if i == 0 or i == len(marks)-1:                              
                 continue # Ensure 1st and last mark are displayed
             if counter != 49:
-                marks[i] = ""               
+                marks[i][1] = ""               
                 counter += 1
             else:                
                 counter = 0
 
-    print(marks)
+    # Convert marks to dict     
+    value = marks[-1][0] #most recent yr
+    marks_dict = {item[0]:item[1] for item in marks }  
 
+    time_slider = {'marks':marks_dict, 'value':value}
 
     return time_slider
 

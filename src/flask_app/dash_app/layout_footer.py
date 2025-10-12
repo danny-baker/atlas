@@ -169,8 +169,8 @@ def build():
                                 
                             dcc.Slider(
                                 id='year-slider',
-                                min=0,
-                                max=0,
+                                #min=0,
+                                #max=0,
                                 step=None,
                                 #marks={ 0: {'label':'2005', 'style':{'color':'red', 'fontSize':12}}}, #dummy data. Overwritten
                                 #marks={}, #dummy data. Overwritten

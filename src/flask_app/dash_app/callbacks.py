@@ -42,7 +42,9 @@ def init_callbacks(dash_app, dobj):
         c.append(Input('my-url-map-trigger', 'data'))        
 
         # input triggers for timeslider and settings changes   
-        c.append(Input("timeslider-hidden-div", "children"))        
+        c.append(Input("timeslider-hidden-div", "children"))  
+        c.append(Input("year-slider", "value"))
+
         c.append(Input('my-settings_json_store', 'data')) #these act purely as triggers after apply button pushed (like the hidden div), to call the main callback
         c.append(Input('my-settings_mapstyle_store', 'data')) #these act purely as triggers after apply button pushed (like the hidden div), to call the main callback
         
@@ -71,7 +73,7 @@ def init_callbacks(dash_app, dobj):
         #    Output('button-panel-style', "style"), #used to hide initially
         #    Output('year-slider-style', "style"), #used to hide initially
         #    Output('data-source-style', 'style'), #used to hide initially         
-            Output("year-slider", "max"),         
+            #Output("year-slider", "max"),         
             Output("year-slider", "marks"),
             Output("year-slider", "value"),         
         #    Output("year-slider-title","style"),
@@ -157,9 +159,11 @@ def init_callbacks(dash_app, dobj):
             time_slider = data.get_time_slider(dobj, series['dataset_raw'])
             #print(time_slider)
             #print(time_slider['max'], time_slider['value'], time_slider['marks'])
-            return series['dataset_raw'], fig, series_source, link, series_label, time_slider['max'], time_slider['marks'], time_slider['value'], note
+            return series['dataset_raw'], fig, series_source, link, series_label, time_slider['marks'], time_slider['value'], note
 
-
+        # CASE: year slider
+        if selection == 'year-slider':
+            print(f"Year selected is {states['year-slider.value'] }")    
 
         # CASE: year slider change
         #if selection == "timeslider-hidden-div":      
