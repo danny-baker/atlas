@@ -37,6 +37,8 @@ def create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year):
     geojson = dobj.map_lowres
     mapstyle = mapbox_style[1] #default for now
 
+    print(series)
+
     # DISCRETE DATA
     if var_type == 'discrete':            
         
@@ -85,7 +87,7 @@ def create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year):
         return fig
 
     # CONTINUOUS DATA
-    elif var_type == 'continuous' or var_type == 'ratio':
+    elif var_type == 'continuous' or var_type == 'ratio' or var_type == 'quantitative':
 
         logger.info("Create Geomap: 'continuous' or 'ratio' dataset")
                             
