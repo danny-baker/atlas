@@ -10,10 +10,10 @@
 # Get footer running ok [DONE]
 # about modal [DONE]
 # user guide modal [DONE]
+# Get timeslider working [DONE]
 
-# Get timeslider working (current)
+# Bar chart (basically working, just needs some clean up. loader, footer formatting etc.)
 
-# Bar chart
 # Line chart ... etc
 # Settings
 # URL

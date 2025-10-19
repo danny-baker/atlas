@@ -530,8 +530,8 @@ def init_callbacks(dash_app, dobj):
         Output('bar-graph-dropdown-countrieselector', 'options'),
         Output('bar-graph-dropdown-dataset', 'options'), 
         Output('bar-graph-dropdown-year', 'options'),
-        #Output('my-series-bar','data'),
-        #Output('my-year-bar','data'),     
+        Output('my-series-bar','data'),
+        Output('my-year-bar','data'),     
         #Output("my-url-bar-callback","data"),
         #Output('my-loader-bar-refresh','children'),
         ],
@@ -545,8 +545,7 @@ def init_callbacks(dash_app, dobj):
         ],
         [
         State("dbc-modal-bar", "is_open"),
-        State("my-series", "data"), #super useful. Use state of selections as global vars via state.     
-        #State("my-series-data","data"),     
+        State("my-series", "data"), #map series selection 
         State("year-slider", "value"),  
         State("year-slider", "marks"),     
         State('bar-graph-dropdown-year','options'),
@@ -554,34 +553,37 @@ def init_callbacks(dash_app, dobj):
         State("my-url-view", 'data'),       
         State("my-url-series", 'data'),
         State("my-url-year", 'data'),
+        State('my-series-bar','data'),
+        State('my-year-bar', 'data'),
         ],
         prevent_initial_call=True
     )
-    def callback_toggle_modal_bar(bar_trigger, n1, n2, highlight_countries, select_dataset, select_year, is_open, series, yearid, yeardict, dropdown_year_list, href, url_view, url_series, url_year):
+    def callback_toggle_modal_bar(bar_trigger, n1, n2, highlight_countries, select_dataset, select_year, is_open, series_map_state, year_slider_state, yeardict, dropdown_year_list, href, url_view, url_series, url_year, series_state, year_state):
             
         trigger = ctx.triggered_id
         states = ctx.states  
         print(f"Bar chart: {trigger}")
         print(states)
 
-        # CASE: entry from map mode (use series store and year from slider)    
+        # CASE: entry from map mode   
         if trigger == 'bar-button': 
-            year = int(states['year-slider.value'])
-            series_name = states['my-series.data']
+            year = year_slider_state                        
+            series_name = series_map_state            
         
         # CASE: year selection
         elif trigger == 'bar-graph-dropdown-year':
-            year = int(select_year)
-            series_name = states['my-series.data']
+            year = int(select_year)            
+            series_name = series_state
             
+        # CASE: dataset selection
         elif trigger == 'bar-graph-dropdown-dataset':            
             series_name = select_dataset #this should be dsraw from the drop down 'value' (label:value)
             year = dobj.get_latest_year(series_name)
         
         # CASE: country highlight
         elif trigger == 'bar-graph-dropdown-countrieselector':
-            #This is a problem and needs logic. i.e. needs to knwo year and series to use (states)
-            pass       
+            series_name = series_state
+            year = int(year_state)                   
         
         series = dobj.config_key_dsraw[series_name]  
         series_label = series['dataset_label']
@@ -597,16 +599,16 @@ def init_callbacks(dash_app, dobj):
 
         # Build year dropdown
         dropdown_years = []
-        for year in dobj.get_years(series_name):
-            dropdown_years.append({'label': year, 'value': year}) 
+        for yr in dobj.get_years(series_name):
+            dropdown_years.append({'label': yr, 'value': yr}) 
 
         # Build series dropdown
         dropdown_dataset = []
-        for series_name in dobj.get_numerical_series():            
-            dropdown_dataset.append({'label': dobj.config_key_dsraw[series_name]['dataset_label'], 'value': series_name}) 
+        for series in dobj.get_numerical_series():            
+            dropdown_dataset.append({'label': dobj.config_key_dsraw[series]['dataset_label'], 'value': series}) 
               
-
-        return True, fig, bar_graph_title, series_source, series_link, dropdown_countries, dropdown_dataset, dropdown_years
+       
+        return True, fig, bar_graph_title, series_source, series_link, dropdown_countries, dropdown_dataset, dropdown_years, series_name, year
        
            
         
