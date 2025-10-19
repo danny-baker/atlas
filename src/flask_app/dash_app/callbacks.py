@@ -528,7 +528,7 @@ def init_callbacks(dash_app, dobj):
         Output("bar-graph-modal-footer-link", "href"),
         #Output('my-loader-bar', "children"), #used to trigger loader. Use null string "" as output
         Output('bar-graph-dropdown-countrieselector', 'options'),
-        #Output('bar-graph-dropdown-dataset', 'options'), 
+        Output('bar-graph-dropdown-dataset', 'options'), 
         Output('bar-graph-dropdown-year', 'options'),
         #Output('my-series-bar','data'),
         #Output('my-year-bar','data'),     
@@ -557,7 +557,7 @@ def init_callbacks(dash_app, dobj):
         ],
         prevent_initial_call=True
     )
-    def callback_toggle_modal_bar(bar_trigger, n1, n2, highlight_countries, dropdown_dataset, select_year, is_open, series, yearid, yeardict, dropdown_year_list, href, url_view, url_series, url_year):
+    def callback_toggle_modal_bar(bar_trigger, n1, n2, highlight_countries, select_dataset, select_year, is_open, series, yearid, yeardict, dropdown_year_list, href, url_view, url_series, url_year):
             
         trigger = ctx.triggered_id
         states = ctx.states  
@@ -574,13 +574,15 @@ def init_callbacks(dash_app, dobj):
             year = int(select_year)
             series_name = states['my-series.data']
             
+        elif trigger == 'bar-graph-dropdown-dataset':            
+            series_name = select_dataset #this should be dsraw from the drop down 'value' (label:value)
+            year = dobj.get_latest_year(series_name)
+        
         # CASE: country highlight
         elif trigger == 'bar-graph-dropdown-countrieselector':
             #This is a problem and needs logic. i.e. needs to knwo year and series to use (states)
-            pass
-
+            pass       
         
-        series_name = states['my-series.data']
         series = dobj.config_key_dsraw[series_name]  
         series_label = series['dataset_label']
         series_source = series['source']
@@ -598,8 +600,13 @@ def init_callbacks(dash_app, dobj):
         for year in dobj.get_years(series_name):
             dropdown_years.append({'label': year, 'value': year}) 
 
+        # Build series dropdown
+        dropdown_dataset = []
+        for series_name in dobj.get_numerical_series():            
+            dropdown_dataset.append({'label': dobj.config_key_dsraw[series_name]['dataset_label'], 'value': series_name}) 
+              
 
-        return True, fig, bar_graph_title, series_source, series_link, dropdown_countries, dropdown_years
+        return True, fig, bar_graph_title, series_source, series_link, dropdown_countries, dropdown_dataset, dropdown_years
        
            
         

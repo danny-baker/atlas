@@ -578,6 +578,27 @@ class Data:
     api_dict_raw_to_label: dict
     api_dict_label_to_raw: dict 
     
+    
+    def get_numerical_series(self) -> list[str]:
+        # Return an alphabetically sorted list of raw series names for numerical series only (i.e. continuous, ratio, quantitative)
+        # use case: chart drop down selectors (we don't want users to select discrete/categorical series so we must exclude them)
+
+        series=[]
+        for key in self.config_key_dsraw:
+            #print(f'{key} {self.config_key_dsraw[key]['var_type']}')
+            if self.config_key_dsraw[key]['var_type'] == 'discrete': continue
+            series.append(key)
+                                
+        series.sort()     
+
+        #HACK remove first x rows as they are not sorted for some strange fucking reason
+        series = series[19:]
+        
+        return series
+
+
+
+    
     def get_countries(self, series_name:str, year:int) -> list[str]:
         # Return an alphabetically ascending list of countries available for the given dataset series and year.
         df = self.stats.loc[(self.stats['dataset_raw'] == series_name) & (self.stats['year'] == year)]         
