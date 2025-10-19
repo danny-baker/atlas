@@ -565,7 +565,7 @@ class Data:
     # config dicts
     # prev known as master_config, master_config_key_datasetid, master_config_key_nav_cat
     # dict of type {dataset_id, dataset_label, dataset_raw, var_type, nav_cat, nav_cat_nest, colour, var_type, source, link, note} 
-    config_key_dsraw: dict
+    config_key_dsraw: dict # Each dict entry is typically thought of as 'series' metadata 
     config_key_dsid: dict
     config_key_navcat: dict
 
@@ -578,9 +578,33 @@ class Data:
     api_dict_raw_to_label: dict
     api_dict_label_to_raw: dict 
     
-    def get_stats(self, series_name:str, year:int) -> pd.DataFrame:
-        # Query master stats and return a dataframe with all stats for a given dataset_raw name and year        
-        df = self.stats.loc[(self.stats['dataset_raw'] == series_name) & (self.stats['year'] == year)].sort_values('country')       
+    def get_stats(self, series_name:str, year:int, sort_by:str, ascending:bool) -> pd.DataFrame:
+        # Query master stats and return a dataframe with all stats for a given dataset_raw name and year 
+        # Convert value to correct data type based on series metatdata               
+        
+        # Master df.dtypes
+        # m49_un_a3      category
+        # country        category
+        # year             uint16
+        # dataset_raw    category
+        # value            object
+        # continent      category
+
+        # var_type: continuous, quantitative, ratio, discrete
+        var_type = self.config_key_dsraw[series_name]['var_type']
+        
+        # Slice stats out from master
+        df = self.stats.loc[(self.stats['dataset_raw'] == series_name) & (self.stats['year'] == year)]     
+        
+        # Cast 'values' to relevant datatype if possible 
+        if var_type == 'quantitative':
+            df['value'] = df['value'].astype(int)
+        elif var_type == 'ratio' or var_type == 'continuous':
+            df['value'] = df['value'].astype(float)
+        
+        # Perform sort logic        
+        df = df.sort_values(by=sort_by, ascending=ascending) 
+     
         return df
     
     def get_stats_for_dl(self, series_name:str) -> pd.DataFrame:
@@ -698,9 +722,7 @@ def get_time_slider(dobj, series_name:str, year=None) -> dict:
             else:                
                 counter = 0
 
-    # clean up if 2nd last val too close to final (stop years overlaying)
-
-    
+        
     # set selection
     if year == None:
         value = marks[-1][0] #most recent yr

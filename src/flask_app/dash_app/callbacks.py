@@ -39,10 +39,8 @@ def init_callbacks(dash_app, dobj):
         c.append(Input('nav-search-menu', 'value'))
         
         # add api
-        c.append(Input('my-url-map-trigger', 'data'))        
-
-        # input triggers for timeslider and settings changes   
-        c.append(Input("timeslider-hidden-div", "children"))  
+        c.append(Input('my-url-map-trigger', 'data')) 
+        
         c.append(Input("year-slider", "value"))
 
         c.append(Input('my-settings_json_store', 'data')) #these act purely as triggers after apply button pushed (like the hidden div), to call the main callback
@@ -122,8 +120,7 @@ def init_callbacks(dash_app, dobj):
                 
         # user selection
         selection = ctx.triggered_id
-        states = ctx.states
-        #print(states)
+        states = ctx.states        
         logger.info(f"Selection is {selection}")
 
         # load colour palette
@@ -520,3 +517,220 @@ def init_callbacks(dash_app, dobj):
             filename = "WORLD_ATLAS_2.0 "+series_label+".json"        
             return dcc.send_data_frame(df.to_json, filename, orient='table', index=False)
         
+    
+    #Bar graph modal
+    @dash_app.callback(
+        [
+        Output("dbc-modal-bar", "is_open"),
+        Output('bar-graph', 'figure'),
+        Output("bar-graph-modal-title", "children"),
+        Output("bar-graph-modal-footer", "children"),
+        Output("bar-graph-modal-footer-link", "href"),
+        #Output('my-loader-bar', "children"), #used to trigger loader. Use null string "" as output
+        #Output('bar-graph-dropdown-countrieselector', 'options'),
+        #Output('bar-graph-dropdown-dataset', 'options'), 
+        #Output('bar-graph-dropdown-year', 'options'),
+        #Output('my-series-bar','data'),
+        #Output('my-year-bar','data'),     
+        #Output("my-url-bar-callback","data"),
+        #Output('my-loader-bar-refresh','children'),
+        ],
+        [
+        Input("my-url-bar-trigger", "data"), 
+        Input("bar-button", "n_clicks"), 
+        Input("modal-bar-close", "n_clicks"),
+        Input("bar-graph-dropdown-countrieselector", "value"),
+        Input("bar-graph-dropdown-dataset", "value"),
+        Input('bar-graph-dropdown-year','value'),     
+        ],
+        [
+        State("dbc-modal-bar", "is_open"),
+        State("my-series", "data"), #super useful. Use state of selections as global vars via state.     
+        #State("my-series-data","data"),     
+        State("year-slider", "value"),  
+        State("year-slider", "marks"),     
+        State('bar-graph-dropdown-year','options'),
+        State('url','href'),
+        State("my-url-view", 'data'),       
+        State("my-url-series", 'data'),
+        State("my-url-year", 'data'),
+        ],
+        prevent_initial_call=True
+    )
+    def callback_toggle_modal_bar(bar_trigger, n1, n2, dropdown_countrieselector, dropdown_dataset, dropdown_year, is_open, series, yearid, yeardict, dropdown_year_list, href, url_view, url_series, url_year):
+            
+        trigger = ctx.triggered_id
+        states = ctx.states  
+        print(f"Bar chart: {trigger}")
+        print(states)
+
+        # CASE: entry from map mode (use series store and year from slider)    
+        if trigger == 'bar-button':            
+              
+            year = int(states['year-slider.value'])
+            series_name = states['my-series.data']
+            series = dobj.config_key_dsraw[series_name]  
+            series_label = series['dataset_label']
+            series_source = series['source']
+            series_link = series['link']
+            bar_graph_title = f"{series_label} in {str(year)}"  
+            #df = dobj.get_stats(series_name, year)
+            #print(df)
+            fig = charts.create_chart_bar(dobj, series, year)
+        
+        # stop here. Simplify and return out simply. Dummy data for drop down and jsut get modal up first.
+
+        return not is_open, fig, bar_graph_title, series_source, series_link
+        #return not is_open, create_chart_bar(df, series, dropdown_countrieselector), bar_graph_title, source, link, "", dropdown_countries, dropdown_ds, dropdown_years, series, year, url_bar, ''
+
+        """
+        # return out quickly on close     
+        if trigger == 'modal-bar-close': return not is_open, {}, None,None,None,None,[],[],[], None, None, None, None   
+        
+        if trigger == 'my-url-bar-trigger':
+            if url_view == '' or url_view == None or bar_trigger != 'bar': 
+                #print("breaking out of bar callback!")
+                raise PreventUpdate()
+            else:
+                # logic here. Can't wait for underlying map, so need year and series from somewhere else
+                series = api_dict_label_to_raw[url_series]
+                year = url_year                   
+                series_label = master_config[series].get("dataset_label")         
+                source = master_config[series].get("source")        
+                link = master_config[series].get("link") 
+                bar_graph_title = series_label+" in "+year  
+                df = d.get_series_and_year(pop, year, series, False) 
+              
+                
+            
+        # case: entry from dataset selection 
+        elif trigger == 'bar-graph-dropdown-dataset':        
+                
+            #if we have a manual selection set the series to this, otherwise we fall back on the underlying myseries selection from the map (already received as input)
+            if dropdown_dataset != None: 
+                series = dropdown_dataset        
+            
+            series_label = master_config[series].get("dataset_label")         
+            source = master_config[series].get("source")        
+            link = master_config[series].get("link") 
+            
+            #select the series (expensive)       
+            df = d.get_series(pop, series, False)
+            df['value'] = df['value'].astype(float)            
+            
+            #set to the most current year
+            year = np.max(pd.unique(df["year"]))
+            
+            if dropdown_year != None and dropdown_year != "":
+                
+                availyrs = np.sort(pd.unique(df["year"]))           
+                #logger.info("available years %r\nyear %r",availyrs, year)
+                if str(dropdown_year) in availyrs:
+                    #logger.info("setting year %r to dropdown_year %r", year, dropdown_year)
+                    year = str(dropdown_year)
+                #else it will be reset automatically by the drop down when it's not in the new list   
+            
+            #now subset to the most recent year        
+            df = df[(df["year"] == year)].sort_values(by="value", ascending=False)    
+            
+            #update title
+            bar_graph_title = series_label+" in "+str(year) 
+        
+        #case: country selector
+        elif trigger == 'bar-graph-dropdown-countrieselector': 
+            
+            # case: map entry so use map data
+            if dropdown_dataset == None or dropdown_dataset == '': 
+                if dropdown_year == None or dropdown_year == '':
+                    year = d.get_years(pop.loc[(pop['dataset_raw'] == series)])[yearid]
+                else:
+                    year = dropdown_year
+                series_label = master_config[series].get("dataset_label")         
+                source = master_config[series].get("source")        
+                link = master_config[series].get("link") 
+                bar_graph_title = series_label+" in "+str(year)
+            
+            # case: dataset selection
+            else:
+                series = dropdown_dataset            
+                series_label = master_config[series].get("dataset_label")         
+                source = master_config[series].get("source")        
+                link = master_config[series].get("link")    
+                df = d.get_series(pop, series, False)          
+                
+                if dropdown_year == None or dropdown_year == '':
+                    year = np.max(pd.unique(df["year"]))
+                else:
+                    year = dropdown_year               
+                bar_graph_title = series_label+" in "+str(year)     
+            
+            #select the series and year from pop data, and sort it descending
+            df = d.get_series_and_year(pop, str(year), series, False)               
+            
+        elif trigger == 'bar-graph-dropdown-year':          
+            
+            #determine which series to use
+            if dropdown_dataset != None and dropdown_dataset != '':
+                series = dropdown_dataset
+            
+            #determine which year to use
+            if dropdown_year == None:
+                #year has been cleared, set to most recent            
+                years = np.sort(pd.unique(pd.DataFrame(pop[(pop['dataset_raw']==series)], columns=['year'])['year'].astype(int)))
+                year = str(years[-1])
+            else:
+                year = str(dropdown_year)        
+            
+            #update all vars               
+            series_label = master_config[series].get("dataset_label")         
+            source = master_config[series].get("source")        
+            link = master_config[series].get("link") 
+            bar_graph_title = series_label+" in "+year        
+            
+            #select the series and year from pop data, and sort it descending
+            df = d.get_series_and_year(pop, year, series, False)    
+        """
+
+        # case: all conditions 
+            
+        # build dropdown list for datasets  (exclude discrete)  
+        
+        # get list of dicts for continuous and ratio, then combine them
+        list_continuous = d.get_list_of_dataset_labels_and_raw(master_config,'continuous')
+        list_ratio = d.get_list_of_dataset_labels_and_raw(master_config,'ratio')
+        list_combined = list_continuous + list_ratio #won't be sorted
+        
+        # sort this list by label by converting to df and back to list
+        list_combined = pd.DataFrame(list_combined).sort_values(by="dataset_label").to_dict('records') 
+        
+        #assemble into list of dicts for dataset dropdown
+        dropdown_ds=[]
+        for i in range(0,len(list_combined)):        
+            dropdown_ds.append({'label': list_combined[i].get("dataset_label"), 'value': list_combined[i].get("dataset_raw")}) 
+        
+        # build dropdown list of unique countries available for the given dataset (in df)    
+        
+        # Find the unique countries for this dataset (all years) and sort 
+        dd = np.sort(pd.unique(df["country"]).astype(str)) #numpy array. Had to conv to str as countries are categoricals now and was glitching
+        
+        #refresh list of country labels and vals for the dropdown
+        dropdown_countries=[]
+        for i in range(0,len(dd)):
+            dropdown_countries.append({'label': dd[i], 'value': dd[i]})     
+   
+        # build dropdown list for available years
+        dropdown_years=[]
+        years = np.sort(pd.unique(pd.DataFrame(pop[(pop['dataset_raw']==series)], columns=['year'])['year'].astype(int)))    
+        for i in range(0,len(years)):
+                dropdown_years.append({'label': years[i], 'value': years[i]})   
+            
+        # build url
+        #print("href: ",href)
+        blah = href.split('/') 
+        root = blah[0]+'//'+blah[2]+'/'
+        url_bar = root + api_dict_raw_to_label[series] + '/' + str(year) + '/bar'
+        
+        # keep modal open in these conditions
+        if trigger == 'bar-graph-dropdown-dataset' or trigger == 'bar-graph-dropdown-countrieselector' or trigger == 'bar-graph-dropdown-year': is_open = not is_open
+        
+        return not is_open, create_chart_bar(df, series, dropdown_countrieselector), bar_graph_title, source, link, "", dropdown_countries, dropdown_ds, dropdown_years, series, year, url_bar, ''

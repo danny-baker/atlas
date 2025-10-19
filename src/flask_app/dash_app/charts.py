@@ -33,7 +33,7 @@ def create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year):
     series_name = series['dataset_raw']
     var_type = series['var_type']
     #year = dobj.get_latest_year(series_name)
-    stats = dobj.get_stats(series_name=series_name, year=year)
+    stats = dobj.get_stats(series_name=series_name, year=year, sort_by='country', ascending=True)
     geojson = dobj.map_lowres
     mapstyle = mapbox_style[1] #default for now
 
@@ -125,111 +125,52 @@ def create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year):
         )
 
         return fig
+    
 
 
 
-
-def create_map_geomap_old(df, geojson, series, zoom, center, selected_map_location, mapstyle, colorbarstyle, colorpalette_reverse):      
+def create_chart_bar(dobj, series, year):     
         
-    logger.info("Create Geomap...")
+    #lookup the series label from the dataset_lkup df
+    series_label = series['dataset_label']                
+    series_name = series['dataset_raw']    
+    df = dobj.get_stats(series_name, year, sort_by='value', ascending=False)    
+    logger.info("Creating bar graph with series %r", series_label, )
+   
+    #Colour a new column of the df based on any selections received
     
-    if series == None: return create_map_geomap_empty()  #speical case for if settings are applied before a dataset is selected. Cmplicated logic.
+    #first colour all markers to a nice default
+    #df['color'] = "rgb(158,202,225)"
     
-    #determine if selected dataset is discrete or continuous
-    var_type = master_config[series].get("var_type")         
-    #logger.info("Creating geomap with zoom %r and centre %r for series %r and variable type %r", zoom, center, series, var_type)
+    #If there is an array of countries to mark, set the colour to black
+    #if dropdown_choices != None:
+    #    for i in range(0,len(dropdown_choices)):
+    #        df.loc[df['country']==dropdown_choices[i], 'color'] = 'black' #discrete_colorscale[i][0][1]        
     
-    #DISCRETE DATA
-    if var_type == "discrete":
-        #print("Discrete data found. Dataframe length is:", len(df))        
-        #print("data types ",df.dtypes)
-        #print("discrete classes found ",len(df['value'].unique()))
-        
-        #build figure out here for discrete data        
-        hovertemp = "%{customdata}: %{text}<extra></extra>" 
-        
-        fig = go.Figure()
-        
-        #Loop through all the discrete classes and add a coloured trace
-        for i, discrete_classes in enumerate(df['value'].unique()): 
-            #logger.info("Create discrete geomap.Iterator i and type are: %r, %r",i, discrete_classes)
-            
-            #subset dataframe to a discrete class
-            t = df[df["value"] == discrete_classes]
-            
-            #optimisation: strip out unneeded json before passing to fig.add            
-            
-            #loop through JSON and pull anything from the mask
-            gj = copy.deepcopy(geojson)
-            gj['features'].clear()
-            for j in range(0,len(geojson['features'])):                
-                if geojson['features'][j]['properties']['UN_A3'] in t.m49_un_a3.values:                    
-                    gj['features'].append(geojson['features'][j])                
-             
-            
-            #add a choroplethmapbox trace passing just the JSON fragments needed for each discrete category
-            fig.add_choroplethmapbox(geojson=gj, #send the bare minimum json each time
-                                     locations=t.m49_un_a3,
-                                     z=[i,] * len(t),                                     
-                                     featureidkey="properties.UN_A3", #this is the link to the gejson
-                                     showlegend=True,
-                                     name=discrete_classes,
-                                     customdata=t['country'],  
-                                     text=t['value'],
-                                     hovertemplate=hovertemp,
-                                     colorscale=discrete_colorscale[i],                                     
-                                     showscale=False,
-                                     marker_opacity=0.5,
-                                     marker_line_width=1)
-           
-                    
-        fig.update_layout(
-            mapbox_style=mapstyle,
-            mapbox_zoom=zoom,
-            mapbox_center=center, #{"lat": -8.7, "lon": 34.5},
-            margin={"r": 0, "t": 0, "l": 0, "b": 0},        
-        )
-        
-        return fig
-    
-    
-    #ALL OTHER DATA TYPES (non-discrete)
-    else:
-    
-        logger.info("Create Geomap: 'continuous' or 'ratio' dataset")
-                            
-        # format numbers in d3 format
-        #print("Mean value is ",df['value'].astype(float).mean())
-        hovertemp = "%{customdata} %{text:,.2f}<extra></extra>" 
-        if df["value"].astype(float).mean() > 1000000: hovertemp = "%{customdata} %{text:,d}<extra></extra>" #large number formatting no decmials e.g. 123,000,000                
-                
-        #Build main figure
-        fig = go.Figure(
-            go.Choroplethmapbox(
-                geojson=geojson,
-                locations=df.m49_un_a3, #if you correct and link on the country name, can free up customdata field for the units                
-                featureidkey="properties.UN_A3",                
-                z=np.log10(df['value'].astype(float)),  #use log scale to naturally normalise. 
-                text=df['value'],
-                customdata=df['country'],                
-                hoverinfo="location+text",
-                hovertemplate=hovertemp,             
-                colorscale=colorbarstyle,
-                reversescale=colorpalette_reverse,
-                #this is a dict and I think can set all the params of colorbar here. scale etc. Either object of type colorbar, or dict with compat properties
-                colorbar= {'ticks': '', 'title': {'text': 'HIGH', 'side': 'top'}, 'showticklabels': False, 'bgcolor': 'rgba(0,0,0,0)', 'outlinewidth':0 },  #'xpad': 20, 'borderwidth': 10, 'bgcolor': 'blue'
-                zauto=True,
-                marker_opacity=0.5,
-                marker_line_width=1,
+    #GRAPH OBJECT VERSION
+    #build using graph object
+    fig = go.Figure([
+        go.Bar(
+            x=df['country'],
+            y=df['value'],            
+            hovertemplate="%{x} %{y:}<extra></extra>",
+            opacity=0.7,
             )
-        )
-            
-        #add in some extras (needs to be done like this)
-        fig.update_layout(
-            mapbox_style=mapstyle,
-            mapbox_zoom=zoom,
-            mapbox_center=center, #{"lat": -8.7, "lon": 34.5},
-            margin={"r": 0, "t": 0, "l": 0, "b": 0},              
-        )
-     
+        ])
+    
+    # Customize aspect
+    #fig.update_traces(            
+    #    marker={'color': df['color']}, #fuck yeeeeeh            
+    #    marker_line_width=0,
+    #    opacity=0.7,
+    #    #texttemplate='%{text:.2s}',
+    #    #textposition='outside'
+    #)  
+    
+    fig.update_layout({
+        'plot_bgcolor': 'white',
+        'paper_bgcolor': 'white',        
+        },
+        yaxis_title=series_label,)   
+    
     return fig
