@@ -14,6 +14,6 @@ def build():
             id="dbc-modal-uguide",
             centered=True,
             size="xl",
-            #style={"max-width": "none", "width": INIT_UGUIDE_MODAL_W}  
+            dialog_style={"max-width": "none", "width": INIT_UGUIDE_MODAL_W}  
         )
     return m

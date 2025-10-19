@@ -139,7 +139,7 @@ def build():
                 id="dbc-modal-bar",
                 centered=True,
                 size="xl",
-                style={"max-width": "none", "width": INIT_BAR_MODAL_W, 'max-height': "100vh"} 
+                dialog_style={"max-width": "none", "width": INIT_BAR_MODAL_W, 'max-height': "100vh"} 
             )
     
     return m

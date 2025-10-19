@@ -60,6 +60,6 @@ def build():
             id="dbc-modal-about",
             centered=True,
             size="xl",
-            #style={"max-width": "none", "width": INIT_ABOUT_MODAL_W}  #70%
+            dialog_style={"max-width": "none", "width": INIT_ABOUT_MODAL_W}  #70%
         )
     return m
