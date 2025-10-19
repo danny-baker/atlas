@@ -578,6 +578,14 @@ class Data:
     api_dict_raw_to_label: dict
     api_dict_label_to_raw: dict 
     
+    def get_countries(self, series_name:str, year:int) -> list[str]:
+        # Return an alphabetically ascending list of countries available for the given dataset series and year.
+        df = self.stats.loc[(self.stats['dataset_raw'] == series_name) & (self.stats['year'] == year)]         
+        countries_df = np.sort(pd.unique(df['country'].astype(str)))
+        countries_lst = countries_df.tolist()
+        return countries_lst        
+
+    
     def get_stats(self, series_name:str, year:int, sort_by:str, ascending:bool) -> pd.DataFrame:
         # Query master stats and return a dataframe with all stats for a given dataset_raw name and year 
         # Convert value to correct data type based on series metatdata               
@@ -598,15 +606,18 @@ class Data:
         
         # Cast 'values' to relevant datatype if possible 
         if var_type == 'quantitative':
-            df['value'] = df['value'].astype(int)
+            #df['value'] = df['value'].astype(int)
+            df.loc[:, 'value'] = df['value'].astype(int)
         elif var_type == 'ratio' or var_type == 'continuous':
-            df['value'] = df['value'].astype(float)
+            #df['value'] = df['value'].astype(float)
+            df.loc[:, 'value'] = df['value'].astype(float)
         
         # Perform sort logic        
         df = df.sort_values(by=sort_by, ascending=ascending) 
      
         return df
-    
+        
+
     def get_stats_for_dl(self, series_name:str) -> pd.DataFrame:
         # Prepare a cleaned DF suitable for download
 

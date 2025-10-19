@@ -129,7 +129,7 @@ def create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year):
 
 
 
-def create_chart_bar(dobj, series, year):     
+def create_chart_bar(dobj, series, year, highlight_countries:list):     
         
     #lookup the series label from the dataset_lkup df
     series_label = series['dataset_label']                
@@ -140,14 +140,13 @@ def create_chart_bar(dobj, series, year):
     #Colour a new column of the df based on any selections received
     
     #first colour all markers to a nice default
-    #df['color'] = "rgb(158,202,225)"
+    df['color'] = "rgb(158,202,225)"
     
-    #If there is an array of countries to mark, set the colour to black
-    #if dropdown_choices != None:
-    #    for i in range(0,len(dropdown_choices)):
-    #        df.loc[df['country']==dropdown_choices[i], 'color'] = 'black' #discrete_colorscale[i][0][1]        
-    
-    #GRAPH OBJECT VERSION
+    #If there is list of countries to mark, set the colour to black
+    if highlight_countries != None:
+       for country in highlight_countries:
+            df.loc[df['country']==country, 'color'] = 'black' #discrete_colorscale[i][0][1]        
+       
     #build using graph object
     fig = go.Figure([
         go.Bar(
@@ -159,13 +158,13 @@ def create_chart_bar(dobj, series, year):
         ])
     
     # Customize aspect
-    #fig.update_traces(            
-    #    marker={'color': df['color']}, #fuck yeeeeeh            
-    #    marker_line_width=0,
-    #    opacity=0.7,
-    #    #texttemplate='%{text:.2s}',
-    #    #textposition='outside'
-    #)  
+    fig.update_traces(            
+        marker={'color': df['color']}, #fuck yeeeeeh            
+        marker_line_width=0,
+        opacity=0.7,
+        #texttemplate='%{text:.2s}',
+        #textposition='outside'
+    )  
     
     fig.update_layout({
         'plot_bgcolor': 'white',

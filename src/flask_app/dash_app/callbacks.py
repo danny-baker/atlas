@@ -527,9 +527,9 @@ def init_callbacks(dash_app, dobj):
         Output("bar-graph-modal-footer", "children"),
         Output("bar-graph-modal-footer-link", "href"),
         #Output('my-loader-bar', "children"), #used to trigger loader. Use null string "" as output
-        #Output('bar-graph-dropdown-countrieselector', 'options'),
+        Output('bar-graph-dropdown-countrieselector', 'options'),
         #Output('bar-graph-dropdown-dataset', 'options'), 
-        #Output('bar-graph-dropdown-year', 'options'),
+        Output('bar-graph-dropdown-year', 'options'),
         #Output('my-series-bar','data'),
         #Output('my-year-bar','data'),     
         #Output("my-url-bar-callback","data"),
@@ -557,7 +557,7 @@ def init_callbacks(dash_app, dobj):
         ],
         prevent_initial_call=True
     )
-    def callback_toggle_modal_bar(bar_trigger, n1, n2, dropdown_countrieselector, dropdown_dataset, dropdown_year, is_open, series, yearid, yeardict, dropdown_year_list, href, url_view, url_series, url_year):
+    def callback_toggle_modal_bar(bar_trigger, n1, n2, highlight_countries, dropdown_dataset, select_year, is_open, series, yearid, yeardict, dropdown_year_list, href, url_view, url_series, url_year):
             
         trigger = ctx.triggered_id
         states = ctx.states  
@@ -565,23 +565,46 @@ def init_callbacks(dash_app, dobj):
         print(states)
 
         # CASE: entry from map mode (use series store and year from slider)    
-        if trigger == 'bar-button':            
-              
+        if trigger == 'bar-button': 
             year = int(states['year-slider.value'])
             series_name = states['my-series.data']
-            series = dobj.config_key_dsraw[series_name]  
-            series_label = series['dataset_label']
-            series_source = series['source']
-            series_link = series['link']
-            bar_graph_title = f"{series_label} in {str(year)}"  
-            #df = dobj.get_stats(series_name, year)
-            #print(df)
-            fig = charts.create_chart_bar(dobj, series, year)
         
-        # stop here. Simplify and return out simply. Dummy data for drop down and jsut get modal up first.
+        # CASE: year selection
+        elif trigger == 'bar-graph-dropdown-year':
+            year = int(select_year)
+            series_name = states['my-series.data']
+            
+        # CASE: country highlight
+        elif trigger == 'bar-graph-dropdown-countrieselector':
+            #This is a problem and needs logic. i.e. needs to knwo year and series to use (states)
+            pass
 
-        return not is_open, fig, bar_graph_title, series_source, series_link
-        #return not is_open, create_chart_bar(df, series, dropdown_countrieselector), bar_graph_title, source, link, "", dropdown_countries, dropdown_ds, dropdown_years, series, year, url_bar, ''
+        
+        series_name = states['my-series.data']
+        series = dobj.config_key_dsraw[series_name]  
+        series_label = series['dataset_label']
+        series_source = series['source']
+        series_link = series['link']
+        bar_graph_title = f"{series_label} in {str(year)}"             
+        fig = charts.create_chart_bar(dobj, series, year, highlight_countries)    
+        
+        # Build country highlighter
+        dropdown_countries = []
+        for country in dobj.get_countries(series_name, year):
+            dropdown_countries.append({'label': country, 'value': country}) 
+
+        # Build year dropdown
+        dropdown_years = []
+        for year in dobj.get_years(series_name):
+            dropdown_years.append({'label': year, 'value': year}) 
+
+
+        return True, fig, bar_graph_title, series_source, series_link, dropdown_countries, dropdown_years
+       
+           
+        
+
+        
 
         """
         # return out quickly on close     
