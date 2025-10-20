@@ -526,7 +526,7 @@ def init_callbacks(dash_app, dobj):
         Output("bar-graph-modal-title", "children"),
         Output("bar-graph-modal-footer", "children"),
         Output("bar-graph-modal-footer-link", "href"),
-        #Output('my-loader-bar', "children"), #used to trigger loader. Use null string "" as output
+        Output('my-loader-bar', "children"), #used to trigger loader. Use null string "" as output
         Output('bar-graph-dropdown-countrieselector', 'options'),
         Output('bar-graph-dropdown-dataset', 'options'), 
         Output('bar-graph-dropdown-year', 'options'),
@@ -536,7 +536,7 @@ def init_callbacks(dash_app, dobj):
         #Output('my-loader-bar-refresh','children'),
         ],
         [
-        Input("my-url-bar-trigger", "data"), 
+        Input("my-url-bar-trigger", "data"), #TODO
         Input("bar-button", "n_clicks"), 
         Input("modal-bar-close", "n_clicks"),
         Input("bar-graph-dropdown-countrieselector", "value"),
@@ -546,9 +546,7 @@ def init_callbacks(dash_app, dobj):
         [
         State("dbc-modal-bar", "is_open"),
         State("my-series", "data"), #map series selection 
-        State("year-slider", "value"),  
-        State("year-slider", "marks"),     
-        State('bar-graph-dropdown-year','options'),
+        State("year-slider", "value"),         
         State('url','href'),
         State("my-url-view", 'data'),       
         State("my-url-series", 'data'),
@@ -558,15 +556,19 @@ def init_callbacks(dash_app, dobj):
         ],
         prevent_initial_call=True
     )
-    def callback_toggle_modal_bar(bar_trigger, n1, n2, highlight_countries, select_dataset, select_year, is_open, series_map_state, year_slider_state, yeardict, dropdown_year_list, href, url_view, url_series, url_year, series_state, year_state):
+    def callback_toggle_modal_bar(bar_trigger, n1, n2, highlight_countries, select_dataset, select_year, is_open, series_map_state, year_slider_state,  href, url_view, url_series, url_year, series_state, year_state):
             
         trigger = ctx.triggered_id
         states = ctx.states  
         print(f"Bar chart: {trigger}")
-        print(states)
+        #print(states)
 
+        # CASE: close button
+        if trigger == 'modal-bar-close':
+            return False,{},None,None,None,None,[],[],[],None,None   
+        
         # CASE: entry from map mode   
-        if trigger == 'bar-button': 
+        elif trigger == 'bar-button': 
             year = year_slider_state                        
             series_name = series_map_state            
         
@@ -583,8 +585,9 @@ def init_callbacks(dash_app, dobj):
         # CASE: country highlight
         elif trigger == 'bar-graph-dropdown-countrieselector':
             series_name = series_state
-            year = int(year_state)                   
+            year = int(year_state)  
         
+        # Build components
         series = dobj.config_key_dsraw[series_name]  
         series_label = series['dataset_label']
         series_source = series['source']
@@ -608,7 +611,7 @@ def init_callbacks(dash_app, dobj):
             dropdown_dataset.append({'label': dobj.config_key_dsraw[series]['dataset_label'], 'value': series}) 
               
        
-        return True, fig, bar_graph_title, series_source, series_link, dropdown_countries, dropdown_dataset, dropdown_years, series_name, year
+        return True, fig, bar_graph_title, series_source, series_link, "", dropdown_countries, dropdown_dataset, dropdown_years, series_name, year
        
            
         
