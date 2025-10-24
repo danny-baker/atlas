@@ -12,11 +12,15 @@
 # user guide modal [DONE]
 # Get timeslider working [DONE]
 
-# Bar chart (basically working, just needs some clean up. loader, footer formatting etc.)
+# Bar chart get dl working
 
 # Line chart ... etc
+# Bubble chart?
+# Geobar
+# Globe
 # Settings
-# URL
+# URL path working
+# Finishing. CSS clean up (formatting and finishing touches. E.g. modal left align for footer. Make yr slider sexy etc)
 # Port rest of app_old.py across. i.e. delete app_old.py
 
 # Build note...when call uv build, want to build into a container, not a package. See if that's possible.
@@ -103,8 +107,6 @@ def get_component_ids(layout):
 
 def create_dash_layout(app):
 
-    #CONSTRUCT DASH LAYOUT
-
     app._favicon = FAVICON
     app.title = TAB_TITLE 
     app.index_string = layout_html.index_string     
@@ -126,7 +128,7 @@ def create_dash_layout(app):
     app.layout = html.Div([navmenu, header, body, footer, dcc_stores, hidden_div_triggers, url])    
 
     #enable special clientside callbacks
-    #js_callback_clientside_blur(app)
+    js_callback_clientside_blur(app)
     #js_callback_clientside_share(app)
     #callbacks.js_callback_clientside_viewport(app)      
     

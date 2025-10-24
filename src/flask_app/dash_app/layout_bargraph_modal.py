@@ -59,14 +59,17 @@ def build():
                                   #animation_options={ 'frame': { 'redraw': True, }, 'transition': { 'duration': 500, 'ease': 'cubic-in-out', }, },
                                   style={"backgroundColor": "#1a2d46", 'color': '#ffffff', 'height': INIT_BAR_H},
                                   config={'displayModeBar': False },),
-                    ])),                           
+                    ])),  
+          
                     
-                    dbc.ModalFooter([
-                        html.Div([
+                    dbc.ModalFooter([                       
+                        
+                        
+                        html.Div([                            
                             html.Div("Data source: "),
                             html.Div(id='bar-graph-modal-footer'), 
                             html.Div(dcc.Link(href='', target="_blank", id="bar-graph-modal-footer-link", )), 
-                        ], style={"fontSize": INIT_MODAL_FOOTER_FONT_SIZE, "background-color": "yellow" } ),
+                        ], className="me-auto", style={"fontSize": INIT_MODAL_FOOTER_FONT_SIZE, "background-color": "none" } ),
                        
                             
                         html.Div([       
@@ -74,8 +77,8 @@ def build():
                             dbc.Button("Instructions", id='modal-bar-instruction-popover-target', color='warning', className="me-2", outline=False, size=INIT_BUTTON_SIZE),
                             dbc.Button("Download", id='modal-bar-download', color='success', className="me-2", outline=False, size=INIT_BUTTON_SIZE),
                             dcc.Download(id='download_dataset_bar'),                           
-                            dbc.Button("Close", id="modal-bar-close", className="me-2", size=INIT_BUTTON_SIZE),
-                        ], style={"background-color": "green"}),                        
+                            dbc.Button("Close", id="modal-bar-close", className="me-2",size=INIT_BUTTON_SIZE),
+                        ], style={"background-color": "none"}),                        
                         
                         
                         dbc.Popover(
@@ -128,7 +131,8 @@ def build():
                         
                         
                         
-                    ], style={"background-color": "grey"}),
+                        
+                    ], style={"background-color": "none"}),
                 ],
                 id="dbc-modal-bar",
                 centered=True,

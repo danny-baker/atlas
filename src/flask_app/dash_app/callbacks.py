@@ -769,3 +769,44 @@ def init_callbacks(dash_app, dobj):
         if trigger == 'bar-graph-dropdown-dataset' or trigger == 'bar-graph-dropdown-countrieselector' or trigger == 'bar-graph-dropdown-year': is_open = not is_open
         
         return not is_open, create_chart_bar(df, series, dropdown_countrieselector), bar_graph_title, source, link, "", dropdown_countries, dropdown_ds, dropdown_years, series, year, url_bar, ''
+    
+
+def js_callback_clientside_blur(dash_app):
+
+        #Special client side callback that removes unwanted focus on buttons that trigger modals (for hiding tooltip) using embedded javascript function
+        dash_app.clientside_callback(
+            """
+            function() {
+                //alert("Blur function trigger");
+                //document.getElementById("some-other-component").focus();
+                document.getElementById("about-button").blur();
+                document.getElementById("uguide-button").blur();
+                document.getElementById("settings-button").blur();
+                document.getElementById("download-button").blur();
+                document.getElementById("bar-button").blur();
+                document.getElementById("line-button").blur();
+                document.getElementById("sunburst-button").blur();
+                document.getElementById("globe-button").blur();
+                document.getElementById("geobar-button").blur();
+                document.getElementById("bubble-button").blur();
+                //document.getElementById("button-userguide-about").blur();
+                //document.getElementById("download-popover").blur();
+                return {};
+            }
+            """,
+            Output('blur-hidden-div', 'style'),
+            Input('about-button', 'n_clicks'),
+            Input("uguide-button", 'n_clicks'),
+            Input("settings-button", 'n_clicks'),
+            Input("download-button", 'n_clicks'),
+            Input("bar-button", 'n_clicks'),
+            Input("line-button", 'n_clicks'),
+            Input('sunburst-button', 'n_clicks'),
+            Input("globe-button", 'n_clicks'),
+            Input("geobar-button", 'n_clicks'),
+            Input("bubble-button", 'n_clicks'),
+            #Input("button-userguide-about", 'n_clicks'),
+            #Input("btn-popover-map-download-land", 'n_clicks'),
+            prevent_initial_call=True
+        )
+        return 
