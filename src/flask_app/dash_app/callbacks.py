@@ -10,6 +10,9 @@ from . import data
 from . import charts
 from dash.exceptions import PreventUpdate #for raising exception to break out of callbacks
 import sys
+import xlsxwriter #needed for linux Ubuntu server
+import plotly.graph_objs as go
+import plotly
 
 #Obtain the root logger
 logger = logging.getLogger(LOGGER)
@@ -615,161 +618,87 @@ def init_callbacks(dash_app, dobj):
        
            
         
-
-        
-
-        """
-        # return out quickly on close     
-        if trigger == 'modal-bar-close': return not is_open, {}, None,None,None,None,[],[],[], None, None, None, None   
-        
-        if trigger == 'my-url-bar-trigger':
-            if url_view == '' or url_view == None or bar_trigger != 'bar': 
-                #print("breaking out of bar callback!")
-                raise PreventUpdate()
-            else:
-                # logic here. Can't wait for underlying map, so need year and series from somewhere else
-                series = api_dict_label_to_raw[url_series]
-                year = url_year                   
-                series_label = master_config[series].get("dataset_label")         
-                source = master_config[series].get("source")        
-                link = master_config[series].get("link") 
-                bar_graph_title = series_label+" in "+year  
-                df = d.get_series_and_year(pop, year, series, False) 
-              
-                
-            
-        # case: entry from dataset selection 
-        elif trigger == 'bar-graph-dropdown-dataset':        
-                
-            #if we have a manual selection set the series to this, otherwise we fall back on the underlying myseries selection from the map (already received as input)
-            if dropdown_dataset != None: 
-                series = dropdown_dataset        
-            
-            series_label = master_config[series].get("dataset_label")         
-            source = master_config[series].get("source")        
-            link = master_config[series].get("link") 
-            
-            #select the series (expensive)       
-            df = d.get_series(pop, series, False)
-            df['value'] = df['value'].astype(float)            
-            
-            #set to the most current year
-            year = np.max(pd.unique(df["year"]))
-            
-            if dropdown_year != None and dropdown_year != "":
-                
-                availyrs = np.sort(pd.unique(df["year"]))           
-                #logger.info("available years %r\nyear %r",availyrs, year)
-                if str(dropdown_year) in availyrs:
-                    #logger.info("setting year %r to dropdown_year %r", year, dropdown_year)
-                    year = str(dropdown_year)
-                #else it will be reset automatically by the drop down when it's not in the new list   
-            
-            #now subset to the most recent year        
-            df = df[(df["year"] == year)].sort_values(by="value", ascending=False)    
-            
-            #update title
-            bar_graph_title = series_label+" in "+str(year) 
-        
-        #case: country selector
-        elif trigger == 'bar-graph-dropdown-countrieselector': 
-            
-            # case: map entry so use map data
-            if dropdown_dataset == None or dropdown_dataset == '': 
-                if dropdown_year == None or dropdown_year == '':
-                    year = d.get_years(pop.loc[(pop['dataset_raw'] == series)])[yearid]
-                else:
-                    year = dropdown_year
-                series_label = master_config[series].get("dataset_label")         
-                source = master_config[series].get("source")        
-                link = master_config[series].get("link") 
-                bar_graph_title = series_label+" in "+str(year)
-            
-            # case: dataset selection
-            else:
-                series = dropdown_dataset            
-                series_label = master_config[series].get("dataset_label")         
-                source = master_config[series].get("source")        
-                link = master_config[series].get("link")    
-                df = d.get_series(pop, series, False)          
-                
-                if dropdown_year == None or dropdown_year == '':
-                    year = np.max(pd.unique(df["year"]))
-                else:
-                    year = dropdown_year               
-                bar_graph_title = series_label+" in "+str(year)     
-            
-            #select the series and year from pop data, and sort it descending
-            df = d.get_series_and_year(pop, str(year), series, False)               
-            
-        elif trigger == 'bar-graph-dropdown-year':          
-            
-            #determine which series to use
-            if dropdown_dataset != None and dropdown_dataset != '':
-                series = dropdown_dataset
-            
-            #determine which year to use
-            if dropdown_year == None:
-                #year has been cleared, set to most recent            
-                years = np.sort(pd.unique(pd.DataFrame(pop[(pop['dataset_raw']==series)], columns=['year'])['year'].astype(int)))
-                year = str(years[-1])
-            else:
-                year = str(dropdown_year)        
-            
-            #update all vars               
-            series_label = master_config[series].get("dataset_label")         
-            source = master_config[series].get("source")        
-            link = master_config[series].get("link") 
-            bar_graph_title = series_label+" in "+year        
-            
-            #select the series and year from pop data, and sort it descending
-            df = d.get_series_and_year(pop, year, series, False)    
-        """
-
-        # case: all conditions 
-            
-        # build dropdown list for datasets  (exclude discrete)  
-        
-        # get list of dicts for continuous and ratio, then combine them
-        list_continuous = d.get_list_of_dataset_labels_and_raw(master_config,'continuous')
-        list_ratio = d.get_list_of_dataset_labels_and_raw(master_config,'ratio')
-        list_combined = list_continuous + list_ratio #won't be sorted
-        
-        # sort this list by label by converting to df and back to list
-        list_combined = pd.DataFrame(list_combined).sort_values(by="dataset_label").to_dict('records') 
-        
-        #assemble into list of dicts for dataset dropdown
-        dropdown_ds=[]
-        for i in range(0,len(list_combined)):        
-            dropdown_ds.append({'label': list_combined[i].get("dataset_label"), 'value': list_combined[i].get("dataset_raw")}) 
-        
-        # build dropdown list of unique countries available for the given dataset (in df)    
-        
-        # Find the unique countries for this dataset (all years) and sort 
-        dd = np.sort(pd.unique(df["country"]).astype(str)) #numpy array. Had to conv to str as countries are categoricals now and was glitching
-        
-        #refresh list of country labels and vals for the dropdown
-        dropdown_countries=[]
-        for i in range(0,len(dd)):
-            dropdown_countries.append({'label': dd[i], 'value': dd[i]})     
    
-        # build dropdown list for available years
-        dropdown_years=[]
-        years = np.sort(pd.unique(pd.DataFrame(pop[(pop['dataset_raw']==series)], columns=['year'])['year'].astype(int)))    
-        for i in range(0,len(years)):
-                dropdown_years.append({'label': years[i], 'value': years[i]})   
-            
-        # build url
-        #print("href: ",href)
-        blah = href.split('/') 
-        root = blah[0]+'//'+blah[2]+'/'
-        url_bar = root + api_dict_raw_to_label[series] + '/' + str(year) + '/bar'
-        
-        # keep modal open in these conditions
-        if trigger == 'bar-graph-dropdown-dataset' or trigger == 'bar-graph-dropdown-countrieselector' or trigger == 'bar-graph-dropdown-year': is_open = not is_open
-        
-        return not is_open, create_chart_bar(df, series, dropdown_countrieselector), bar_graph_title, source, link, "", dropdown_countries, dropdown_ds, dropdown_years, series, year, url_bar, ''
     
+    
+    #Download dataset BAR
+    @dash_app.callback(Output('download_dataset_bar', 'data'),
+                [                
+                Input('btn-popover-bar-download-csv', 'n_clicks'),
+                Input('btn-popover-bar-download-json', 'n_clicks'),
+                Input('btn-popover-bar-download-xls', 'n_clicks'),
+                Input('btn-popover-bar-download-pdf', 'n_clicks'),
+                Input('btn-popover-bar-download-jpg', 'n_clicks'),
+                Input('btn-popover-bar-download-png', 'n_clicks'),
+                Input('btn-popover-bar-download-svg', 'n_clicks'),
+                ],              
+                State('my-series-bar','data'),
+                State('my-year-bar','data'),
+                State('bar-graph', 'figure'),  
+                prevent_initial_call=True,)
+    def callback_download_dataset_bar(n1,n2,n3,n4,n5,n6,n7, series_name, year_str, fig):   
+        
+        trigger = ctx.triggered_id    
+
+        # Grab some basics
+        series = dobj.config_key_dsraw[series_name]  
+        year = int(year_str)
+        series_label = series['dataset_label']
+        series_source = series['source']
+        series_link = series['link']
+        
+        # Obtain cleaned data suitable for download
+        df =dobj.get_stats_for_dl_bar(series_name, int(year_str))
+
+        # nest function for returning chart
+        def chart(extension):
+            f = go.Figure(fig)        
+            f.update_layout(
+                title={'text':f'WORLD ATLAS 2.0 - {series_label} in {str(year)}','font':{'size':36,'color':'black'},'x':0,'xref':'container', 'xanchor':'left','pad':{'b':0,'t':40,'l':40,'r':0}, 'y':1, 'yref':'container', 'yanchor':'auto'},
+                #annotations=[{'text':'Source: '+source,'font':{'size':14,'color':'black'},'x':0,'xref':'paper', 'xanchor':'left','y':0, 'yref':'paper', 'yanchor':'auto'}],
+                xaxis={'title':{'text':f'Source: This chart was generated at https://worldatlas.org based on dataset: {series_source}. Originally sourced from {series_link}' , 'font':{'size':22}}}, 
+                )
+            path = "tmp/WORLD_ATLAS_2.0 "+series_label+" ("+str(year)+")"+extension
+            plotly.io.write_image(fig=f, file=path, engine="kaleido", height=700, width=4096)
+            return dcc.send_file(path)  
+
+        # CASE: dl xlsx
+        if trigger == 'btn-popover-bar-download-xls':
+            filename = f"WORLD_ATLAS_2.0 {series_label} ({str(year)}).xlsx" 
+            def to_xlsx(bytes_io):
+                xslx_writer = pd.ExcelWriter(bytes_io, engine="xlsxwriter")
+                df.to_excel(xslx_writer, index=False, sheet_name="sheet1")
+                xslx_writer._save()    
+            return dcc.send_bytes(to_xlsx, filename)    
+
+        # CASE: dl csv
+        elif trigger == 'btn-popover-bar-download-csv':       
+            filename = f"WORLD_ATLAS_2.0 {series_label} ({str(year)}).csv" 
+            return dcc.send_data_frame(df.to_csv, filename, index=False)
+        
+        # CASE: dl json
+        elif trigger == 'btn-popover-bar-download-json':          
+            filename = f"WORLD_ATLAS_2.0 {series_label} ({str(year)}).json"        
+            return dcc.send_data_frame(df.to_json, filename, orient='table', index=False)
+
+        # CASE: dl pdf
+        elif trigger == 'btn-popover-bar-download-pdf': return chart('.pdf')
+        
+        # CASE: dl png
+        elif trigger == 'btn-popover-bar-download-png': return chart('.png')
+        
+        # CASE: dl jpg
+        elif trigger == 'btn-popover-bar-download-jpg': return chart('.jpg')
+        
+        # CASE: dl svg
+        elif trigger == 'btn-popover-bar-download-svg': return chart('.svg')
+
+
+     
+
+
+
+# Special stuff
 
 def js_callback_clientside_blur(dash_app):
 

@@ -607,7 +607,7 @@ class Data:
         return countries_lst        
 
     
-    def get_stats(self, series_name:str, year:int, sort_by:str, ascending:bool) -> pd.DataFrame:
+    def get_stats(self, series_name:str, year:int, sort_by:str, ascending:bool=True) -> pd.DataFrame:
         # Query master stats and return a dataframe with all stats for a given dataset_raw name and year 
         # Convert value to correct data type based on series metatdata               
         
@@ -662,6 +662,32 @@ class Data:
   
         return df
     
+    def get_stats_for_dl_bar(self, series_name:str, year:int) -> pd.DataFrame:
+        # Prepare a cleaned DF suitable for downloading from bar chart modal 
+
+        # gather userful vars    
+        series = self.config_key_dsraw[series_name]          
+        series_label = series['dataset_label']      
+        source = series['source']      
+        link = series['link']
+
+        #subset master dataset to selected series and selected year
+        df = self.get_stats(series_name, year, sort_by='country' )  
+        
+        # make it pretty for file download
+        df['m49_un_a3'] = df['m49_un_a3'].astype(str).str.zfill(3) 
+        df['United Nations m49 country code'] = df['m49_un_a3']
+        df = df.rename(columns={'value':series_label})   
+        df = df.drop(columns=['dataset_raw', 'm49_un_a3', 'continent'])     
+
+        #merge in source information 
+        df['Source'] = f"{source} {link}"
+        
+        return df
+        
+
+
+
     def get_latest_year(self, series_name:str) -> int:
         # Return the most recent year available for the given dataset
         yr = max(self.stats.loc[(self.stats['dataset_raw'] == series_name), 'year'])
