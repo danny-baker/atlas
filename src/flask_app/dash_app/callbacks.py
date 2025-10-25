@@ -521,7 +521,7 @@ def init_callbacks(dash_app, dobj):
             return dcc.send_data_frame(df.to_json, filename, orient='table', index=False)
         
     
-    #Bar graph modal
+    # Bar graph modal
     @dash_app.callback(
         [
         Output("dbc-modal-bar", "is_open"),
@@ -561,10 +561,8 @@ def init_callbacks(dash_app, dobj):
     )
     def callback_toggle_modal_bar(bar_trigger, n1, n2, highlight_countries, select_dataset, select_year, is_open, series_map_state, year_slider_state,  href, url_view, url_series, url_year, series_state, year_state):
             
-        trigger = ctx.triggered_id
-        states = ctx.states  
-        print(f"Bar chart: {trigger}")
-        #print(states)
+        trigger = ctx.triggered_id      
+        logger.info(f"Bar chart: {trigger}")        
 
         # CASE: close button
         if trigger == 'modal-bar-close':
@@ -572,7 +570,7 @@ def init_callbacks(dash_app, dobj):
         
         # CASE: entry from map mode   
         elif trigger == 'bar-button': 
-            year = year_slider_state                        
+            year = int(year_slider_state)                        
             series_name = series_map_state            
         
         # CASE: year selection
@@ -621,7 +619,7 @@ def init_callbacks(dash_app, dobj):
    
     
     
-    #Download dataset BAR
+    # Download dataset BAR
     @dash_app.callback(Output('download_dataset_bar', 'data'),
                 [                
                 Input('btn-popover-bar-download-csv', 'n_clicks'),
@@ -694,7 +692,145 @@ def init_callbacks(dash_app, dobj):
         elif trigger == 'btn-popover-bar-download-svg': return chart('.svg')
 
 
-     
+
+    #Line graph modal
+    @dash_app.callback(
+        [
+        Output("dbc-modal-line", "is_open"),
+        Output('line-graph', 'figure'),
+        Output("line-graph-modal-title", "children"),
+        Output("line-graph-modal-footer", "children"),
+        Output("line-graph-modal-footer-link", "href"),
+        #Output('my-loader-line', "children"), #used to trigger loader. Use null string "" as output
+        #Output('line-graph-dropdown-countries', 'options'),
+        #Output('line-graph-dropdown-dataset', 'options'),
+        #Output('my-series-line', 'data'),
+        #Output("my-url-line-callback","data"),
+        #Output('my-loader-line-refresh','children'),     
+        ],
+        [
+        Input("my-url-line-trigger", "data"), 
+        Input("line-button", "n_clicks"), 
+        Input("modal-line-close", "n_clicks"),
+        Input("line-graph-dropdown-countries", "value"),
+        Input('line-graph-dropdown-dataset', 'value'),
+        ],
+        [
+        State("dbc-modal-line", "is_open"),
+        State("my-series", "data"), #super useful. Use state of selections as global vars via state.
+        State("year-slider", "value"),  
+        State("year-slider", "marks"),
+        State("my-url-series", 'data'),
+        State('url','href'),  
+        State("my-url-view", 'data'),
+        State("my-url-year", 'data'),
+                    
+        ],
+        prevent_initial_call=True
+    )    
+    def callback_toggle_modal_line(line_trigger, n1, n2, dd_country_choices, dd_dataset_choice, is_open, series_map_state, year_slider_state, yeardict, url_series, href, url_view, url_year):
+        
+        trigger = ctx.triggered_id      
+        logger.info(f"Line chart: {trigger}") 
+        
+        # CASE: close button
+        if trigger == 'modal-line-close':
+            return False,{},None,None,None#,None,[],[],[],None,None 
+        
+        # CASE: entry from map mode   
+        elif trigger == 'line-button': 
+            year = int(year_slider_state)
+            series_name = series_map_state
+
+        # Build components
+        series = dobj.config_key_dsraw[series_name]  
+        series_label = series['dataset_label']
+        series_source = series['source']
+        series_link = series['link']                   
+        fig = {}
+        #fig = charts.create_chart_bar(dobj, series, year, highlight_countries)
+
+        return True, fig, series_label, series_source, series_link
+        
+        """
+        #first check triggers and context 
+        ctx = dash.callback_context 
+        trigger = ctx.triggered[0]["prop_id"].split(".")[0] #this is the series selection (component id from navbar top), except if the year slider is the trigger!!
+        #logger.info("linegraph callback. \nTrigger is %r,\nopen state is %r, n1 %r, n2 %r, \ndropdown country %r\ndropdown dataset %r", trigger, is_open, n1, n2, dd_country_choices, dd_dataset_choice) 
+        
+        if trigger == 'modal-line-close': return not is_open, {}, None,None,None,None, [],[], None,None,None
+        
+        # special api check 
+        if trigger == 'my-url-line-trigger':     
+            if url_view == '' or line_trigger != 'line': 
+                #print("breaking out of line callback!")
+                raise PreventUpdate()
+                
+            else: series=api_dict_label_to_raw[url_series]
+        
+        #Check if a dataset choice is the trigger (simpler than bar logic as no years to worry about)
+        elif dd_dataset_choice!='' and dd_dataset_choice!=None: series = dd_dataset_choice      
+        
+        #Gather variables we need    
+        series_label = master_config[series].get("dataset_label")         
+        source = master_config[series].get("source")        
+        link = master_config[series].get("link") 
+        graph_title = series_label
+            
+        # select the series from pop data (all years)
+        df = pop[(pop["dataset_raw"] == series)].sort_values(by="country", ascending=True)
+            
+        # cast numeric values to floats
+        df["value"] = df["value"].astype(float)
+        df["year"] = df["year"].astype(int)
+        
+        # Build dropdown list for countries
+        ddc = np.sort(pd.unique(df["country"]).astype(str)) #numpy array    
+        dd_country_list=[]    
+        #dd_country_list.append({'label': 'ALL COUNTRIES' , 'value': 'ALL COUNTRIES'})
+        for i in range(0,len(ddc)):
+            dd_country_list.append({'label': ddc[i], 'value': ddc[i]})
+            
+        # Build dropdown list for datasets  (continuous and ratio only)      
+                
+        # get list of dicts for continuous and ratio, then combine them
+        list_continuous = d.get_list_of_dataset_labels_and_raw(master_config,'continuous')
+        list_ratio = d.get_list_of_dataset_labels_and_raw(master_config,'ratio')
+        list_combined = list_continuous + list_ratio #won't be sorted
+        
+        # sort this list by label by converting to df and back to list
+        list_combined = pd.DataFrame(list_combined).sort_values(by="dataset_label").to_dict('records') 
+        
+        #assemble into list of dicts for dropdown
+        dd_dataset_list=[] 
+        for i in range(0,len(list_combined)):        
+            dd_dataset_list.append({'label': list_combined[i].get("dataset_label"), 'value': list_combined[i].get("dataset_raw")}) 
+        
+        
+        # build url    
+        blah = href.split('/') 
+        root = blah[0]+'//'+blah[2]+'/'
+        url = root + api_dict_raw_to_label[series] + '/' + 'x/line'          
+            
+        # keep modal open in these conditions
+        if trigger == 'line-graph-dropdown-countries' or trigger == 'line-graph-dropdown-dataset': is_open = not is_open
+        
+        return not is_open, create_chart_line(df, series, dd_country_choices), graph_title, source, link, "", dd_country_list, dd_dataset_list, series, url, '' 
+        """
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

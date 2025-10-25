@@ -65,30 +65,27 @@ def build():
                         html.Span("Data source: "),
                         html.Span(id='line-graph-modal-footer'),
                         html.Div(dcc.Link(href='', target="_blank", id="line-graph-modal-footer-link")),
-                    ], style={'fontSize':INIT_MODAL_FOOTER_FONT_SIZE}), #end div
+                    ], className="me-auto", style={'fontSize':INIT_MODAL_FOOTER_FONT_SIZE}), 
                     
                     html.Div([
-                        dbc.Button("About", id='modal-line-guide-popover-target', color='info', className="mr-1", size=INIT_BUTTON_SIZE),
-                        dbc.Button("Instructions", id='modal-line-instructions-popover-target', color='warning', className="mr-1", size=INIT_BUTTON_SIZE),
-                        dbc.Button("Download", id='modal-line-download', color='success', className="mr-1", size=INIT_BUTTON_SIZE),
+                        dbc.Button("About", id='modal-line-guide-popover-target', color='info', className="me-2", size=INIT_BUTTON_SIZE),
+                        dbc.Button("Instructions", id='modal-line-instructions-popover-target', color='warning', className="me-2", size=INIT_BUTTON_SIZE),
+                        dbc.Button("Download", id='modal-line-download', color='success', className="me-2", size=INIT_BUTTON_SIZE),
                         dcc.Download(id='download_dataset_line'),
-                        dbc.Button("Close", id="modal-line-close", className="mr-1", size=INIT_BUTTON_SIZE)
+                        dbc.Button("Close", id="modal-line-close", className="me-2", size=INIT_BUTTON_SIZE)
                         
-                    ], className='ml-auto'),
+                    ]),
                     
                                         
                     dbc.Popover(
                         [
                             dbc.PopoverHeader("Instructions", style={'fontWeight':'bold'}),
                             dbc.PopoverBody(layout_hovertip.linegraph_instructions)
-                        ],
-                        #id="modal-line-instructions-popover",
-                        #is_open=False,
+                        ],                        
                         target="modal-line-instructions-popover-target",
                         trigger="hover",
                         placement="top",
-                        hide_arrow=False,
-                        #style={"zIndex":1}
+                        hide_arrow=False,                        
                     ),
                     
                     dbc.Popover(
@@ -96,13 +93,10 @@ def build():
                             dbc.PopoverHeader("About", style={'fontWeight':'bold'}),
                             dbc.PopoverBody(layout_hovertip.linegraph_about),
                         ],
-                        #id="modal-line-guide-popover",
-                        #is_open=False,
                         target="modal-line-guide-popover-target",
                         trigger="hover",
                         placement="top",
-                        hide_arrow=False,                        
-                        style={"zIndex":1}
+                        hide_arrow=False,  
                     ),
                     
                     dbc.Popover(
@@ -110,33 +104,32 @@ def build():
                           dbc.PopoverHeader("Download", style={'fontWeight':'bold'}),
                           dbc.PopoverBody([          
                               html.Div('Raw data'),
-                              dbc.Button(".xlsx", outline=True, color="secondary", className="mr-1", id="btn-popover-line-download-xls", style={}, size=INIT_BUTTON_SIZE),
-                              dbc.Button(".csv", outline=True, color="secondary", className="mr-1", id="btn-popover-line-download-csv", style={}, size=INIT_BUTTON_SIZE),
-                              dbc.Button(".json", outline=True, color="secondary", className="mr-1", id="btn-popover-line-download-json", style={}, size=INIT_BUTTON_SIZE),
+                              dbc.Button(".xlsx", outline=True, color="secondary", className="me-1", id="btn-popover-line-download-xls", style={}, size=INIT_BUTTON_SIZE),
+                              dbc.Button(".csv", outline=True, color="secondary", className="me-1", id="btn-popover-line-download-csv", style={}, size=INIT_BUTTON_SIZE),
+                              dbc.Button(".json", outline=True, color="secondary", className="me-1", id="btn-popover-line-download-json", style={}, size=INIT_BUTTON_SIZE),
                               html.Div('Chart', style={'marginTop':5}),
-                              dbc.Button(".pdf", outline=True, color="secondary", className="mr-1", id="btn-popover-line-download-pdf", style={}, size=INIT_BUTTON_SIZE),
-                              dbc.Button(".jpg", outline=True, color="secondary", className="mr-1", id="btn-popover-line-download-jpg", style={}, size=INIT_BUTTON_SIZE),
-                              dbc.Button(".png", outline=True, color="secondary", className="mr-1", id="btn-popover-line-download-png", style={}, size=INIT_BUTTON_SIZE),
-                              dbc.Button(".svg", outline=True, color="secondary", className="mr-1", id="btn-popover-line-download-svg", style={}, size=INIT_BUTTON_SIZE),
-                              html.Div('Advanced', style={'marginTop':5,'display':'none'}),
-                              dbc.Button("Downloads Area", outline=True, color="secondary", className="mr-1", id="btn-popover-line-download-land", style={'display':'none'}, size=INIT_BUTTON_SIZE),
+                              dbc.Button(".pdf", outline=True, color="secondary", className="me-1", id="btn-popover-line-download-pdf", style={}, size=INIT_BUTTON_SIZE),
+                              dbc.Button(".jpg", outline=True, color="secondary", className="me-1", id="btn-popover-line-download-jpg", style={}, size=INIT_BUTTON_SIZE),
+                              dbc.Button(".png", outline=True, color="secondary", className="me-1", id="btn-popover-line-download-png", style={}, size=INIT_BUTTON_SIZE),
+                              dbc.Button(".svg", outline=True, color="secondary", className="me-1", id="btn-popover-line-download-svg", style={}, size=INIT_BUTTON_SIZE),
+                              #html.Div('Advanced', style={'marginTop':5,'display':'none'}),
+                              #dbc.Button("Downloads Area", outline=True, color="secondary", className="me-1", id="btn-popover-line-download-land", style={'display':'none'}, size=INIT_BUTTON_SIZE),
                               ]),
                           ],
                           id="download-popover-line",                                        
-                          target="modal-line-download",
-                          #style={'maxHeight': '300px', 'overflowY': 'auto'},
+                          target="modal-line-download",                          
                           trigger="legacy",
                           placement="top",
                           hide_arrow=False,
                           
                     ), 
                     
-                ]), #end footer
+                ]), 
                 
             ],
             id="dbc-modal-line",
             centered=True,
             size="xl",
-            style={"max-width": "none", "width": INIT_LINE_MODAL_W} 
+            dialog_style={"max-width": "none", "width": INIT_LINE_MODAL_W} 
         )
     return m

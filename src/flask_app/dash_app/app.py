@@ -11,8 +11,7 @@
 # about modal [DONE]
 # user guide modal [DONE]
 # Get timeslider working [DONE]
-
-# Bar chart get dl working
+# Bar chart [DONE]
 
 # Line chart ... etc
 # Bubble chart?
