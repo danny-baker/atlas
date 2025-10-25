@@ -19,6 +19,9 @@ sys.path.append('/usr/src/app/data') #working dir for built container (see /Dock
 sys.path.append('/home/dan/atlas/data') #testing on local machine (no docker)
 from data_pipeline.data_paths import * 
 
+pd.set_option('display.max_rows', 500)
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.width', 1000)
 
 
 
@@ -607,7 +610,7 @@ class Data:
         return countries_lst        
 
     
-    def get_stats(self, series_name:str, year:int, sort_by:str, ascending:bool=True) -> pd.DataFrame:
+    def get_stats(self, series_name:str, year:int|None, sort_by:str, ascending:bool=True) -> pd.DataFrame:
         # Query master stats and return a dataframe with all stats for a given dataset_raw name and year 
         # Convert value to correct data type based on series metatdata               
         
@@ -623,14 +626,15 @@ class Data:
         var_type = self.config_key_dsraw[series_name]['var_type']
         
         # Slice stats out from master
-        df = self.stats.loc[(self.stats['dataset_raw'] == series_name) & (self.stats['year'] == year)]     
+        if year == None:
+            df = self.stats.loc[(self.stats['dataset_raw'] == series_name)]  
+        else:
+            df = self.stats.loc[(self.stats['dataset_raw'] == series_name) & (self.stats['year'] == year)]     
         
         # Cast 'values' to relevant datatype if possible 
-        if var_type == 'quantitative':
-            #df['value'] = df['value'].astype(int)
+        if var_type == 'quantitative':            
             df.loc[:, 'value'] = df['value'].astype(int)
-        elif var_type == 'ratio' or var_type == 'continuous':
-            #df['value'] = df['value'].astype(float)
+        elif var_type == 'ratio' or var_type == 'continuous':            
             df.loc[:, 'value'] = df['value'].astype(float)
         
         # Perform sort logic        
@@ -638,6 +642,61 @@ class Data:
      
         return df
         
+    def get_stats_for_line(self, series_name:str, highlight_countries:list) -> pd.DataFrame:
+        # return a df structure suitable for ingesting into the go.Scatter chart
+
+        # need to build chart data to feed into fig
+        # year  countryA    countyB     countryC
+        # 2021  23.1        43.3        954
+
+        # query series from master dataset
+        df = self.get_stats(series_name=series_name, year=None, sort_by='year', ascending=True)          
+
+        # prepare list of df chunks for each country
+        df_chunks = []
+
+        for country in highlight_countries:
+            # Prepare df chunks of type [year country(val)]
+            
+            # subset to given country
+            cdf = df[(df['country'] == country)]             
+
+            # strip out any duplicate years for this series and country (just in case)
+            cdf = cdf.drop_duplicates(subset=['year'])
+
+            # select out year and country cols
+            cdf = cdf[['year','value']]
+
+            # rename value column to country name
+            cdf = cdf.rename(columns={'value':country})            
+                        
+            df_chunks.append(cdf)
+        
+        # We now have a list of df chunks we want to merge, noting some countries might have no data in a given year but we want to display ALL yrs.
+        # year  countryA    countyB     countryC
+        # 2021  23.1        43.3        954
+        # 2022  NaN         34          NaN
+
+        # CASE: 1 country selected
+        if len(df_chunks) == 1: return df
+        
+        # CASE: 2 countries (just merge)
+        if len(df_chunks) == 2:
+            merged_df = pd.merge(df_chunks[0], df_chunks[1], on='year', how='outer') 
+            return merged_df
+        
+        # CASE: 3 countries or more (loop merge)
+        if len(df_chunks) > 2:
+            # first build base to merge against
+            merged_df = pd.merge(df_chunks[0], df_chunks[1], on='year', how='outer') 
+
+            # iterate, merging each chunk against the base
+            for i in range(2,len(df_chunks)):
+                merged_df = pd.merge(merged_df, df_chunks[i], on='year', how='outer')
+            
+            return merged_df
+
+    
 
     def get_stats_for_dl(self, series_name:str) -> pd.DataFrame:
         # Prepare a cleaned DF suitable for download
@@ -699,7 +758,7 @@ class Data:
         return years
 
 
-def get_time_slider(dobj, series_name:str, year=None) -> dict:
+def get_time_slider(dobj, series_name:str, year=None) -> dict[str,int]:
     # return a dictionary representing time slider properties to set for a given series, selecting most recent year
     # marks [[val,mark], ...]  i.e. [[2000: '2000'], [2001: '2001'], [2002: '2002'], ... ]
     # marks_dict {2000: '2000', 2001:'2001', 2003:'' ...}

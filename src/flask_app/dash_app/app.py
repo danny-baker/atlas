@@ -13,7 +13,8 @@
 # Get timeslider working [DONE]
 # Bar chart [DONE]
 
-# Line chart ... etc
+# Line chart ... basic working. Needs hovertip cleanups and some testing.
+
 # Bubble chart?
 # Geobar
 # Globe

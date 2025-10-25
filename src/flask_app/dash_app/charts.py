@@ -129,7 +129,7 @@ def create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year):
 
 
 
-def create_chart_bar(dobj, series, year, highlight_countries:list):     
+def create_chart_bar(dobj, series:dict, year:int, highlight_countries:list) -> go.Figure:     
         
     #lookup the series label from the dataset_lkup df
     series_label = series['dataset_label']                
@@ -172,4 +172,105 @@ def create_chart_bar(dobj, series, year, highlight_countries:list):
         },
         yaxis_title=series_label,)   
     
+    return fig
+
+
+
+def create_chart_line(dobj, series:dict, highlight_countries:list) -> go.Figure:  
+    
+    print(highlight_countries)
+
+    #lookup the series label from the dataset_lkup df
+    series_label = series['dataset_label']                
+    series_name = series['dataset_raw']    
+    
+    chartdata = dobj.get_stats_for_line(series_name, highlight_countries)  
+
+    # set line width based on number of countries
+    if len(highlight_countries) <=10: line_width=3
+    elif len(highlight_countries) > 10 and len(highlight_countries) <= 40: line_width=2
+    else: line_width=1
+           
+    fig = go.Figure()
+    for country in highlight_countries:
+
+        fig.add_trace(go.Scatter(
+                    x=chartdata['year'],
+                    y=chartdata[country],
+                    name=country, # Style name/legend entry with html tags
+                    showlegend=True,
+                    #customdata=countryname,
+                    #hovertemplate="%{customdata} %{y:} (%{x})<extra></extra>", # e.g. "America 45.3 (2009)"
+                    connectgaps=True, 
+                    line=dict(width=line_width),
+                    #mode='lines+markers',
+                ))
+    fig.update_layout(yaxis_title=series_label)
+
+    return fig
+
+    """
+    #lookup the series label from the dataset_lkup df
+    series_label = master_config[series].get("dataset_label")   
+   
+    logger.info("Creating line graph with series %r", series)
+          
+    #get unique, ordered list of years for selected series
+    chartdata = pd.DataFrame(np.sort(pd.unique(df["year"])), columns=["year"]).copy() #numpy array...fix for pop
+    
+    #loop through dropdown_choices and populate chartdata array    
+    if dropdown_choices != None:
+        for i in range(0,len(dropdown_choices)):
+            
+            #create a new column for each country
+            chartdata[dropdown_choices[i]] = "hello"
+            
+            #for this country, set any vals found in dataset (be sure to do a isin check first)
+            for j in range(0,len(chartdata)):
+                
+                #check to see if data exists for this country and year (avoids a key error)                
+                if chartdata.iloc[j][0] in df[(df['country']==dropdown_choices[i])].year.values:                    
+                    #update chart data with corresponding value for this country and year
+                    chartdata.loc[chartdata.year == chartdata.iloc[j][0], dropdown_choices[i]] = df[(df['country']==dropdown_choices[i]) & (df['year']==chartdata.iloc[j][0])].iloc[0][4]
+                
+                else:                    
+                    #this country must be missing some data points compared to others in the set
+                    chartdata.loc[chartdata.year == chartdata.iloc[j][0], dropdown_choices[i]] = None
+    
+   
+    # set line width based on number of countries
+    if len(dropdown_choices) <=10: width=3
+    elif len(dropdown_choices) > 10 and len(dropdown_choices) <= 40: width=2
+    else: width=1
+    
+   
+    # now build the figure
+    fig = go.Figure()
+    
+    if dropdown_choices != None:
+        for k in range(0,len(dropdown_choices)):  
+            
+            #build custom list for hover template (must be country name repeated)
+            countryname = [dropdown_choices[k]] * len(chartdata)                        
+            
+            fig.add_trace(go.Scatter(
+                x=chartdata['year'],
+                y=chartdata[dropdown_choices[k]],
+                name=dropdown_choices[k], # Style name/legend entry with html tags
+                showlegend=True,
+                customdata=countryname,
+                hovertemplate="%{customdata} %{y:} (%{x})<extra></extra>", # e.g. "America 45.3 (2009)"
+                connectgaps=True, 
+                line=dict(width=width),
+                #mode='lines+markers',
+            ))
+           
+        
+        fig.update_layout(
+                       #xaxis_title='Month',
+                       yaxis_title=series_label,                       
+                       )
+         
+  
+    """
     return fig

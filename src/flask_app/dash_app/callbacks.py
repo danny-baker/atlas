@@ -712,8 +712,8 @@ def init_callbacks(dash_app, dobj):
         Input("my-url-line-trigger", "data"), 
         Input("line-button", "n_clicks"), 
         Input("modal-line-close", "n_clicks"),
-        Input("line-graph-dropdown-countries", "value"),
-        Input('line-graph-dropdown-dataset', 'value'),
+        #Input("line-graph-dropdown-countries", "value"),
+        #Input('line-graph-dropdown-dataset', 'value'),
         ],
         [
         State("dbc-modal-line", "is_open"),
@@ -728,7 +728,7 @@ def init_callbacks(dash_app, dobj):
         ],
         prevent_initial_call=True
     )    
-    def callback_toggle_modal_line(line_trigger, n1, n2, dd_country_choices, dd_dataset_choice, is_open, series_map_state, year_slider_state, yeardict, url_series, href, url_view, url_year):
+    def callback_toggle_modal_line(line_trigger, n1, n2, is_open, series_map_state, year_slider_state, yeardict, url_series, href, url_view, url_year):
         
         trigger = ctx.triggered_id      
         logger.info(f"Line chart: {trigger}") 
@@ -746,9 +746,9 @@ def init_callbacks(dash_app, dobj):
         series = dobj.config_key_dsraw[series_name]  
         series_label = series['dataset_label']
         series_source = series['source']
-        series_link = series['link']                   
-        fig = {}
-        #fig = charts.create_chart_bar(dobj, series, year, highlight_countries)
+        series_link = series['link']  
+        highlight_countries = ['New Zealand', 'Australia', 'Spain'] #testing                         
+        fig = charts.create_chart_line(dobj, series, highlight_countries)
 
         return True, fig, series_label, series_source, series_link
         
