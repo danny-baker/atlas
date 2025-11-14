@@ -13,7 +13,7 @@
 # Get timeslider working [DONE]
 # Bar chart [DONE]
 
-# Line chart ... basic working. Needs hovertip cleanups and some testing.
+# Line chart ... basic working. Hovertips good. working on country selector.
 
 # Bubble chart?
 # Geobar

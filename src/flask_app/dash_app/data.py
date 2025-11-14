@@ -602,9 +602,14 @@ class Data:
 
 
     
-    def get_countries(self, series_name:str, year:int) -> list[str]:
+    def get_countries(self, series_name:str, year:int=None) -> list[str]:
         # Return an alphabetically ascending list of countries available for the given dataset series and year.
-        df = self.stats.loc[(self.stats['dataset_raw'] == series_name) & (self.stats['year'] == year)]         
+        
+        if year is not None:
+            df = self.stats.loc[(self.stats['dataset_raw'] == series_name) & (self.stats['year'] == year)]         
+        else:
+            df = self.stats.loc[(self.stats['dataset_raw'] == series_name)]  
+        
         countries_df = np.sort(pd.unique(df['country'].astype(str)))
         countries_lst = countries_df.tolist()
         return countries_lst        

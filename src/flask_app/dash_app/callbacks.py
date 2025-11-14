@@ -702,7 +702,8 @@ def init_callbacks(dash_app, dobj):
         Output("line-graph-modal-footer", "children"),
         Output("line-graph-modal-footer-link", "href"),
         #Output('my-loader-line', "children"), #used to trigger loader. Use null string "" as output
-        #Output('line-graph-dropdown-countries', 'options'),
+        Output('line-graph-dropdown-countries', 'options'),
+        Output('line-graph-dropdown-countries', 'value'),
         #Output('line-graph-dropdown-dataset', 'options'),
         #Output('my-series-line', 'data'),
         #Output("my-url-line-callback","data"),
@@ -712,14 +713,12 @@ def init_callbacks(dash_app, dobj):
         Input("my-url-line-trigger", "data"), 
         Input("line-button", "n_clicks"), 
         Input("modal-line-close", "n_clicks"),
-        #Input("line-graph-dropdown-countries", "value"),
+        Input("line-graph-dropdown-countries", "value"), # country_select
         #Input('line-graph-dropdown-dataset', 'value'),
         ],
         [
         State("dbc-modal-line", "is_open"),
-        State("my-series", "data"), #super useful. Use state of selections as global vars via state.
-        State("year-slider", "value"),  
-        State("year-slider", "marks"),
+        State("my-series", "data"), #super useful. Use state of selections as global vars via state.        
         State("my-url-series", 'data'),
         State('url','href'),  
         State("my-url-view", 'data'),
@@ -728,29 +727,56 @@ def init_callbacks(dash_app, dobj):
         ],
         prevent_initial_call=True
     )    
-    def callback_toggle_modal_line(line_trigger, n1, n2, is_open, series_map_state, year_slider_state, yeardict, url_series, href, url_view, url_year):
+    def callback_toggle_modal_line(line_trigger, n1, n2, country_select, is_open, series_map_state, url_series, href, url_view, url_year):
         
         trigger = ctx.triggered_id      
         logger.info(f"Line chart: {trigger}") 
         
         # CASE: close button
         if trigger == 'modal-line-close':
-            return False,{},None,None,None#,None,[],[],[],None,None 
+            return False,{},None,None,None,None#,[],[],[],None,None 
         
         # CASE: entry from map mode   
         elif trigger == 'line-button': 
-            year = int(year_slider_state)
+            
             series_name = series_map_state
 
-        # Build components
-        series = dobj.config_key_dsraw[series_name]  
-        series_label = series['dataset_label']
-        series_source = series['source']
-        series_link = series['link']  
-        highlight_countries = ['New Zealand', 'Australia', 'Spain'] #testing                         
-        fig = charts.create_chart_line(dobj, series, highlight_countries)
+            # Build components
+            series = dobj.config_key_dsraw[series_name]  
+            series_label = series['dataset_label']
+            series_source = series['source']
+            series_link = series['link']  
+            highlight_countries = ['New Zealand', 'Australia', 'Spain'] #testing                         
+            fig = charts.create_chart_line(dobj, series, highlight_countries)
 
-        return True, fig, series_label, series_source, series_link
+            # Build country highlighter
+            dropdown_countries = []
+            for country in dobj.get_countries(series_name):
+                dropdown_countries.append({'label': country, 'value': country})         
+
+            return True, fig, series_label, series_source, series_link, dropdown_countries, highlight_countries
+        
+        # CASE: entry from country select
+        elif trigger == 'line-graph-dropdown-countries':
+            # reminder this logic is kind of duplicated and can probably be refactored.           
+            series_name = series_map_state
+
+            # Build components
+            series = dobj.config_key_dsraw[series_name]  
+            series_label = series['dataset_label']
+            series_source = series['source']
+            series_link = series['link']  
+            highlight_countries = country_select                       
+            fig = charts.create_chart_line(dobj, series, highlight_countries)
+
+            # Build country highlighter
+            dropdown_countries = []
+            for country in dobj.get_countries(series_name):
+                dropdown_countries.append({'label': country, 'value': country})         
+
+            return True, fig, series_label, series_source, series_link, dropdown_countries, highlight_countries
+
+
         
         """
         #first check triggers and context 
