@@ -683,7 +683,7 @@ class Data:
         # 2022  NaN         34          NaN
 
         # CASE: 1 country selected
-        if len(df_chunks) == 1: return df
+        if len(df_chunks) == 1: return df_chunks[0]
         
         # CASE: 2 countries (just merge)
         if len(df_chunks) == 2:

@@ -529,14 +529,14 @@ def init_callbacks(dash_app, dobj):
         Output("bar-graph-modal-title", "children"),
         Output("bar-graph-modal-footer", "children"),
         Output("bar-graph-modal-footer-link", "href"),
-        Output('my-loader-bar', "children"), #used to trigger loader. Use null string "" as output
+        Output('my-loader-bar', "children"), #used to trigger loader. Return None
         Output('bar-graph-dropdown-countrieselector', 'options'),
         Output('bar-graph-dropdown-dataset', 'options'), 
         Output('bar-graph-dropdown-year', 'options'),
         Output('my-series-bar','data'),
         Output('my-year-bar','data'),     
         #Output("my-url-bar-callback","data"),
-        #Output('my-loader-bar-refresh','children'),
+        Output('my-loader-bar-refresh','children'), # return None
         ],
         [
         Input("my-url-bar-trigger", "data"), #TODO
@@ -566,7 +566,7 @@ def init_callbacks(dash_app, dobj):
 
         # CASE: close button
         if trigger == 'modal-bar-close':
-            return False,{},None,None,None,None,[],[],[],None,None   
+            return False,{},None,None,None,None,[],[],[],None,None,None   
         
         # CASE: entry from map mode   
         elif trigger == 'bar-button': 
@@ -612,7 +612,7 @@ def init_callbacks(dash_app, dobj):
             dropdown_dataset.append({'label': dobj.config_key_dsraw[series]['dataset_label'], 'value': series}) 
               
        
-        return True, fig, bar_graph_title, series_source, series_link, "", dropdown_countries, dropdown_dataset, dropdown_years, series_name, year
+        return True, fig, bar_graph_title, series_source, series_link, "", dropdown_countries, dropdown_dataset, dropdown_years, series_name, year, ""
        
            
         
@@ -701,83 +701,90 @@ def init_callbacks(dash_app, dobj):
         Output("line-graph-modal-title", "children"),
         Output("line-graph-modal-footer", "children"),
         Output("line-graph-modal-footer-link", "href"),
-        #Output('my-loader-line', "children"), #used to trigger loader. Use null string "" as output
+        Output('my-loader-line', "children"), #used to trigger loader. Return None
         Output('line-graph-dropdown-countries', 'options'),
-        Output('line-graph-dropdown-countries', 'value'),
-        #Output('line-graph-dropdown-dataset', 'options'),
-        #Output('my-series-line', 'data'),
+        Output('line-graph-dropdown-countries', 'value'), # countries selected list[str]
+        Output('line-graph-dropdown-dataset', 'options'),
+        Output('my-series-line', 'data'),
         #Output("my-url-line-callback","data"),
-        #Output('my-loader-line-refresh','children'),     
+        Output('my-loader-line-refresh','children'), #Return None 
         ],
         [
         Input("my-url-line-trigger", "data"), 
         Input("line-button", "n_clicks"), 
         Input("modal-line-close", "n_clicks"),
         Input("line-graph-dropdown-countries", "value"), # country_select
-        #Input('line-graph-dropdown-dataset', 'value'),
+        Input('line-graph-dropdown-dataset', 'value'), # dataset_select
+        Input("linegraph-nocountries-button", "n_clicks"),
+        Input("linegraph-allcountries-button", "n_clicks"),
         ],
         [
         State("dbc-modal-line", "is_open"),
-        State("my-series", "data"), #super useful. Use state of selections as global vars via state.        
+        State("my-series", "data"), # underlying map dataset       
+        State('my-series-line', 'data'), #used if changing datasets on modal
         State("my-url-series", 'data'),
         State('url','href'),  
         State("my-url-view", 'data'),
         State("my-url-year", 'data'),
+        State('line-graph-dropdown-countries', 'value'), # countries selected list[str]
                     
         ],
         prevent_initial_call=True
     )    
-    def callback_toggle_modal_line(line_trigger, n1, n2, country_select, is_open, series_map_state, url_series, href, url_view, url_year):
+    def callback_toggle_modal_line(line_trigger, n1, n2, country_select, dataset_select, btn_no_countries, btn_all_countries, is_open, series_map_state, series_modal_state, url_series, href, url_view, url_year, highlight_state):
         
         trigger = ctx.triggered_id      
-        logger.info(f"Line chart: {trigger}") 
+        logger.info(f"Line chart: {trigger}")         
         
         # CASE: close button
         if trigger == 'modal-line-close':
-            return False,{},None,None,None,None#,[],[],[],None,None 
+            return False,{},None,None,None,None, [], None, [], None,None #,[],[],[],None,None          
         
         # CASE: entry from map mode   
-        elif trigger == 'line-button': 
-            
+        elif trigger == 'line-button':             
             series_name = series_map_state
-
-            # Build components
-            series = dobj.config_key_dsraw[series_name]  
-            series_label = series['dataset_label']
-            series_source = series['source']
-            series_link = series['link']  
-            highlight_countries = ['New Zealand', 'Australia', 'Spain'] #testing                         
-            fig = charts.create_chart_line(dobj, series, highlight_countries)
-
-            # Build country highlighter
-            dropdown_countries = []
-            for country in dobj.get_countries(series_name):
-                dropdown_countries.append({'label': country, 'value': country})         
-
-            return True, fig, series_label, series_source, series_link, dropdown_countries, highlight_countries
+            highlight_countries = ['Albania', 'New Zealand'] # start state (maybe make this random from the available countries?)
         
         # CASE: entry from country select
-        elif trigger == 'line-graph-dropdown-countries':
-            # reminder this logic is kind of duplicated and can probably be refactored.           
-            series_name = series_map_state
+        elif trigger == 'line-graph-dropdown-countries':       
+            series_name = series_modal_state
+            highlight_countries = country_select  
 
-            # Build components
-            series = dobj.config_key_dsraw[series_name]  
-            series_label = series['dataset_label']
-            series_source = series['source']
-            series_link = series['link']  
-            highlight_countries = country_select                       
-            fig = charts.create_chart_line(dobj, series, highlight_countries)
+        # CASE: Clear all countries
+        elif trigger == 'linegraph-nocountries-button':                      
+            series_name = series_modal_state #bug: get this from the state, or series dropdown will always be overriden
+            highlight_countries = []  
 
-            # Build country highlighter
-            dropdown_countries = []
-            for country in dobj.get_countries(series_name):
-                dropdown_countries.append({'label': country, 'value': country})         
-
-            return True, fig, series_label, series_source, series_link, dropdown_countries, highlight_countries
-
-
+        # CASE: Display all countries
+        elif trigger == 'linegraph-allcountries-button':                      
+            series_name = series_modal_state
+            highlight_countries = dobj.get_countries(series_name)
         
+        # CASE: Dataset select
+        elif trigger == 'line-graph-dropdown-dataset':
+            series_name = dataset_select #this should be dsraw from the drop down 'value' (label:value)
+            highlight_countries = highlight_state
+
+        # Build components
+        series = dobj.config_key_dsraw[series_name]  
+        series_label = series['dataset_label']
+        series_source = series['source']
+        series_link = series['link']                                 
+        fig = charts.create_chart_line(dobj, series, highlight_countries)
+
+        # Build country selector
+        dropdown_countries = []
+        for country in dobj.get_countries(series_name):
+            dropdown_countries.append({'label': country, 'value': country})
+
+        # Build dataset dropdown
+        dropdown_dataset = []
+        for series in dobj.get_numerical_series():            
+            dropdown_dataset.append({'label': dobj.config_key_dsraw[series]['dataset_label'], 'value': series}) 
+
+        return True, fig, series_label, series_source, series_link, None, dropdown_countries, highlight_countries, dropdown_dataset, series_name, None
+
+
         """
         #first check triggers and context 
         ctx = dash.callback_context 

@@ -13,9 +13,10 @@
 # Get timeslider working [DONE]
 # Bar chart [DONE]
 
-# Line chart ... basic working. Hovertips good. working on country selector.
+# Line chart ... basic working. Sml bug when adding/removing countries, don't obtain series from map state if already have one?? minor tweak. Then just add download functionality and done.
 
 # Bubble chart?
+# Pizza (remove, never worked properly)
 # Geobar
 # Globe
 # Settings

@@ -177,14 +177,12 @@ def create_chart_bar(dobj, series:dict, year:int, highlight_countries:list) -> g
 
 
 def create_chart_line(dobj, series:dict, highlight_countries:list) -> go.Figure:  
-    
-    print(highlight_countries)
-
+        
     #lookup the series label from the dataset_lkup df
     series_label = series['dataset_label']                
     series_name = series['dataset_raw']    
     
-    chartdata = dobj.get_stats_for_line(series_name, highlight_countries)  
+    chartdata = dobj.get_stats_for_line(series_name, highlight_countries)      
 
     # set line width based on number of countries
     if len(highlight_countries) <=10: line_width=3
@@ -195,8 +193,8 @@ def create_chart_line(dobj, series:dict, highlight_countries:list) -> go.Figure:
     
     # Add a trace for each country
     for country in highlight_countries:
-
-        # Build special list of repeating country names for each data point (for hovertip)
+     
+        # Build special list of repeating country names for each data point (for hovertip)        
         countryname = [country] * len(chartdata[country])
 
         fig.add_trace(go.Scatter(
