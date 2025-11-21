@@ -13,14 +13,14 @@
 # Get timeslider working [DONE]
 # Bar chart [DONE]
 
-# Line chart ... basic working. Sml bug when adding/removing countries, don't obtain series from map state if already have one?? minor tweak. Then just add download functionality and done.
+# Line chart ... basic working.  add download functionality and done.
 
+# URL path working
 # Bubble chart?
 # Pizza (remove, never worked properly)
 # Geobar
 # Globe
 # Settings
-# URL path working
 # Finishing. CSS clean up (formatting and finishing touches. E.g. modal left align for footer. Make yr slider sexy etc)
 # Port rest of app_old.py across. i.e. delete app_old.py
 

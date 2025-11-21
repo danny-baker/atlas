@@ -160,24 +160,20 @@ def build():
                     dbc.Col([
                     #html.Div([ 
                         
-                        html.Div("year_test", 
-                                 style={'fontWeight': 'bold', 'color': INIT_year_SLIDER_FONTCOLOR, 'fontSize': INIT_year_SLIDER_FONTSIZE, 'align-items': 'center', 'justify-content': 'center','display': 'none', 'marginBottom':'0.5vmin'},
+                        html.Div("YEAR", 
+                                 style={'fontWeight': 'bold', 'color': INIT_year_SLIDER_FONTCOLOR, 'fontSize': INIT_year_SLIDER_FONTSIZE, 'align-items': 'center', 'justify-content': 'center','display': 'flex', 'marginBottom':'0.5vmin'},
                                  id='year-slider-title'), 
                         
                         html.Div([                                
                            
                                 
                             dcc.Slider(
-                                id='year-slider',
-                                #min=0,
-                                #max=0,
-                                step=None,
-                                #marks={ 0: {'label':'2005', 'style':{'color':'red', 'fontSize':12}}}, #dummy data. Overwritten
-                                #marks={}, #dummy data. Overwritten
+                                id='year-slider',                                
+                                step=None,                                
                                 marks={0: {'label': '2020', 'style': {'fontSize': 14, 'color': 'grey', 'fontWeight': 'bold'}}},
                                 value=0, 
                                 included=False,                                
-                                #disabled=True,
+                                
                             )],
                             
                             id='year-slider-style', #div id

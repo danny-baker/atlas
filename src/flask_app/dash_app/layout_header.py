@@ -7,7 +7,7 @@ def build():
             
     #title of app in page
     title = html.Div([
-        html.Span(INIT_TITLE_TEXT, style={"marginBottom": 0,
+        html.Span(PAGE_TITLE, style={"marginBottom": 0,
                                         #"marginTop": INIT_TITLE_PAD_TOP,
                                         #"marginLeft": 0,
                                         #'textAlign': 'center',
@@ -31,7 +31,7 @@ def build():
                 dcc.Loading(
                 type=INIT_LOADER_TYPE,
                 color=INIT_LOADER_DATASET_COLOR, #hex colour close match to nav bar ##515A5A
-                children=html.Span("No data selected", id="my-loader-main", style={"marginBottom": 0, "marginTop": 10, "marginLeft": 0, 'textAlign': 'center', 'fontSize': INIT_SELECTION_H, 'fontFamily': 'Helvetica', 'fontWeight': '', 'backgroundColor': INIT_TITLE_BG_COL, 'opacity': INIT_TITLE_OPACITY  },), #style of span
+                children=html.Span("\u00A0No data selected\u00A0", id="my-loader-main", style={"marginBottom": 0, "marginTop": 10, "marginLeft": 0, 'textAlign': 'center', 'fontSize': INIT_SELECTION_H, 'fontFamily': 'Helvetica', 'fontWeight': '', 'backgroundColor': INIT_TITLE_BG_COL, 'opacity': INIT_TITLE_OPACITY  },), #style of span
                 style={'textAlign': 'center' } #style of loader
                 ),style={'textAlign': 'center', 'marginTop':10, 'marginBottom':10, 'color': INIT_TITLE_COL}, #style of div
     )

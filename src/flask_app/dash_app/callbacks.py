@@ -70,7 +70,7 @@ def init_callbacks(dash_app, dobj):
         #    Output("globe-button", "style"),
         #    Output("bubble-button", "style"),        
         #    Output('my-year', "data"),
-            Output('my-loader-main', "children"), #used to trigger loader. Use null string "" as output
+            Output('my-loader-main', "children"), #The dataset label to display under title
         #    Output('button-panel-style', "style"), #used to hide initially
         #    Output('year-slider-style', "style"), #used to hide initially
         #    Output('data-source-style', 'style'), #used to hide initially         
@@ -152,7 +152,7 @@ def init_callbacks(dash_app, dobj):
             #return out and build main map
             year = dobj.get_latest_year(series['dataset_raw'])
             fig = charts.create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year)
-            series_label = f"{series['dataset_label']} in {year}"
+            series_label = f"\u00A0{series['dataset_label']} in {year}\u00A0"
             series_source = series['source']
             link = series['link']
             note = series['note']            
@@ -166,7 +166,7 @@ def init_callbacks(dash_app, dobj):
             series_name = states['my-series.data']
             series = dobj.config_key_dsraw[series_name]   
             fig = charts.create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year)
-            series_label = f"{series['dataset_label']} in {year}"
+            series_label = f"\u00A0{series['dataset_label']} in {year}\u00A0"
             series_source = series['source']
             link = series['link']
             note = series['note']            
@@ -531,6 +531,7 @@ def init_callbacks(dash_app, dobj):
         Output("bar-graph-modal-footer-link", "href"),
         Output('my-loader-bar', "children"), #used to trigger loader. Return None
         Output('bar-graph-dropdown-countrieselector', 'options'),
+        Output('bar-graph-dropdown-countrieselector', 'value'),
         Output('bar-graph-dropdown-dataset', 'options'), 
         Output('bar-graph-dropdown-year', 'options'),
         Output('my-series-bar','data'),
@@ -571,7 +572,8 @@ def init_callbacks(dash_app, dobj):
         # CASE: entry from map mode   
         elif trigger == 'bar-button': 
             year = int(year_slider_state)                        
-            series_name = series_map_state            
+            series_name = series_map_state
+            highlight_countries = ['United States of America', 'China', 'India']            
         
         # CASE: year selection
         elif trigger == 'bar-graph-dropdown-year':
@@ -612,14 +614,14 @@ def init_callbacks(dash_app, dobj):
             dropdown_dataset.append({'label': dobj.config_key_dsraw[series]['dataset_label'], 'value': series}) 
               
        
-        return True, fig, bar_graph_title, series_source, series_link, "", dropdown_countries, dropdown_dataset, dropdown_years, series_name, year, ""
+        return True, fig, bar_graph_title, series_source, series_link, "", dropdown_countries, highlight_countries, dropdown_dataset, dropdown_years, series_name, year, ""
        
            
         
    
     
     
-    # Download dataset BAR
+    # Download dataset bar graph modal
     @dash_app.callback(Output('download_dataset_bar', 'data'),
                 [                
                 Input('btn-popover-bar-download-csv', 'n_clicks'),
@@ -646,18 +648,23 @@ def init_callbacks(dash_app, dobj):
         series_link = series['link']
         
         # Obtain cleaned data suitable for download
-        df =dobj.get_stats_for_dl_bar(series_name, int(year_str))
+        df =dobj.get_stats_for_dl(series_name, int(year_str))
+
+        # Optimise chart formating
+        title_font=36
+        footer_font=22
+        height=700
+        width=4096
 
         # nest function for returning chart
         def chart(extension):
             f = go.Figure(fig)        
             f.update_layout(
-                title={'text':f'WORLD ATLAS 2.0 - {series_label} in {str(year)}','font':{'size':36,'color':'black'},'x':0,'xref':'container', 'xanchor':'left','pad':{'b':0,'t':40,'l':40,'r':0}, 'y':1, 'yref':'container', 'yanchor':'auto'},
-                #annotations=[{'text':'Source: '+source,'font':{'size':14,'color':'black'},'x':0,'xref':'paper', 'xanchor':'left','y':0, 'yref':'paper', 'yanchor':'auto'}],
-                xaxis={'title':{'text':f'Source: This chart was generated at https://worldatlas.org based on dataset: {series_source}. Originally sourced from {series_link}' , 'font':{'size':22}}}, 
+                title={'text':f'WORLD ATLAS 2.0 - {series_label} in {str(year)}','font':{'size':title_font,'color':'black'},'x':0,'xref':'container', 'xanchor':'left','pad':{'b':0,'t':40,'l':40,'r':0}, 'y':1, 'yref':'container', 'yanchor':'auto'},                                               
+                xaxis={'title':{'text':f'Source: This chart was generated at https://worldatlas.org based on dataset: {series_source}. Originally sourced from {series_link}' , 'font':{'size':footer_font}}}, 
                 )
             path = "tmp/WORLD_ATLAS_2.0 "+series_label+" ("+str(year)+")"+extension
-            plotly.io.write_image(fig=f, file=path, engine="kaleido", height=700, width=4096)
+            plotly.io.write_image(fig=f, file=path, engine="kaleido", height=height, width=width)
             return dcc.send_file(path)  
 
         # CASE: dl xlsx
@@ -743,7 +750,7 @@ def init_callbacks(dash_app, dobj):
         # CASE: entry from map mode   
         elif trigger == 'line-button':             
             series_name = series_map_state
-            highlight_countries = ['Albania', 'New Zealand'] # start state (maybe make this random from the available countries?)
+            highlight_countries = ['China', 'India', 'Germany', 'Italy', 'United Kingdom', 'Japan', 'France', 'Canada', 'New Zealand' ] # start state (maybe make this random from the available countries?)
         
         # CASE: entry from country select
         elif trigger == 'line-graph-dropdown-countries':       
@@ -785,71 +792,92 @@ def init_callbacks(dash_app, dobj):
         return True, fig, series_label, series_source, series_link, None, dropdown_countries, highlight_countries, dropdown_dataset, series_name, None
 
 
-        """
-        #first check triggers and context 
-        ctx = dash.callback_context 
-        trigger = ctx.triggered[0]["prop_id"].split(".")[0] #this is the series selection (component id from navbar top), except if the year slider is the trigger!!
-        #logger.info("linegraph callback. \nTrigger is %r,\nopen state is %r, n1 %r, n2 %r, \ndropdown country %r\ndropdown dataset %r", trigger, is_open, n1, n2, dd_country_choices, dd_dataset_choice) 
+    # Download dataset Line graph modal
+    @dash_app.callback(Output('download_dataset_line', 'data'),
+                [                
+                Input('btn-popover-line-download-csv', 'n_clicks'),
+                Input('btn-popover-line-download-json', 'n_clicks'),
+                Input('btn-popover-line-download-xls', 'n_clicks'),
+                Input('btn-popover-line-download-pdf', 'n_clicks'),
+                Input('btn-popover-line-download-jpg', 'n_clicks'),
+                Input('btn-popover-line-download-png', 'n_clicks'),
+                Input('btn-popover-line-download-svg', 'n_clicks'),
+                ],              
+                State('my-series-line','data'),                
+                State('line-graph', 'figure'),
+                State('line-graph-dropdown-countries', 'value'),  
+                prevent_initial_call=True,)
+    def callback_download_dataset_line(n1,n2,n3,n4,n5,n6,n7, series_name, fig, selected_countries):   
         
-        if trigger == 'modal-line-close': return not is_open, {}, None,None,None,None, [],[], None,None,None
+        trigger = ctx.triggered_id            
         
-        # special api check 
-        if trigger == 'my-url-line-trigger':     
-            if url_view == '' or line_trigger != 'line': 
-                #print("breaking out of line callback!")
-                raise PreventUpdate()
-                
-            else: series=api_dict_label_to_raw[url_series]
+        # Grab some basics
+        series = dobj.config_key_dsraw[series_name] 
+        series_label = series['dataset_label']
+        series_source = series['source']
+        series_link = series['link']
         
-        #Check if a dataset choice is the trigger (simpler than bar logic as no years to worry about)
-        elif dd_dataset_choice!='' and dd_dataset_choice!=None: series = dd_dataset_choice      
+        # Obtain cleaned data suitable for download
+        df =dobj.get_stats_for_dl(series_name)
+       
+        # optimise chart formating based on no. countries selected
+        title_font=32
+        footer_font=12
+        if len(selected_countries) <= 10:
+            height=700
+            width = 1920
+        elif len(selected_countries) > 10 and len(selected_countries) <= 40:
+            height=1080
+            width = 1920
+        else:
+            height=4096
+            width=1920        
+
+        # nest function for returning chart
+        def chart(extension):
+            f = go.Figure(fig)  
+       
+            f.update_layout(
+                title={'text':f'WORLD ATLAS 2.0 - {series_label}','font':{'size':title_font,'color':'black'},'x':0,'xref':'container', 'xanchor':'left','pad':{'b':0,'t':40,'l':40,'r':0}, 'y':1, 'yref':'container', 'yanchor':'auto'},            
+                xaxis={'title':{'text':f'Source: This chart was generated at https://worldatlas.org based on dataset: {series_source}. Originally sourced from {series_link}', 'font':{'size':footer_font}}},
+                yaxis={'title':{'font':{'size':footer_font}}}, 
+                )
+            path = "tmp/WORLD_ATLAS_2.0 "+series_label+extension
+            plotly.io.write_image(fig=f, file=path, engine="kaleido", height=height, width=width)
+            return dcc.send_file(path)
+
+        # CASE: dl xlsx
+        if trigger == 'btn-popover-line-download-xls':
+            filename = f"WORLD_ATLAS_2.0 {series_label} (all years).xlsx" 
+            def to_xlsx(bytes_io):
+                xslx_writer = pd.ExcelWriter(bytes_io, engine="xlsxwriter")
+                df.to_excel(xslx_writer, index=False, sheet_name="sheet1")
+                xslx_writer._save()    
+            return dcc.send_bytes(to_xlsx, filename)    
+
+        # CASE: dl csv
+        elif trigger == 'btn-popover-line-download-csv':       
+            filename = f"WORLD_ATLAS_2.0 {series_label} (all years).csv" 
+            return dcc.send_data_frame(df.to_csv, filename, index=False)
         
-        #Gather variables we need    
-        series_label = master_config[series].get("dataset_label")         
-        source = master_config[series].get("source")        
-        link = master_config[series].get("link") 
-        graph_title = series_label
-            
-        # select the series from pop data (all years)
-        df = pop[(pop["dataset_raw"] == series)].sort_values(by="country", ascending=True)
-            
-        # cast numeric values to floats
-        df["value"] = df["value"].astype(float)
-        df["year"] = df["year"].astype(int)
+        # CASE: dl json
+        elif trigger == 'btn-popover-line-download-json':          
+            filename = f"WORLD_ATLAS_2.0 {series_label} (all years).json"        
+            return dcc.send_data_frame(df.to_json, filename, orient='table', index=False)
+
+        # CASE: dl pdf
+        elif trigger == 'btn-popover-line-download-pdf': return chart('.pdf')
         
-        # Build dropdown list for countries
-        ddc = np.sort(pd.unique(df["country"]).astype(str)) #numpy array    
-        dd_country_list=[]    
-        #dd_country_list.append({'label': 'ALL COUNTRIES' , 'value': 'ALL COUNTRIES'})
-        for i in range(0,len(ddc)):
-            dd_country_list.append({'label': ddc[i], 'value': ddc[i]})
-            
-        # Build dropdown list for datasets  (continuous and ratio only)      
-                
-        # get list of dicts for continuous and ratio, then combine them
-        list_continuous = d.get_list_of_dataset_labels_and_raw(master_config,'continuous')
-        list_ratio = d.get_list_of_dataset_labels_and_raw(master_config,'ratio')
-        list_combined = list_continuous + list_ratio #won't be sorted
+        # CASE: dl png
+        elif trigger == 'btn-popover-line-download-png': return chart('.png')
         
-        # sort this list by label by converting to df and back to list
-        list_combined = pd.DataFrame(list_combined).sort_values(by="dataset_label").to_dict('records') 
+        # CASE: dl jpg
+        elif trigger == 'btn-popover-line-download-jpg': return chart('.jpg')
         
-        #assemble into list of dicts for dropdown
-        dd_dataset_list=[] 
-        for i in range(0,len(list_combined)):        
-            dd_dataset_list.append({'label': list_combined[i].get("dataset_label"), 'value': list_combined[i].get("dataset_raw")}) 
+        # CASE: dl svg
+        elif trigger == 'btn-popover-line-download-svg': return chart('.svg')
+
         
-        
-        # build url    
-        blah = href.split('/') 
-        root = blah[0]+'//'+blah[2]+'/'
-        url = root + api_dict_raw_to_label[series] + '/' + 'x/line'          
-            
-        # keep modal open in these conditions
-        if trigger == 'line-graph-dropdown-countries' or trigger == 'line-graph-dropdown-dataset': is_open = not is_open
-        
-        return not is_open, create_chart_line(df, series, dd_country_choices), graph_title, source, link, "", dd_country_list, dd_dataset_list, series, url, '' 
-        """
 
 
 

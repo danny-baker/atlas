@@ -677,7 +677,7 @@ class Data:
                         
             df_chunks.append(cdf)
         
-        # We now have a list of df chunks we want to merge, noting some countries might have no data in a given year but we want to display ALL yrs.
+        # We now have a list of df chunks we want to merge, noting some countries might have no data in a given year but we want to display ALL yrs so we will OUTER merge.
         # year  countryA    countyB     countryC
         # 2021  23.1        43.3        954
         # 2022  NaN         34          NaN
@@ -703,8 +703,8 @@ class Data:
 
     
 
-    def get_stats_for_dl(self, series_name:str) -> pd.DataFrame:
-        # Prepare a cleaned DF suitable for download
+    def get_stats_for_dl(self, series_name:str, year:int|None=None) -> pd.DataFrame:
+        # Prepare a cleaned DF suitable for download with year as optional (e.g. map dl vs bar vs line)
 
         # gather userful vars    
         series = self.config_key_dsraw[series_name]          
@@ -712,44 +712,22 @@ class Data:
         source = series['source']      
         link = series['link']
         
-        # Query master stats and return a dataframe with all stats for a given dataset_raw name      
-        df = self.stats.loc[(self.stats['dataset_raw'] == series_name)].sort_values(['year','country'])     
-        
+        # Query master stats and return a dataframe with all stats for a given dataset_raw name    
+        if year is None:                      
+            df = self.stats.loc[(self.stats['dataset_raw'] == series_name)].sort_values(['year','country'])  
+        else:            
+            df = self.get_stats(series_name, year, sort_by='country' )           
+                      
         # make it pretty
         df['m49_un_a3'] = df['m49_un_a3'].astype(str).str.zfill(3) 
         df['United Nations m49 country code'] = df['m49_un_a3']        
         df = df.rename(columns={'value':series_label}) 
         df = df.drop(columns=['dataset_raw', 'm49_un_a3', 'continent'])        
                         
-        #merge in source information     
-        df['Source'] = source+" "+link
-  
-        return df
-    
-    def get_stats_for_dl_bar(self, series_name:str, year:int) -> pd.DataFrame:
-        # Prepare a cleaned DF suitable for downloading from bar chart modal 
-
-        # gather userful vars    
-        series = self.config_key_dsraw[series_name]          
-        series_label = series['dataset_label']      
-        source = series['source']      
-        link = series['link']
-
-        #subset master dataset to selected series and selected year
-        df = self.get_stats(series_name, year, sort_by='country' )  
-        
-        # make it pretty for file download
-        df['m49_un_a3'] = df['m49_un_a3'].astype(str).str.zfill(3) 
-        df['United Nations m49 country code'] = df['m49_un_a3']
-        df = df.rename(columns={'value':series_label})   
-        df = df.drop(columns=['dataset_raw', 'm49_un_a3', 'continent'])     
-
         #merge in source information 
         df['Source'] = f"{source} {link}"
-        
+  
         return df
-        
-
 
 
     def get_latest_year(self, series_name:str) -> int:

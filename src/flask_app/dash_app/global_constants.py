@@ -3,6 +3,7 @@
 LOGGER = "Atlas"
 FAVICON = "favicon.ico" #must be in /assets/favicon.ico 
 TAB_TITLE = "WORLD ATLAS 2.0" #browser tab
+PAGE_TITLE = f"\u00A0WORLD ATLAS 2.0\u00A0" #main title on page
 
 #DECLARE GLOBAL APPLICATION DATA
 
@@ -48,7 +49,6 @@ INIT_BORDER_RES = 0
 INIT_COLOR_PALETTE = 39 #fall 28 
 INIT_COLOR_PALETTE_REVERSE = True
 INIT_MAP_STYLE = 1
-INIT_TITLE_TEXT = "WORLD  ATLAS  2.0"
 INIT_TITLE_H = "6vmin" # "7vh"
 INIT_TITLE_DIV_H = "7vmin"
 INIT_TITLE_PAD_TOP = "1vmin"
