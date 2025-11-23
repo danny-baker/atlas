@@ -429,13 +429,9 @@ def read_blob(account_name, account_key, container_name, filepath, data_format, 
 
 def build_config_dicts(set_key_list: list, master_config: pd.DataFrame):
     #The successor to read_dataset_metadata using new master_config.csv
-    #Returns a dictionary of dictionaries, with a specified parent key (for rapid lookup)
-  
-    #master_config = d.read_master_config("dataset_raw") #used to lookup metadata based on dataset raw (often thru the app)
-    #master_config_key_datasetid = d.read_master_config("dataset_id") #used by main callback upon user selection from navbar and key is datasetID (integer)
-    #master_config_key_nav_cat = d.read_master_config("nav_cat") #used to lookup colour when constructing nav menu
+    #Returns a dictionary of dictionaries, with a specified parent key (for rapid lookup) 
     
-    print('Building configuration dictionaries...')    
+    print('Building configuration dictionaries...')        
     
     # Remove all rows with unprocessed configurations (i.e. pipeline has run but not updated by human yet)
     master_config = master_config[~master_config['dataset_label'].isin(["TODO"])]
@@ -445,76 +441,66 @@ def build_config_dicts(set_key_list: list, master_config: pd.DataFrame):
     master_config = master_config[~master_config['nav_cat_nest'].isin(["TODO"])]
     
     # Remove any NaN's in config variables (human error may create these)    
-    master_config = master_config.dropna(subset=['dataset_label','var_type','nav_cat','colour','nav_cat_nest']) #specify cols to drop rows with NaN in them
-        
-    # transform df into dictionary of dictionaries
+    master_config = master_config.dropna(subset=['dataset_label','var_type','nav_cat','colour','nav_cat_nest']) #specify cols to drop rows with NaN in them        
      
     # convert df to list of dicts as records 
     dict_list = master_config.to_dict('records')
     
     # now build a new dict setting keys based on the passed in list
+    
+    # key:dataset_raw       {dataset_raw: {dataset_label:, dataset_id:, dataset_html:, var_type:, nav_cat, colour:, nav_cat_nest: }}    
     config_dict1 = {}
-    for i in range(len(dict_list)):             
-        # set key and values from this item on the list of dicts
+    for i in range(len(dict_list)): 
         key = dict_list[i].get(set_key_list[0]) #e.g set dataset_raw as key for parent dictionary
-        value = dict_list[i] #value is the whole dictionary     
-        # insert item to dictionary (if duplicate dataset_raw in csv, it will only add 1, so this kind of filters crud)
+        value = dict_list[i] #value is the whole dictionary  
         config_dict1[key]=value
         
+    # key:dataset_id        {dataset_id: {dataset_raw:, dataset_label:, dataset_html:, var_type:, nav_cat, colour:, nav_cat_nest: }}   
     config_dict2 = {}
-    for i in range(len(dict_list)):             
-        # set key and values from this item on the list of dicts
+    for i in range(len(dict_list)):  
         key = dict_list[i].get(set_key_list[1]) #e.g set dataset_id as key for parent dictionary
-        value = dict_list[i] #value is the whole dictionary     
-        # insert item to dictionary (if duplicate dataset_raw in csv, it will only add 1, so this kind of filters crud)
+        value = dict_list[i] #value is the whole dictionary    
         config_dict2[key]=value
         
+    # key:nav_cat           {nav_cat: {dataset_raw:, dataset_label:, dataset_id:, var_type:, colour:, nav_cat_nest: }} 
     config_dict3 = {}
-    for i in range(len(dict_list)):             
-        # set key and values from this item on the list of dicts
+    for i in range(len(dict_list)):  
         key = dict_list[i].get(set_key_list[2]) #e.g set nav_cat as key for parent dictionary
-        value = dict_list[i] #value is the whole dictionary     
-        # insert item to dictionary (if duplicate dataset_raw in csv, it will only add 1, so this kind of filters crud)
-        config_dict3[key]=value  
+        value = dict_list[i] #value is the whole dictionary  
+        config_dict3[key]=value
+
+    # key:dataset_html
+    config_dict4 = {}
+    for i in range(len(dict_list)):  
+        key = dict_list[i].get(set_key_list[3]) #e.g set dataset_html as key
+        value = dict_list[i] #value is the whole dictionary  
+        config_dict4[key]=value
+
+    # key:dataset_label
+    config_dict5 = {}
+    for i in range(len(dict_list)):  
+        key = dict_list[i].get(set_key_list[4]) #e.g set dataset_label as key
+        value = dict_list[i] #value is the whole dictionary  
+        config_dict5[key]=value
    
-    return config_dict1, config_dict2, config_dict3
+    return config_dict1, config_dict2, config_dict3, config_dict4, config_dict5
 
 
-def create_api_lookup_dicts(master_config):
+def add_html_friendly_dataset_labels(df) -> pd.DataFrame:
     
-    # The goal of this is to modify the dataset raw and label strings to be URL path friendly
-    # These are then put into dictionaries that are used to confert a URL path (api_label) to the original
-    # At runtime, so queries can be performed on the master dataset.
-        
-    # get list of master config dictionaries
-    config_list = get_list_of_dataset_labels_and_raw(master_config,"all")
+    # Add a new column to the master config dataframe representing the html friendly version of the dataset labels     
     
-    # convert this to a df
-    df = pd.DataFrame(config_list)
-    
-    # subset it into a 3 col format
-    df = df[['dataset_raw', 'dataset_label', 'dataset_label']].copy()
-        
-    # rename cols
-    df.columns=['dataset_raw', 'dataset_label', 'api_label']       
-    
+    # Copy the column we which to modify
+    df['dataset_html'] = df['dataset_label'].copy()      
+
     # make api labels URL path friendly
-    df['api_label'] = df['api_label'].str.replace(' ','-', regex=True)
-    df['api_label'] = df['api_label'].str.replace('%','percent', regex=True)
-    df['api_label'] = df['api_label'].str.replace('?','-', regex=False) 
-    df['api_label'] = df['api_label'].str.replace('+','-', regex=False) 
-    df['api_label'] = df['api_label'].str.replace(',','-', regex=False)
-    
-    # declare new global dicts
-    api_dict_raw_to_label={}
-    api_dict_label_to_raw={}
-    
-    # build lookup dictionaries by iterating the DF (ineffecient but will do for now)
-    for index,row in df.iterrows():
-        api_dict_raw_to_label[row['dataset_raw']]=row['api_label']
-        api_dict_label_to_raw[row['api_label']]=row['dataset_raw']
-        
-    return api_dict_raw_to_label, api_dict_label_to_raw
+    df['dataset_html'] = df['dataset_html'].str.replace(' ','-', regex=True)
+    df['dataset_html'] = df['dataset_html'].str.replace('%','percent', regex=True)
+    df['dataset_html'] = df['dataset_html'].str.replace('?','-', regex=False) 
+    df['dataset_html'] = df['dataset_html'].str.replace('+','-', regex=False) 
+    df['dataset_html'] = df['dataset_html'].str.replace(',','-', regex=False)
+       
+    return df
 
 
 def get_list_of_dataset_labels_and_raw(master_config,var_type):
@@ -522,6 +508,7 @@ def get_list_of_dataset_labels_and_raw(master_config,var_type):
     # build and return list of dictionaries containing var_type, datset_raw, dataset_label
     # Special condition if var_type specified as "all" at calling, return all.
     # This is used heabily to subset datasets to build lots of the modal drop downs for charts.
+    # Is this redundant??? seems like double work. Check. TODO
     
     config_list=[]
     for i in master_config:
@@ -547,6 +534,72 @@ def get_list_of_dataset_labels_and_raw(master_config,var_type):
 
 
 @dataclass
+class url_path:  
+    """
+    The concept of a url path and it's elements to drive site behaviour. 
+    It can be instantiated in a variety of ways based on a url path or directly (to allow creation from browser path or from callback)
+    It must translate non-allowed chars in the path also    
+    
+    e.g.
+    https://worldatlas.org/ -> ['http:', '', '127.0.0.1:5000', ''] -> {level: map, series: none, year: none}    
+    https://worldatlas.org/Access-to-electricity-(percent-of-population)/map/2022 -> ['http:', '', '127.0.0.1:5000', 'map', '2022'] -> {level: map, series: Access-to-electricity-(percent-of-population), year: 2022}
+    https://worldatlas.org/Access-to-electricity-(percent-of-population)/bar/2022 -> {level: bar, series: Access-to-electricity-(percent-of-population), year: 2022}
+    https://worldatlas.org/Access-to-electricity-(percent-of-population)/line/ -> {level: line, series: Access-to-electricity-(percent-of-population), year: None}
+    """
+
+    url:str=None            # e.g. https://worldatlas.org/map/2022
+    level:str='map'         # map/bar/line/etc.
+    series_html:str=None    # html friendly version of series name
+    year:str=None           # year, if relevant
+    first_load:bool=True
+
+    def __post_init__(self):
+        # based on starting conditions, attempt to fill in the blanks
+
+        # CASE: url supplied (populate other attributes of object)
+        if self.url is not None:
+
+            # split it on / and drop first 3 elements
+            url_frags = self.url.split('/')[3:]
+            print(url_frags)
+
+            # CASE: root url (first load of site)
+            # i.e. ['https:', '', 'worldatlas.org', ''] and we grap 4th element        
+            if len(url_frags) == 1 and url_frags[0] == '':  
+                # keep defaults and return
+                return
+
+            # CASE: line
+            if len(url_frags) == 2:
+                self.first_load = False
+                self.series_html = url_frags[0]
+                self.level = url_frags[1]
+                self.year = None
+            
+            # CASE: map or bar
+            if len(url_frags) == 3:
+                self.first_load = False
+                self.series_html = url_frags[0]
+                self.level = url_frags[1]
+                self.year = url_frags[2]
+                return
+            
+
+        # CASE: url NOT supplied (build url from other attributes)
+        else:
+            first_load=False
+            self.url = f'{self.series_html}/{self.level}/{self.year}'
+            return
+
+
+
+
+
+
+    
+
+
+@dataclass
 class Data:
     # abstract all static data used by app at run-time (load once)
     
@@ -565,21 +618,24 @@ class Data:
     # experimental data
     EXP_POWER_PLANTS_DF: pd.DataFrame 
     
-    # config dicts
-    # prev known as master_config, master_config_key_datasetid, master_config_key_nav_cat
-    # dict of type {dataset_id, dataset_label, dataset_raw, var_type, nav_cat, nav_cat_nest, colour, var_type, source, link, note} 
-    config_key_dsraw: dict # Each dict entry is typically thought of as 'series' metadata 
+    # config dicts    
+    # These are all basically ways to index the metatdata which is dict of type {dataset_id, dataset_label, dataset_html, dataset_raw, var_type, nav_cat, nav_cat_nest, colour, var_type, source, link, note} 
+    # Each dict entry is typically thought of as 'series' metadata 
+    config_key_dsraw: dict 
     config_key_dsid: dict
     config_key_navcat: dict
+    config_key_dshtml: dict # for url lookup
+    config_key_dslabel: dict # for url lookup
 
     # helpers
-    dataset_count: int
-    observation_count: int
-    dataset_list: list
+    dataset_count: int = None
+    observation_count: int = None
+    dataset_list: list = None    
 
-    # URL dicts    
-    api_dict_raw_to_label: dict
-    api_dict_label_to_raw: dict 
+    def __post_init__(self):
+        self.dataset_count = len(pd.unique(self.stats['dataset_raw'])) 
+        self.observation_count= len(self.stats.index)
+        self.dataset_list = pd.unique(self.stats['dataset_raw']) 
     
     
     def get_numerical_series(self) -> list[str]:
@@ -913,17 +969,13 @@ def load(debug_mode: bool) -> Data:
         
         print('Success.')
         
-    
-    # build config dictionaries
-    config_key_dsraw, config_key_dsid, config_key_navcat = build_config_dicts(['dataset_raw', 'dataset_id', 'nav_cat'], config_df)
-    
-    # Add helpers
-    dataset_count = len(pd.unique(stats['dataset_raw'])) 
-    observation_count = len(stats.index)
-    dataset_list = pd.unique(stats['dataset_raw']) 
+    # Add html dataset labels to master config
+    config_df = add_html_friendly_dataset_labels(config_df)
 
-    # build global api lookup dicts (for url path operations)
-    api_dict_raw_to_label, api_dict_label_to_raw = create_api_lookup_dicts(config_key_dsraw)
+    # build config dictionaries
+    config_key_dsraw, config_key_dsid, config_key_navcat, config_key_dshtml, config_key_dslabel = build_config_dicts(['dataset_raw', 'dataset_id', 'nav_cat', 'dataset_html', 'dataset_label'], config_df)    
+    #print(config_key_dsid[5])
+    print(config_key_dshtml['Biodiversity-Red-List-Index'])
 
     # build data object
     data_obj = Data(map_lowres=map_lowres,
@@ -938,11 +990,8 @@ def load(debug_mode: bool) -> Data:
                     config_key_dsraw=config_key_dsraw,
                     config_key_dsid=config_key_dsid,
                     config_key_navcat=config_key_navcat,
-                    dataset_count=dataset_count,
-                    observation_count=observation_count,
-                    dataset_list=dataset_list,
-                    api_dict_raw_to_label=api_dict_raw_to_label,
-                    api_dict_label_to_raw=api_dict_label_to_raw
+                    config_key_dshtml=config_key_dshtml,
+                    config_key_dslabel=config_key_dslabel                              
                     )    
     
     return data_obj

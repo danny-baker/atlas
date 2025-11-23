@@ -12,10 +12,12 @@
 # user guide modal [DONE]
 # Get timeslider working [DONE]
 # Bar chart [DONE]
-
-# Line chart ... basic working.  add download functionality and done.
+# Line chart [DONE]
 
 # URL path working
+# kind of working for input BUT change tact and implement to write the path from user movement firstr. i.e. output href in all callbacks to new standard
+# Then work on making it work on input
+
 # Bubble chart?
 # Pizza (remove, never worked properly)
 # Geobar
@@ -124,14 +126,14 @@ def create_dash_layout(app):
            
     hidden_div_triggers = layout_hidden_divs.build() # for chaining callbacks
     
-    url = dcc.Location(id='url', refresh=False) # enable pathname API queries    
+    url = dcc.Location(id='url', refresh=False) # enable pathname URL queries    
   
     app.layout = html.Div([navmenu, header, body, footer, dcc_stores, hidden_div_triggers, url])    
 
     #enable special clientside callbacks
     js_callback_clientside_blur(app)
     #js_callback_clientside_share(app)
-    #callbacks.js_callback_clientside_viewport(app)      
+    #callbacks.js_callback_clientside_viewport(app)         
     
 
     return app

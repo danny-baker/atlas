@@ -41,8 +41,9 @@ def init_callbacks(dash_app, dobj):
         # add search menu
         c.append(Input('nav-search-menu', 'value'))
         
-        # add api
-        c.append(Input('my-url-map-trigger', 'data')) 
+        # add url trigger
+        #c.append(Input('my-url-map-trigger', 'data')) 
+        c.append(Input('url', 'href'))
         
         c.append(Input("year-slider", "value"))
 
@@ -119,12 +120,11 @@ def init_callbacks(dash_app, dobj):
         prevent_initial_call=True
     )    
     def callback_main(*args):  
-        logger.info("MAIN CALLBACK")
-                
+                        
         # user selection
         selection = ctx.triggered_id
         states = ctx.states        
-        logger.info(f"Selection is {selection}")
+        logger.info(f"Main callback. Selection is {selection}")        
 
         # load colour palette
         colorpalette = states['my-settings_colorbar_store.data']
@@ -132,7 +132,7 @@ def init_callbacks(dash_app, dobj):
         if colorpalette is None: colorpalette = geomap_colorscale[INIT_COLOR_PALETTE] #39 inferno,  #55 plasma    
         if colorpalette_reverse is None: colorpalette_reverse = INIT_COLOR_PALETTE_REVERSE # default True        
 
-        #series: dict of type {dataset_id, dataset_label, dataset_raw, var_type, nav_cat, nav_cat_nest, colour, var_type, source, link, note} 
+        # series: dict of type {dataset_id, dataset_label, dataset_raw, var_type, nav_cat, nav_cat_nest, colour, var_type, source, link, note} 
 
         # CASE: navmenu selection        
         if selection.isnumeric():                                 
@@ -145,7 +145,31 @@ def init_callbacks(dash_app, dobj):
         # CASE: search menu
         elif selection == 'nav-search-menu':            
             search_menu_dsraw = states["nav-search-menu.value"] #dataset_raw
-            series = dobj.config_key_dsraw[search_menu_dsraw]            
+            series = dobj.config_key_dsraw[search_menu_dsraw] 
+
+        # CASE: url path        
+        elif selection == 'url':
+            # href is currently at args[4033] tuple position
+            url = args[4033]
+
+            if 'http://' in url or 'https://' in url:
+                url_obj = data.url_path(url=url)
+                print(url_obj)
+
+                if url_obj.first_load:
+                    # Set behaviour for first load (this replaces the defaults in the layout)
+                    return None,charts.create_map_geomap_empty(),None,None,"\u00A0No data selected\u00A0",None,None,None
+
+                else:
+                    # Set values based on url object
+                    print("Attempting to identify series from url, etc")
+                    urlrw = dobj.api_dict_label_to_raw[url_obj.series]
+                    print(f'conversion: {url_obj.series} to {urlrw}')
+                    
+        
+
+            
+
 
         # CASE: series selection (from either navmenu, random btn or search menu) 
         if selection.isnumeric() or selection == 'random-button' or selection == 'nav-search-menu':
@@ -157,12 +181,13 @@ def init_callbacks(dash_app, dobj):
             link = series['link']
             note = series['note']            
             time_slider = data.get_time_slider(dobj, series['dataset_raw'], year=None)
+            url_suffix = data.url_path(level='map', series_html=series['dataset_raw'], year=year)
+            print(url_suffix)
             return series['dataset_raw'], fig, series_source, link, series_label, time_slider['marks'], time_slider['value'], note
 
         # CASE: year slider
         if selection == 'year-slider':
-            year = int(states['year-slider.value'])
-            print(f"Year selected is {year}")
+            year = int(states['year-slider.value'])            
             series_name = states['my-series.data']
             series = dobj.config_key_dsraw[series_name]   
             fig = charts.create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year)
@@ -567,7 +592,7 @@ def init_callbacks(dash_app, dobj):
 
         # CASE: close button
         if trigger == 'modal-bar-close':
-            return False,{},None,None,None,None,[],[],[],None,None,None   
+            return False,{},None,None,None,None,[],[],[],None,None,None,None
         
         # CASE: entry from map mode   
         elif trigger == 'bar-button': 

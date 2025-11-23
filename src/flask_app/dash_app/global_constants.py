@@ -3,7 +3,7 @@
 LOGGER = "Atlas"
 FAVICON = "favicon.ico" #must be in /assets/favicon.ico 
 TAB_TITLE = "WORLD ATLAS 2.0" #browser tab
-PAGE_TITLE = f"\u00A0WORLD ATLAS 2.0\u00A0" #main title on page
+PAGE_TITLE = f"\u00A0WORLD ATLAS 2.0\u00A0" #To prevent white space being trimmed non-trimming space character is the No-Break Space (NBSP), represented in Unicode as U+00A0.
 
 #DECLARE GLOBAL APPLICATION DATA
 

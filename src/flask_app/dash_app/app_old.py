@@ -36,73 +36,6 @@ import sys
 
 
 
-
-
-
-#@cache.memoize(timeout=CACHE_TIMEOUT)
-def create_chart_bar(df, series, dropdown_choices):     
-        
-    #lookup the series label from the dataset_lkup df
-    series_label = master_config[series].get("dataset_label") 
-            
-    logger.info("Creating bar graph with series %r", series, )
-      
-    #Colour a new column of the df based on any selections received
-    
-    #first colour all markers to a nice default
-    df['color'] = "rgb(158,202,225)"
-    
-    #If there is an array of countries to mark, set the colour to black
-    if dropdown_choices != None:
-        for i in range(0,len(dropdown_choices)):
-            df.loc[df['country']==dropdown_choices[i], 'color'] = 'black' #discrete_colorscale[i][0][1]        
-    
-    #GRAPH OBJECT VERSION
-    #build using graph object
-    fig = go.Figure([
-        go.Bar(
-            x=df['country'],
-            y=df['value'],            
-            hovertemplate="%{x} %{y:}<extra></extra>",
-            opacity=0.7,
-            )
-        ])
-       
-        
-    #PX VERSION (FOR ANIMATION)
-    
-    '''
-    #can do sick animations in px, but tradeoff with the marking thing
-    fig = px.bar(
-            df,    
-            x='country',
-            y='value',
-            labels={'value': series_label},
-            #color='color',
-            #animation_frame="year",
-            #animation_group="value",
-            #range_y=[0,5000000]                
-            
-            )'''
-    
-    # Customize aspect
-    fig.update_traces(            
-        marker={'color': df['color']}, #fuck yeeeeeh            
-        marker_line_width=0,
-        opacity=0.7,
-        #texttemplate='%{text:.2s}',
-        #textposition='outside'
-    )  
-    
-    fig.update_layout({
-        'plot_bgcolor': 'white',
-        'paper_bgcolor': 'white',        
-        },
-        yaxis_title=series_label,)   
-    
-    return fig
-
-
 def create_chart_line(df, series, dropdown_choices):  
     
     #lookup the series label from the dataset_lkup df
@@ -2005,69 +1938,7 @@ def init_callbacks(dash_app):
 
 
 
-    #Download dataset MAIN
-    @dash_app.callback(Output('download_dataset_main', 'data'),
-                [Input('btn-popover-map-download-xls', 'n_clicks'),
-                Input('btn-popover-map-download-csv', 'n_clicks'),
-                Input('btn-popover-map-download-json', 'n_clicks'),
-                #Input('btn-popover-map-download-land', 'n_clicks'),               
-                ],
-                State("my-series","data"), 
-                State('geomap_figure', 'figure'),
-                prevent_initial_call=True,)
-    def callback_download_dataset_main(n1, n2,n3, series, fig): 
-        
-        ctx = dash.callback_context 
-        trigger = ctx.triggered[0]["prop_id"].split(".")[0]
-        print('trigger is ',trigger)
-        
-        # gather userful vars        
-        series_label = master_config[series].get("dataset_label")         
-        source = master_config[series].get("source")        
-        link = master_config[series].get("link") 
-            
-        #subset master dataset to selected series, and sort by year, then country
-        df = pop.loc[(pop['dataset_raw'] == series)].sort_values(by=['year', 'country'])      
-        
-        # make it pretty
-        df['m49_un_a3'] = df['m49_un_a3'].astype(str).str.zfill(3) 
-        df['United Nations m49 country code'] = df['m49_un_a3']        
-        df = df.rename(columns={'value':series_label}) 
-        df = df.drop(columns=['dataset_raw', 'm49_un_a3', 'continent'])        
-                        
-        #merge in source information     
-        df['Source'] = source+" "+link
-        
-        # return based on trigger selection
-        if trigger == 'btn-popover-map-download-xls':
-            filename = "WORLD_ATLAS_2.0 "+series_label+".xlsx" 
-            def to_xlsx(bytes_io):
-                xslx_writer = pd.ExcelWriter(bytes_io, engine="xlsxwriter")
-                df.to_excel(xslx_writer, index=False, sheet_name="sheet1")
-                xslx_writer.save()    
-            return send_bytes(to_xlsx, filename)
-        
-        elif trigger == 'btn-popover-map-download-csv':
-            filename = "WORLD_ATLAS_2.0 "+series_label+".csv"     
-            return send_data_frame(df.to_csv, filename, index=False)
-        
-        elif trigger == 'btn-popover-map-download-json':          
-            filename = "WORLD_ATLAS_2.0 "+series_label+".json"        
-            return send_data_frame(df.to_json, filename, orient='table', index=False)
-        
-        elif trigger == 'btn-popover-map-download-pdf':
-            year='blah'
-            f = go.Figure(fig)        
-            f.update_layout(
-                #title={'text':'WORLD ATLAS 2.0 - '+series_label+' in '+year,'font':{'size':36,'color':'black'},'x':0,'xref':'container', 'xanchor':'left','pad':{'b':0,'t':40,'l':40,'r':0}, 'y':1, 'yref':'container', 'yanchor':'auto'},
-                #annotations=[{'text':'Source: '+source,'font':{'size':14,'color':'black'},'x':0,'xref':'paper', 'xanchor':'left','y':0, 'yref':'paper', 'yanchor':'auto'}],
-                #xaxis={'title':{'text':'This chart was generated at https://worldatlas.org based on dataset: '+source+'. Originally sourced from '+link , 'font':{'size':22}}},
-                height=600,
-                width=4096,            
-                )
-            path = "tmp/WORLD_ATLAS_2.0 "+series_label+" ["+year+"].pdf" 
-            plotly.io.write_image(fig=f, file=path, engine="kaleido")
-            return send_file(path)
+   
 
 
     #Download dataset BAR
@@ -3573,37 +3444,7 @@ def init_callbacks(dash_app):
 
 
 
-    #About modal callback
-    @dash_app.callback(
-        [Output("dbc-modal-about", "is_open"),
-        Output("about-button", "active"),],     
-        [Input("about-button", "n_clicks"), 
-        Input("modal-about-close", "n_clicks")],
-        [State("dbc-modal-about", "is_open")], 
-        prevent_initial_call=True,
-    )
-    def callback_toggle_modal_about(n1, n2, is_open):
-        if n1 or n2:
-            logger.info("Modal about triggered")
-            return not is_open, False
-        return is_open, False
 
-    #User Guide modal callback
-    @dash_app.callback(
-        Output("dbc-modal-uguide", "is_open"),
-        [
-        Input("uguide-button", "n_clicks"), 
-        Input("modal-uguide-close", "n_clicks"),
-        #Input("button-userguide-about", "n_clicks"),
-        ],
-        [State("dbc-modal-uguide", "is_open")], 
-        prevent_initial_call=True,
-    )
-    def callback_toggle_modal_uguide(n1, n2, is_open):
-        if n1 or n2:
-            logger.info("Modal User Guide triggered")
-            return not is_open    
-        return is_open
 
 
     #Settings modal callback (settings button push)
