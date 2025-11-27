@@ -590,6 +590,22 @@ class url_path:
             first_load=False
             self.url = f'{self.series_html}/{self.level}/{self.year}'
             return
+        
+    def build(url:str, dataset_html:str, level: str, year:str=None) -> str:
+        # build a custom url path using the href
+        # Type
+        # https://worldatlas.org/dataset_html/level/year
+              
+        url_frags = url.split('/')
+        scheme = url_frags[0]
+        domain = url_frags[2]
+
+        # construct cheeky new path
+        href = f"{scheme}//{domain}/{dataset_html}/{level}{"" if year is None else f"/{year}"}"        
+        
+        return href
+
+
 
 
 
@@ -972,11 +988,9 @@ def load(debug_mode: bool) -> Data:
     # Add html dataset labels to master config
     config_df = add_html_friendly_dataset_labels(config_df)
 
-    # build config dictionaries
+    # build metadata dictionaries
     config_key_dsraw, config_key_dsid, config_key_navcat, config_key_dshtml, config_key_dslabel = build_config_dicts(['dataset_raw', 'dataset_id', 'nav_cat', 'dataset_html', 'dataset_label'], config_df)    
-    #print(config_key_dsid[5])
-    print(config_key_dshtml['Biodiversity-Red-List-Index'])
-
+    
     # build data object
     data_obj = Data(map_lowres=map_lowres,
                     map_medres=map_medres,

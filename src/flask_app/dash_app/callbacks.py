@@ -43,7 +43,7 @@ def init_callbacks(dash_app, dobj):
         
         # add url trigger
         #c.append(Input('my-url-map-trigger', 'data')) 
-        c.append(Input('url', 'href'))
+        #c.append(Input('url', 'href'))
         
         c.append(Input("year-slider", "value"))
 
@@ -88,6 +88,7 @@ def init_callbacks(dash_app, dobj):
         #    Output("my-url-globe-trigger", "data"),# chain to globe
         #    Output("my-url-jigsaw-trigger", "data"),# chain to globe
             Output("source-popover","children"), #popover with explanatory notes
+            Output("url", "href", allow_duplicate=True)
         #    Output("my-experimental-trigger", "data") #trigger for experimental modal          
         ],        
         
@@ -108,12 +109,13 @@ def init_callbacks(dash_app, dobj):
             State("my-settings_colorbar_reverse_store", 'data'),
             State('nav-search-menu', 'value'), #new
             State("my-selection-m49", "data"), #NEW, to save the m49 location of the selected map
-            State("my-url-path", "data"),        
-            State("my-url-root", 'data'),
-            State('my-url-map-trigger', 'data'),
-            State("my-url-series", 'data'),
-            State("my-url-year", 'data'),
-            State("my-url-view", 'data'),
+            State("url", "href"),
+            # State("my-url-path", "data"),        
+            # State("my-url-root", 'data'),
+            # State('my-url-map-trigger', 'data'),
+            # State("my-url-series", 'data'),
+            # State("my-url-year", 'data'),
+            # State("my-url-view", 'data'),
             State("js-detected-viewport", 'data'),             
         ],
         
@@ -123,7 +125,8 @@ def init_callbacks(dash_app, dobj):
                         
         # user selection
         selection = ctx.triggered_id
-        states = ctx.states        
+        states = ctx.states 
+        print(states)       
         logger.info(f"Main callback. Selection is {selection}")        
 
         # load colour palette
@@ -147,56 +150,80 @@ def init_callbacks(dash_app, dobj):
             search_menu_dsraw = states["nav-search-menu.value"] #dataset_raw
             series = dobj.config_key_dsraw[search_menu_dsraw] 
 
-        # CASE: url path        
-        elif selection == 'url':
-            # href is currently at args[4033] tuple position
-            url = args[4033]
-
-            if 'http://' in url or 'https://' in url:
-                url_obj = data.url_path(url=url)
-                print(url_obj)
-
-                if url_obj.first_load:
-                    # Set behaviour for first load (this replaces the defaults in the layout)
-                    return None,charts.create_map_geomap_empty(),None,None,"\u00A0No data selected\u00A0",None,None,None
-
-                else:
-                    # Set values based on url object
-                    print("Attempting to identify series from url, etc")
-                    urlrw = dobj.api_dict_label_to_raw[url_obj.series]
-                    print(f'conversion: {url_obj.series} to {urlrw}')
-                    
-        
-
-            
-
-
         # CASE: series selection (from either navmenu, random btn or search menu) 
-        if selection.isnumeric() or selection == 'random-button' or selection == 'nav-search-menu':
-            #return out and build main map
+        if selection.isnumeric() or selection == 'random-button' or selection == 'nav-search-menu':            
             year = dobj.get_latest_year(series['dataset_raw'])
-            fig = charts.create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year)
-            series_label = f"\u00A0{series['dataset_label']} in {year}\u00A0"
-            series_source = series['source']
-            link = series['link']
-            note = series['note']            
-            time_slider = data.get_time_slider(dobj, series['dataset_raw'], year=None)
-            url_suffix = data.url_path(level='map', series_html=series['dataset_raw'], year=year)
-            print(url_suffix)
-            return series['dataset_raw'], fig, series_source, link, series_label, time_slider['marks'], time_slider['value'], note
+            time_slider = data.get_time_slider(dobj, series['dataset_raw'], year=None)         
 
         # CASE: year slider
         if selection == 'year-slider':
             year = int(states['year-slider.value'])            
             series_name = states['my-series.data']
-            series = dobj.config_key_dsraw[series_name]   
-            fig = charts.create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year)
-            series_label = f"\u00A0{series['dataset_label']} in {year}\u00A0"
-            series_source = series['source']
-            link = series['link']
-            note = series['note']            
-            time_slider = data.get_time_slider(dobj, series['dataset_raw'], year=year)
-            return series['dataset_raw'], fig, series_source, link, series_label, time_slider['marks'], time_slider['value'], note  
+            series = dobj.config_key_dsraw[series_name]  
+            time_slider = data.get_time_slider(dobj, series['dataset_raw'], year=year)            
+
+        ## CASE: url path        
+        #elif selection == 'url':
+        #    # href is currently at args[4033] tuple position
+        #    url = args[4033]
+
+        #    if 'http://' in url or 'https://' in url:
+        #        url_obj = data.url_path(url=url)
+        #        print(url_obj)
+
+        #        if url_obj.first_load:
+        #            # Set behaviour for first load (this replaces the defaults in the layout)
+        #            return None,charts.create_map_geomap_empty(),None,None,"\u00A0No data selected\u00A0",None,None,None,None
+
+        #        else:
+        #            # Set values based on url object
+        #            print("Attempting to identify series from url, etc")
+        #            urlrw = dobj.api_dict_label_to_raw[url_obj.series]
+        #            print(f'conversion: {url_obj.series} to {urlrw}')                   
+               
+                
+        # Build artifacts and return
+        fig = charts.create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year)
+        series_label = f"\u00A0{series['dataset_label']} in {year}\u00A0"
+        series_source = series['source']
+        link = series['link']
+        note = series['note']
+        href = data.url_path.build(url=states['url.href'],dataset_html=series['dataset_html'], year=year, level="map")
+        return series['dataset_raw'], fig, series_source, link, series_label, time_slider['marks'], time_slider['value'], note, href  
+
+                    
+        
+        
+        #url_suffix = data.url_path(level='map', series_html=series['dataset_raw'], year=year)
+        #print(url_suffix)
+
+
+        # # CASE: series selection (from either navmenu, random btn or search menu) 
+        # if selection.isnumeric() or selection == 'random-button' or selection == 'nav-search-menu':
+        #     #return out and build main map
+        #     year = dobj.get_latest_year(series['dataset_raw'])
+        #     fig = charts.create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year)
+        #     series_label = f"\u00A0{series['dataset_label']} in {year}\u00A0"
+        #     series_source = series['source']
+        #     link = series['link']
+        #     note = series['note']            
+        #     time_slider = data.get_time_slider(dobj, series['dataset_raw'], year=None)
+        #     url_suffix = data.url_path(level='map', series_html=series['dataset_raw'], year=year)
+        #     print(url_suffix)
+        #     return series['dataset_raw'], fig, series_source, link, series_label, time_slider['marks'], time_slider['value'], note
+
+        # # CASE: year slider
+        # if selection == 'year-slider':
+        #     year = int(states['year-slider.value'])            
+        #     series_name = states['my-series.data']
+        #     series = dobj.config_key_dsraw[series_name]   
+        #     fig = charts.create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year)
+        #     series_label = f"\u00A0{series['dataset_label']} in {year}\u00A0"
+        #     series_source = series['source']
+        #     link = series['link']
+        #     note = series['note']            
+        #     time_slider = data.get_time_slider(dobj, series['dataset_raw'], year=year)
+        #     return series['dataset_raw'], fig, series_source, link, series_label, time_slider['marks'], time_slider['value'], note  
         
  
 
@@ -560,9 +587,9 @@ def init_callbacks(dash_app, dobj):
         Output('bar-graph-dropdown-dataset', 'options'), 
         Output('bar-graph-dropdown-year', 'options'),
         Output('my-series-bar','data'),
-        Output('my-year-bar','data'),     
-        #Output("my-url-bar-callback","data"),
+        Output('my-year-bar','data'),  
         Output('my-loader-bar-refresh','children'), # return None
+        Output('url','href', allow_duplicate=True) 
         ],
         [
         Input("my-url-bar-trigger", "data"), #TODO
@@ -576,23 +603,21 @@ def init_callbacks(dash_app, dobj):
         State("dbc-modal-bar", "is_open"),
         State("my-series", "data"), #map series selection 
         State("year-slider", "value"),         
-        State('url','href'),
-        State("my-url-view", 'data'),       
-        State("my-url-series", 'data'),
-        State("my-url-year", 'data'),
+        State('url','href'),        
         State('my-series-bar','data'),
         State('my-year-bar', 'data'),
         ],
         prevent_initial_call=True
     )
-    def callback_toggle_modal_bar(bar_trigger, n1, n2, highlight_countries, select_dataset, select_year, is_open, series_map_state, year_slider_state,  href, url_view, url_series, url_year, series_state, year_state):
+    def callback_toggle_modal_bar(bar_trigger, n1, n2, highlight_countries, select_dataset, select_year, is_open, series_map_state, year_slider_state,  href, series_state, year_state):
             
         trigger = ctx.triggered_id      
+        states = ctx.states 
         logger.info(f"Bar chart: {trigger}")        
 
         # CASE: close button
         if trigger == 'modal-bar-close':
-            return False,{},None,None,None,None,[],[],[],None,None,None,None
+            return False,{},None,None,None,None,[],[],[],None,None,None,None,None
         
         # CASE: entry from map mode   
         elif trigger == 'bar-button': 
@@ -621,7 +646,8 @@ def init_callbacks(dash_app, dobj):
         series_source = series['source']
         series_link = series['link']
         bar_graph_title = f"{series_label} in {str(year)}"             
-        fig = charts.create_chart_bar(dobj, series, year, highlight_countries)    
+        fig = charts.create_chart_bar(dobj, series, year, highlight_countries)
+        href = data.url_path.build(url=states['url.href'],dataset_html=series['dataset_html'], year=year, level="bar")        
         
         # Build country highlighter
         dropdown_countries = []
@@ -639,7 +665,7 @@ def init_callbacks(dash_app, dobj):
             dropdown_dataset.append({'label': dobj.config_key_dsraw[series]['dataset_label'], 'value': series}) 
               
        
-        return True, fig, bar_graph_title, series_source, series_link, "", dropdown_countries, highlight_countries, dropdown_dataset, dropdown_years, series_name, year, ""
+        return True, fig, bar_graph_title, series_source, series_link, "", dropdown_countries, highlight_countries, dropdown_dataset, dropdown_years, series_name, year, "",href
        
            
         
@@ -737,12 +763,11 @@ def init_callbacks(dash_app, dobj):
         Output('line-graph-dropdown-countries', 'options'),
         Output('line-graph-dropdown-countries', 'value'), # countries selected list[str]
         Output('line-graph-dropdown-dataset', 'options'),
-        Output('my-series-line', 'data'),
-        #Output("my-url-line-callback","data"),
+        Output('my-series-line', 'data'),        
         Output('my-loader-line-refresh','children'), #Return None 
+        Output('url','href', allow_duplicate=True)
         ],
-        [
-        Input("my-url-line-trigger", "data"), 
+        [        
         Input("line-button", "n_clicks"), 
         Input("modal-line-close", "n_clicks"),
         Input("line-graph-dropdown-countries", "value"), # country_select
@@ -753,24 +778,22 @@ def init_callbacks(dash_app, dobj):
         [
         State("dbc-modal-line", "is_open"),
         State("my-series", "data"), # underlying map dataset       
-        State('my-series-line', 'data'), #used if changing datasets on modal
-        State("my-url-series", 'data'),
-        State('url','href'),  
-        State("my-url-view", 'data'),
-        State("my-url-year", 'data'),
+        State('my-series-line', 'data'), #used if changing datasets on modal        
+        State('url','href'), 
         State('line-graph-dropdown-countries', 'value'), # countries selected list[str]
                     
         ],
         prevent_initial_call=True
     )    
-    def callback_toggle_modal_line(line_trigger, n1, n2, country_select, dataset_select, btn_no_countries, btn_all_countries, is_open, series_map_state, series_modal_state, url_series, href, url_view, url_year, highlight_state):
+    def callback_toggle_modal_line(n1, n2, country_select, dataset_select, btn_no_countries, btn_all_countries, is_open, series_map_state, series_modal_state, href, highlight_state):
         
         trigger = ctx.triggered_id      
+        states = ctx.states 
         logger.info(f"Line chart: {trigger}")         
         
         # CASE: close button
         if trigger == 'modal-line-close':
-            return False,{},None,None,None,None, [], None, [], None,None #,[],[],[],None,None          
+            return False,{},None,None,None,None, [], None, [], None,None,None #,[],[],[],None,None          
         
         # CASE: entry from map mode   
         elif trigger == 'line-button':             
@@ -803,6 +826,7 @@ def init_callbacks(dash_app, dobj):
         series_source = series['source']
         series_link = series['link']                                 
         fig = charts.create_chart_line(dobj, series, highlight_countries)
+        href = data.url_path.build(url=states['url.href'],dataset_html=series['dataset_html'], year=None, level="line") 
 
         # Build country selector
         dropdown_countries = []
@@ -814,7 +838,7 @@ def init_callbacks(dash_app, dobj):
         for series in dobj.get_numerical_series():            
             dropdown_dataset.append({'label': dobj.config_key_dsraw[series]['dataset_label'], 'value': series}) 
 
-        return True, fig, series_label, series_source, series_link, None, dropdown_countries, highlight_countries, dropdown_dataset, series_name, None
+        return True, fig, series_label, series_source, series_link, None, dropdown_countries, highlight_countries, dropdown_dataset, series_name, None, href
 
 
     # Download dataset Line graph modal

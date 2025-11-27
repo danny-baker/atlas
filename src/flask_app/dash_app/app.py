@@ -15,8 +15,10 @@
 # Line chart [DONE]
 
 # URL path working
+# map is outputting, but when trying to set href from bar callback, everything freezes up, maybe it's a conflict and we do in fact need a separate chained thingy?? But I didn't think so :(
+# maybe that is why I had separate url href vars before?? You can't have multiple callbacks outputting href??
 # kind of working for input BUT change tact and implement to write the path from user movement firstr. i.e. output href in all callbacks to new standard
-# Then work on making it work on input
+# Then work on making it work on input (url obj ready and new config dicts are ready....i.e. we ar eready to start bulidig hrefs in callbacks using url_path )
 
 # Bubble chart?
 # Pizza (remove, never worked properly)
