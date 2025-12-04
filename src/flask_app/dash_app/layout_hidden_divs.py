@@ -13,7 +13,14 @@ def build():
         html.Div("Test div", id="blur-hidden-div-menu", style={"display":"none"}),
         html.Div("Test div", id="js-social-share-refresh", style={"display":"none"}),
         html.Div("Test div", id="js-social-share-dummy", style={"display":"none"}),        
-        html.Div("Test div", id="js-detected-viewport-dummy", style={"display":"none"}),
+        html.Div("Test div", id="js-detected-viewport-dummy", style={"display":"none"}), 
+
+        html.Div("Test div", id="flag-bar", style={"display":"none"}), 
+        html.Div("Test div", id="fire-bar", style={"display":"none"}), 
+
+        html.Div("Test div", id="flag-line", style={"display":"none"}), 
+        html.Div("Test div", id="fire-line", style={"display":"none"}), 
+
 
         ],style={"display":"none"})
     

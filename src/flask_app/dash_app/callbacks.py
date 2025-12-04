@@ -20,8 +20,7 @@ logger = logging.getLogger(LOGGER)
 
 def init_callbacks(dash_app, dobj):
     
-
-    #INPUTS
+    # MAIN CALLBACK INPUTS
     def callback_main_create_inputs() -> list:
         #Return a list of type callback Input representing all inputs for main callback
         
@@ -41,19 +40,16 @@ def init_callbacks(dash_app, dobj):
         # add search menu
         c.append(Input('nav-search-menu', 'value'))
         
-        # add url trigger
-        #c.append(Input('my-url-map-trigger', 'data')) 
-        #c.append(Input('url', 'href'))
-        
         c.append(Input("year-slider", "value"))
 
         c.append(Input('my-settings_json_store', 'data')) #these act purely as triggers after apply button pushed (like the hidden div), to call the main callback
         c.append(Input('my-settings_mapstyle_store', 'data')) #these act purely as triggers after apply button pushed (like the hidden div), to call the main callback
+
+        c.append(Input('url','href'))
         
         #print(c)
         return c
-
-
+    
     # MAIN CALLBACK
     @dash_app.callback(
         #OUTPUTS
@@ -81,14 +77,11 @@ def init_callbacks(dash_app, dobj):
         #    Output("year-slider-title","style"),
         #    Output("year-slider-title","children"),
         #    Output("my-selection-m49", "data"), #NEW, to save the m49 location of the selected map
-        #    #Output("my-series-data","data"),         
-        #    Output("my-url-main-callback","data"), #to set url in another callback
-        #    Output("my-url-bar-trigger", "data"),  # chain to bar
-        #    Output("my-url-line-trigger", "data"), # chain to line
-        #    Output("my-url-globe-trigger", "data"),# chain to globe
-        #    Output("my-url-jigsaw-trigger", "data"),# chain to globe
+        #    #Output("my-series-data","data"),          
             Output("source-popover","children"), #popover with explanatory notes
-            Output("url", "href", allow_duplicate=True)
+            Output("url", "href", allow_duplicate=True), 
+            Output('fire-bar','data'),   # 1 yes 0 no     
+            Output('fire-line','data')   # 1 yes 0 no 
         #    Output("my-experimental-trigger", "data") #trigger for experimental modal          
         ],        
         
@@ -110,13 +103,11 @@ def init_callbacks(dash_app, dobj):
             State('nav-search-menu', 'value'), #new
             State("my-selection-m49", "data"), #NEW, to save the m49 location of the selected map
             State("url", "href"),
-            # State("my-url-path", "data"),        
-            # State("my-url-root", 'data'),
-            # State('my-url-map-trigger', 'data'),
-            # State("my-url-series", 'data'),
-            # State("my-url-year", 'data'),
-            # State("my-url-view", 'data'),
-            State("js-detected-viewport", 'data'),             
+            State("js-detected-viewport", 'data'),
+            State('url','href'),
+            State('flag-bar','data'),
+            State('flag-line','data')           
+
         ],
         
         prevent_initial_call=True
@@ -126,7 +117,7 @@ def init_callbacks(dash_app, dobj):
         # user selection
         selection = ctx.triggered_id
         states = ctx.states 
-        print(states)       
+        #print(states)       
         logger.info(f"Main callback. Selection is {selection}")        
 
         # load colour palette
@@ -136,6 +127,10 @@ def init_callbacks(dash_app, dobj):
         if colorpalette_reverse is None: colorpalette_reverse = INIT_COLOR_PALETTE_REVERSE # default True        
 
         # series: dict of type {dataset_id, dataset_label, dataset_raw, var_type, nav_cat, nav_cat_nest, colour, var_type, source, link, note} 
+
+        #defaults
+        fire_bar = 0
+        fire_line = 0
 
         # CASE: navmenu selection        
         if selection.isnumeric():                                 
@@ -160,28 +155,45 @@ def init_callbacks(dash_app, dobj):
             year = int(states['year-slider.value'])            
             series_name = states['my-series.data']
             series = dobj.config_key_dsraw[series_name]  
-            time_slider = data.get_time_slider(dobj, series['dataset_raw'], year=year)            
+            time_slider = data.get_time_slider(dobj, series['dataset_raw'], year=year)                          
 
-        ## CASE: url path        
-        #elif selection == 'url':
-        #    # href is currently at args[4033] tuple position
-        #    url = args[4033]
+        # CASE: url
+        if selection == 'url':
+            url = states['url.href']
+            print(f"url state: {url}")
+            url_obj = data.url_path(url)
+            print(url_obj)
 
-        #    if 'http://' in url or 'https://' in url:
-        #        url_obj = data.url_path(url=url)
-        #        print(url_obj)
+            if url_obj.first_load:
+                raise PreventUpdate
 
-        #        if url_obj.first_load:
-        #            # Set behaviour for first load (this replaces the defaults in the layout)
-        #            return None,charts.create_map_geomap_empty(),None,None,"\u00A0No data selected\u00A0",None,None,None,None
+            series = dobj.config_key_dshtml[url_obj.series_html]
+            
+            if url_obj.level == 'map':
+                year = int(url_obj.year)
+                time_slider = data.get_time_slider(dobj, series['dataset_raw'], year=year) 
 
-        #        else:
-        #            # Set values based on url object
-        #            print("Attempting to identify series from url, etc")
-        #            urlrw = dobj.api_dict_label_to_raw[url_obj.series]
-        #            print(f'conversion: {url_obj.series} to {urlrw}')                   
+            elif url_obj.level == 'bar':
+                flag = states['flag-bar.data']
+                if flag is not None:                    
+                    raise PreventUpdate
+                year = int(url_obj.year)
+                time_slider = data.get_time_slider(dobj, series['dataset_raw'], year=year)                 
+                fire_bar=1
+
+            elif url_obj.level == 'line':
+                flag = states['flag-line.data']
+                if flag is not None:
+                    raise PreventUpdate
+                year = dobj.get_latest_year(series['dataset_raw'])
+                time_slider = data.get_time_slider(dobj, series['dataset_raw'], year=year)  
+                fire_line=1
+
+
                
+
                 
+
         # Build artifacts and return
         fig = charts.create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year)
         series_label = f"\u00A0{series['dataset_label']} in {year}\u00A0"
@@ -189,8 +201,7 @@ def init_callbacks(dash_app, dobj):
         link = series['link']
         note = series['note']
         href = data.url_path.build(url=states['url.href'],dataset_html=series['dataset_html'], year=year, level="map")
-        return series['dataset_raw'], fig, series_source, link, series_label, time_slider['marks'], time_slider['value'], note, href  
-
+        return series['dataset_raw'], fig, series_source, link, series_label, time_slider['marks'], time_slider['value'], note, href, fire_bar, fire_line
                     
         
         
@@ -589,7 +600,8 @@ def init_callbacks(dash_app, dobj):
         Output('my-series-bar','data'),
         Output('my-year-bar','data'),  
         Output('my-loader-bar-refresh','children'), # return None
-        Output('url','href', allow_duplicate=True) 
+        Output('url','href', allow_duplicate=True),
+        Output('flag-bar','data') # flag indicating if bar modal has run
         ],
         [
         Input("my-url-bar-trigger", "data"), #TODO
@@ -597,7 +609,8 @@ def init_callbacks(dash_app, dobj):
         Input("modal-bar-close", "n_clicks"),
         Input("bar-graph-dropdown-countrieselector", "value"),
         Input("bar-graph-dropdown-dataset", "value"),
-        Input('bar-graph-dropdown-year','value'),     
+        Input('bar-graph-dropdown-year','value'),  
+        Input('fire-bar','data')   
         ],
         [
         State("dbc-modal-bar", "is_open"),
@@ -605,25 +618,33 @@ def init_callbacks(dash_app, dobj):
         State("year-slider", "value"),         
         State('url','href'),        
         State('my-series-bar','data'),
-        State('my-year-bar', 'data'),
+        State('my-year-bar', 'data'),        
         ],
         prevent_initial_call=True
     )
-    def callback_toggle_modal_bar(bar_trigger, n1, n2, highlight_countries, select_dataset, select_year, is_open, series_map_state, year_slider_state,  href, series_state, year_state):
+    def callback_toggle_modal_bar(bar_trigger, n1, n2, highlight_countries, select_dataset, select_year, fire_bar, is_open, series_map_state, year_slider_state,  href, series_state, year_state):
             
         trigger = ctx.triggered_id      
         states = ctx.states 
-        logger.info(f"Bar chart: {trigger}")        
+        logger.info(f"Bar chart: {trigger}")              
 
         # CASE: close button
         if trigger == 'modal-bar-close':
-            return False,{},None,None,None,None,[],[],[],None,None,None,None,None
+            return False,{},None,None,None,None,[],[],[],None,None,None,None,None,None
         
         # CASE: entry from map mode   
         elif trigger == 'bar-button': 
             year = int(year_slider_state)                        
             series_name = series_map_state
-            highlight_countries = ['United States of America', 'China', 'India']            
+            highlight_countries = ['United States of America', 'China', 'India']
+
+        # CASE: entry from main callback (trigger)
+        elif trigger == 'fire-bar':
+            if int(fire_bar) == 0:
+                raise PreventUpdate
+            year = int(year_slider_state)                        
+            series_name = series_map_state
+            highlight_countries = ['United States of America', 'China', 'India']         
         
         # CASE: year selection
         elif trigger == 'bar-graph-dropdown-year':
@@ -665,7 +686,7 @@ def init_callbacks(dash_app, dobj):
             dropdown_dataset.append({'label': dobj.config_key_dsraw[series]['dataset_label'], 'value': series}) 
               
        
-        return True, fig, bar_graph_title, series_source, series_link, "", dropdown_countries, highlight_countries, dropdown_dataset, dropdown_years, series_name, year, "",href
+        return True, fig, bar_graph_title, series_source, series_link, "", dropdown_countries, highlight_countries, dropdown_dataset, dropdown_years, series_name, year, "",href,""
        
            
         
@@ -765,7 +786,8 @@ def init_callbacks(dash_app, dobj):
         Output('line-graph-dropdown-dataset', 'options'),
         Output('my-series-line', 'data'),        
         Output('my-loader-line-refresh','children'), #Return None 
-        Output('url','href', allow_duplicate=True)
+        Output('url','href', allow_duplicate=True),
+        Output('flag-line','data') # flag indicating if modal has run
         ],
         [        
         Input("line-button", "n_clicks"), 
@@ -774,6 +796,7 @@ def init_callbacks(dash_app, dobj):
         Input('line-graph-dropdown-dataset', 'value'), # dataset_select
         Input("linegraph-nocountries-button", "n_clicks"),
         Input("linegraph-allcountries-button", "n_clicks"),
+        Input('fire-line','data')
         ],
         [
         State("dbc-modal-line", "is_open"),
@@ -785,7 +808,7 @@ def init_callbacks(dash_app, dobj):
         ],
         prevent_initial_call=True
     )    
-    def callback_toggle_modal_line(n1, n2, country_select, dataset_select, btn_no_countries, btn_all_countries, is_open, series_map_state, series_modal_state, href, highlight_state):
+    def callback_toggle_modal_line(n1, n2, country_select, dataset_select, btn_no_countries, btn_all_countries, fire_line, is_open, series_map_state, series_modal_state, href, highlight_state):
         
         trigger = ctx.triggered_id      
         states = ctx.states 
@@ -793,10 +816,17 @@ def init_callbacks(dash_app, dobj):
         
         # CASE: close button
         if trigger == 'modal-line-close':
-            return False,{},None,None,None,None, [], None, [], None,None,None #,[],[],[],None,None          
+            return False,{},None,None,None,None, [], None, [], None,None,None,None #,[],[],[],None,None          
         
         # CASE: entry from map mode   
         elif trigger == 'line-button':             
+            series_name = series_map_state
+            highlight_countries = ['China', 'India', 'Germany', 'Italy', 'United Kingdom', 'Japan', 'France', 'Canada', 'New Zealand' ] # start state (maybe make this random from the available countries?)
+
+        # CASE: entry from main callback (trigger)
+        elif trigger == 'fire-line':
+            if int(fire_line) == 0:
+                raise PreventUpdate
             series_name = series_map_state
             highlight_countries = ['China', 'India', 'Germany', 'Italy', 'United Kingdom', 'Japan', 'France', 'Canada', 'New Zealand' ] # start state (maybe make this random from the available countries?)
         
@@ -838,7 +868,7 @@ def init_callbacks(dash_app, dobj):
         for series in dobj.get_numerical_series():            
             dropdown_dataset.append({'label': dobj.config_key_dsraw[series]['dataset_label'], 'value': series}) 
 
-        return True, fig, series_label, series_source, series_link, None, dropdown_countries, highlight_countries, dropdown_dataset, series_name, None, href
+        return True, fig, series_label, series_source, series_link, None, dropdown_countries, highlight_countries, dropdown_dataset, series_name, None, href,""
 
 
     # Download dataset Line graph modal
