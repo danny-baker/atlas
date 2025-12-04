@@ -66,8 +66,7 @@ def init_dashboard(server):
     dash_app = dash.Dash(
         server=server,
         routes_pathname_prefix='/',
-        external_stylesheets=[
-            #'/static/dist/css/styles.css',
+        external_stylesheets=[            
             dbc.themes.FLATLY #FLATLY UNITED SANDSTONE PULSE
         ],
         update_title=None          
@@ -77,31 +76,7 @@ def init_dashboard(server):
 
     init_callbacks(dash_app, dobj)
 
-    #testing
-    #all_ids = get_component_ids(dash_app.layout)
-    #print(all_ids)
-    #if "random-button" in all_ids:
-        #print("Random button is FOUND!!!")
-
-    #Testing
-    #print('url dict example below')
-    #print(dobj.api_dict_label_to_raw)
-
     return dash_app.server
-
-
-def get_component_ids(layout):
-    #Helper to return all component ids in the dash layout (for testing)
-    ids = []
-    if hasattr(layout, "id") and layout.id:
-        ids.append(layout.id)
-    if hasattr(layout, "children"):
-        if isinstance(layout.children, list):
-            for child in layout.children:
-                ids.extend(get_component_ids(child))
-        else:
-            ids.extend(get_component_ids(layout.children))
-    return ids
 
 
 

@@ -43,5 +43,12 @@ def build():
         dcc.Store(id="my-url-jigsaw-trigger", storage_type='memory'),
         dcc.Store(id="js-detected-viewport", storage_type='memory'),
         dcc.Store(id="my-experimental-trigger", storage_type='memory'),
+
+        dcc.Store(id="flag-bar", storage_type='memory'), 
+        dcc.Store(id="fire-bar", storage_type='memory'), 
+
+        dcc.Store(id="flag-line",storage_type='memory'), 
+        dcc.Store(id="fire-line",storage_type='memory'), 
+
         ]) 
     return dcc_stores
