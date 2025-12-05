@@ -13,7 +13,7 @@ def build():
         dcc.Store(id='my-settings_colorbar_store', storage_type='memory'),
         dcc.Store(id='my-settings_colorbar_reverse_store', storage_type='memory'),  
         dcc.Store(id='my-series', storage_type='memory'),
-        dcc.Store(id='my-series-label', storage_type='memory'),
+        #dcc.Store(id='my-series-label', storage_type='memory'),
         dcc.Store(id='my-year', storage_type='memory'),        
         dcc.Store(id='my-selection-m49', storage_type='memory'), #unused, for selecting region of geomap I think        
         dcc.Store(id='my-series-bar', storage_type='memory'),

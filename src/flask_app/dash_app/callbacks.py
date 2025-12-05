@@ -34,19 +34,13 @@ def init_callbacks(dash_app, dobj):
         for id in keys_list_str:         
             c.append(Input(id,"n_clicks"))     
         
-        # add random button
-        c.append(Input('random-button', "n_clicks"))
-        
-        # add search menu
-        c.append(Input('nav-search-menu', 'value'))
-        
+        # add extras
+        c.append(Input('random-button', "n_clicks"))  
+        c.append(Input('nav-search-menu', 'value'))        
         c.append(Input("year-slider", "value"))
-
         c.append(Input('my-settings_json_store', 'data')) #these act purely as triggers after apply button pushed (like the hidden div), to call the main callback
         c.append(Input('my-settings_mapstyle_store', 'data')) #these act purely as triggers after apply button pushed (like the hidden div), to call the main callback
-
-        c.append(Input('url','href'))
-        
+        c.append(Input('url','href'))        
         #print(c)
         return c
     
@@ -54,34 +48,20 @@ def init_callbacks(dash_app, dobj):
     @dash_app.callback(
         #OUTPUTS
         [
-            Output("my-series","data"),
-        #    Output("my-series-label","data"),
-            Output("geomap_figure", "figure"),
-            Output("my-source", "children"),
-            Output("my-source-link", "href"),         
-        #    Output("download-button", "style"),                       
-        #    Output("bar-button", "style"),
-        #    Output("line-button", "style"),
-        #    Output("geobar-button", "style"),
-        #    Output("sunburst-button", "style"),
-        #    Output("globe-button", "style"),
-        #    Output("bubble-button", "style"),        
-        #    Output('my-year', "data"),
-            Output('my-loader-main', "children"), #The dataset label to display under title
-        #    Output('button-panel-style', "style"), #used to hide initially
-        #    Output('year-slider-style', "style"), #used to hide initially
-        #    Output('data-source-style', 'style'), #used to hide initially         
-            #Output("year-slider", "max"),         
-            Output("year-slider", "marks"),
-            Output("year-slider", "value"),         
-        #    Output("year-slider-title","style"),
-        #    Output("year-slider-title","children"),
-        #    Output("my-selection-m49", "data"), #NEW, to save the m49 location of the selected map
-        #    #Output("my-series-data","data"),          
-            Output("source-popover","children"), #popover with explanatory notes
+            Output("my-series","data"),             # series['dataset_raw']     
+            Output("geomap_figure", "figure"),      # for map zoom and position control
+            Output("my-source", "children"),        # footer source
+            Output("my-source-link", "href"),       # footer link   
+            Output('my-loader-main', "children"),   # dataset label to display under title on main map
+        #    Output('button-panel-style', "style"), # used to hide initially
+        #    Output('year-slider-style', "style"),  # used to hide initially
+        #    Output('data-source-style', 'style'),  # used to hide initially   
+            Output("year-slider", "marks"),         # dict of index:val for years
+            Output("year-slider", "value"),         # selected year (str val in timeslider)        
+            Output("source-popover","children"),    # popover with explanatory notes
             Output("url", "href", allow_duplicate=True), 
-            Output('fire-bar','data'),   # 1 yes 0 no     
-            Output('fire-line','data')   # 1 yes 0 no 
+            Output('fire-bar','data'),              # Fire bar modal: 1 yes 0 no     
+            Output('fire-line','data')              # Fire line modal: 1 yes 0 no 
         #    Output("my-experimental-trigger", "data") #trigger for experimental modal          
         ],        
         
@@ -90,19 +70,16 @@ def init_callbacks(dash_app, dobj):
         
         #STATE
         [
-            State("geomap_figure", "figure"),
-            State("year-slider", "marks"),
-            State("year-slider", "max"),
+            State("geomap_figure", "figure"),            
             State("year-slider", "value"),
             State("my-series","data"),        
-            State("my-series-label","data"),        
-            State('my-settings_json_store', 'data'), #allows data intself to be extracted
-            State('my-settings_mapstyle_store', 'data'), #allows data intself to be extracted
+                   
+            #State('my-settings_json_store', 'data'), #allows data intself to be extracted
+            #State('my-settings_mapstyle_store', 'data'), #allows data intself to be extracted
             State("my-settings_colorbar_store", 'data'),
             State("my-settings_colorbar_reverse_store", 'data'),
-            State('nav-search-menu', 'value'), #new
-            State("my-selection-m49", "data"), #NEW, to save the m49 location of the selected map
-            State("url", "href"),
+            
+            State('nav-search-menu', 'value'), 
             State("js-detected-viewport", 'data'),
             State('url','href'),
             State('flag-bar','data'),
@@ -118,7 +95,7 @@ def init_callbacks(dash_app, dobj):
         selection = ctx.triggered_id
         states = ctx.states 
         #print(states)       
-        logger.info(f"Main callback. Selection is {selection}")        
+        logger.debug(f"Main callback. Selection is {selection}")        
 
         # load colour palette
         colorpalette = states['my-settings_colorbar_store.data']
@@ -160,9 +137,9 @@ def init_callbacks(dash_app, dobj):
         # CASE: url
         if selection == 'url':
             url = states['url.href']
-            print(f"url state: {url}")
+            logger.debug(f"url state: {url}")
             url_obj = data.url_path(url)
-            print(url_obj)
+            logger.debug(url_obj)
 
             if url_obj.first_load:
                 raise PreventUpdate
@@ -188,10 +165,6 @@ def init_callbacks(dash_app, dobj):
                 year = dobj.get_latest_year(series['dataset_raw'])
                 time_slider = data.get_time_slider(dobj, series['dataset_raw'], year=year)  
                 fire_line=1
-
-
-               
-
                 
 
         # Build artifacts and return
@@ -204,37 +177,7 @@ def init_callbacks(dash_app, dobj):
         return series['dataset_raw'], fig, series_source, link, series_label, time_slider['marks'], time_slider['value'], note, href, fire_bar, fire_line
                     
         
-        
-        #url_suffix = data.url_path(level='map', series_html=series['dataset_raw'], year=year)
-        #print(url_suffix)
 
-
-        # # CASE: series selection (from either navmenu, random btn or search menu) 
-        # if selection.isnumeric() or selection == 'random-button' or selection == 'nav-search-menu':
-        #     #return out and build main map
-        #     year = dobj.get_latest_year(series['dataset_raw'])
-        #     fig = charts.create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year)
-        #     series_label = f"\u00A0{series['dataset_label']} in {year}\u00A0"
-        #     series_source = series['source']
-        #     link = series['link']
-        #     note = series['note']            
-        #     time_slider = data.get_time_slider(dobj, series['dataset_raw'], year=None)
-        #     url_suffix = data.url_path(level='map', series_html=series['dataset_raw'], year=year)
-        #     print(url_suffix)
-        #     return series['dataset_raw'], fig, series_source, link, series_label, time_slider['marks'], time_slider['value'], note
-
-        # # CASE: year slider
-        # if selection == 'year-slider':
-        #     year = int(states['year-slider.value'])            
-        #     series_name = states['my-series.data']
-        #     series = dobj.config_key_dsraw[series_name]   
-        #     fig = charts.create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year)
-        #     series_label = f"\u00A0{series['dataset_label']} in {year}\u00A0"
-        #     series_source = series['source']
-        #     link = series['link']
-        #     note = series['note']            
-        #     time_slider = data.get_time_slider(dobj, series['dataset_raw'], year=year)
-        #     return series['dataset_raw'], fig, series_source, link, series_label, time_slider['marks'], time_slider['value'], note  
         
  
 
@@ -627,6 +570,8 @@ def init_callbacks(dash_app, dobj):
         trigger = ctx.triggered_id      
         states = ctx.states 
         logger.info(f"Bar chart: {trigger}")              
+        
+        countries = ['United States of America', 'China', 'India']
 
         # CASE: close button
         if trigger == 'modal-bar-close':
@@ -636,7 +581,7 @@ def init_callbacks(dash_app, dobj):
         elif trigger == 'bar-button': 
             year = int(year_slider_state)                        
             series_name = series_map_state
-            highlight_countries = ['United States of America', 'China', 'India']
+            highlight_countries = countries
 
         # CASE: entry from main callback (trigger)
         elif trigger == 'fire-bar':
@@ -644,7 +589,7 @@ def init_callbacks(dash_app, dobj):
                 raise PreventUpdate
             year = int(year_slider_state)                        
             series_name = series_map_state
-            highlight_countries = ['United States of America', 'China', 'India']         
+            highlight_countries = countries     
         
         # CASE: year selection
         elif trigger == 'bar-graph-dropdown-year':

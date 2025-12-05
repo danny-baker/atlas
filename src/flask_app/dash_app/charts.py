@@ -31,13 +31,10 @@ def create_map_geomap_empty():
 def create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year):    
     
     series_name = series['dataset_raw']
-    var_type = series['var_type']
-    #year = dobj.get_latest_year(series_name)
+    var_type = series['var_type']    
     stats = dobj.get_stats(series_name=series_name, year=year, sort_by='country', ascending=True)
     geojson = dobj.map_lowres
-    mapstyle = mapbox_style[1] #default for now
-
-    print(series)
+    mapstyle = mapbox_style[1] #default for now    
 
     # DISCRETE DATA
     if var_type == 'discrete':            

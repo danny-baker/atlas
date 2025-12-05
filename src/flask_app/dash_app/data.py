@@ -560,8 +560,7 @@ class url_path:
         if self.url is not None:
 
             # split it on / and drop first 3 elements
-            url_frags = self.url.split('/')[3:]
-            print(url_frags)
+            url_frags = self.url.split('/')[3:]            
 
             # CASE: root url (first load of site)
             # i.e. ['https:', '', 'worldatlas.org', ''] and we grap 4th element        
@@ -582,12 +581,11 @@ class url_path:
                 self.series_html = url_frags[0]
                 self.level = url_frags[1]
                 self.year = url_frags[2]
-                return
-            
+                return            
 
         # CASE: url NOT supplied (build url from other attributes)
         else:
-            first_load=False
+            self.first_load=False
             self.url = f'{self.series_html}/{self.level}/{self.year}'
             return
         

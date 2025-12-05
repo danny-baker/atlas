@@ -15,12 +15,13 @@
 # Line chart [DONE]
 # URL path working [DONE]
 
+# Settings
+
 # Bubble chart?
 # Pizza (remove, never worked properly)
 # Geobar
 # Globe
-# Settings
-# Finishing. CSS clean up (formatting and finishing touches. E.g. modal left align for footer. Make yr slider sexy etc)
+# Finishing. CSS clean up (formatting and finishing touches. Hide button logic etc.  Make yr slider sexy etc)
 # Port rest of app_old.py across. i.e. delete app_old.py
 
 # Build note...when call uv build, want to build into a container, not a package. See if that's possible.
