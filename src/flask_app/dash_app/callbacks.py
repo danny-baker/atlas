@@ -543,8 +543,8 @@ def init_callbacks(dash_app, dobj):
         print(selection)
 
         # UPDATE BUTTONS
-
-        # Grab any stored settings from the state and update buttons
+        
+        # Grab stored result or use default
         temp_settings = states['settings-temp-store.data']
         if temp_settings is None:
             settings = data.settings() #defaults
@@ -554,7 +554,7 @@ def init_callbacks(dash_app, dobj):
         # Init             
         tile_btn_states = {"open-street-map":None, "carto-positron": None, "carto-darkmatter": None} 
         res_btn_states = {"LOW":None, "MED":None, "INSANE":None}
-        col_inv_states = {"ON": None, "OFF": None}
+        col_inv_btn_states = {"ON": None, "OFF": None}
         
         # Falsify
         for key in tile_btn_states:
@@ -563,16 +563,16 @@ def init_callbacks(dash_app, dobj):
         for key in res_btn_states:
             res_btn_states[key] = False
 
-        for key in col_inv_states:
-            col_inv_states[key] = False
+        for key in col_inv_btn_states:
+            col_inv_btn_states[key] = False
 
         # Trueify
         tile_btn_states[settings.map_tiles] = True
         res_btn_states[settings.map_resolution] = True
         if settings.col_invert == True:
-            col_inv_states["ON"] = True
+            col_inv_btn_states["ON"] = True
         else:
-            col_inv_states["OFF"] = True
+            col_inv_btn_states["OFF"] = True
 
 
         # PROCESS USER INPUT
@@ -586,10 +586,10 @@ def init_callbacks(dash_app, dobj):
             settings.map_resolution = "MED"
         elif selection == "settingsbtn-resolution-high":
             res_btn_states = {"LOW":False, "MED":False, "INSANE":True}
-            settings.map_resolution = "HIGH"
+            settings.map_resolution = "INSANE"
 
         # Tile button group
-        if selection == "settingsbtn-mapstyle-openstreetmap":
+        elif selection == "settingsbtn-mapstyle-openstreetmap":
             tile_btn_states = {"open-street-map":True, "carto-positron": False, "carto-darkmatter": False}            
             settings.map_tiles = "open-street-map"
         elif selection == "settingsbtn-mapstyle-carto-positron":
@@ -600,11 +600,11 @@ def init_callbacks(dash_app, dobj):
             settings.map_tiles = "carto-darkmatter"
 
         # Colour reverse
-        if selection == "settingsbtn-normal-colorscale":
-            col_inv_states = {"ON": False, "OFF": True}
+        elif selection == "settingsbtn-normal-colorscale":
+            col_inv_btn_states = {"ON": False, "OFF": True}
             settings.col_invert = False
         elif selection == "settingsbtn-reverse-colorscale":
-            col_inv_states = {"ON": True, "OFF": False}
+            col_inv_btn_states = {"ON": True, "OFF": False}
             settings.col_invert = True
         
         settings_serialized = pickle.dumps(settings).decode('latin1')
@@ -612,7 +612,7 @@ def init_callbacks(dash_app, dobj):
         # List all the shit to return neatly
         artifacts = [tile_btn_states["open-street-map"], tile_btn_states["carto-positron"], tile_btn_states["carto-darkmatter"],
                      res_btn_states["LOW"], res_btn_states["MED"], res_btn_states["INSANE"],
-                     col_inv_states['OFF'], col_inv_states['ON']]
+                     col_inv_btn_states['OFF'], col_inv_btn_states['ON']]
         artifacts.append(settings_serialized)
 
         return artifacts
