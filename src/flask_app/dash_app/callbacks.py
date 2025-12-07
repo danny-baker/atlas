@@ -506,48 +506,114 @@ def init_callbacks(dash_app, dobj):
             Output('settingsbtn-mapstyle-openstreetmap', 'active'),
             Output('settingsbtn-mapstyle-carto-positron', 'active'),
             Output('settingsbtn-mapstyle-darkmatter', 'active'),
+            Output('settingsbtn-resolution-low', 'active'),
+            Output('settingsbtn-resolution-med', 'active'),
+            Output('settingsbtn-resolution-high', 'active'),
+            Output('settingsbtn-normal-colorscale','active'),
+            Output('settingsbtn-reverse-colorscale','active'),
             Output('settings-temp-store', 'data'),
             ],
             [
             Input('settingsbtn-mapstyle-openstreetmap', 'n_clicks'),
             Input('settingsbtn-mapstyle-carto-positron', 'n_clicks'),
             Input('settingsbtn-mapstyle-darkmatter', 'n_clicks'),
+            Input('settingsbtn-resolution-low', 'n_clicks'),
+            Input('settingsbtn-resolution-med', 'n_clicks'),
+            Input('settingsbtn-resolution-high', 'n_clicks'),
+            Input('settingsbtn-normal-colorscale','n_clicks'),
+            Input('settingsbtn-reverse-colorscale','n_clicks'),
             ],
-            #prevent_initial_call=True            
+            [
+            State("settings-temp-store", "data"),  #pickle serialized
+            State("settings-store", "data")  #pickle serialized 
+            ], 
+            prevent_initial_call=False            
             )
-    def callback_settings_button_states(n1,n2,n3):
+    def callback_settings_button_states(*args):
         """
         Describe active state for the many buttons on the settings modal, returning the overall state each time.
         Returning updates the state live on the open settings modal, so we must be able to return ALL button active states.
         Potentially also return the actual active states (map, colour scheme etc) that is active as stores so when applied, we can set.
         We are essentially reimplementing logic for button groups where clicking one, unclicks the others. It's painful as hell.
-
         First run should set defaults and save settings to dcc store
         """
         
         selection = ctx.triggered_id  
+        states = ctx.states 
         print(selection)
 
-        # Defaults 
-        map_tiles="carto-positron"        
-        tile_btn_states = {"open":False, "positron": True, "darkmatter": False} # defaults (eventually get these from saved stores, but for now, it resets each modal load)
+        # UPDATE BUTTONS
 
+        # Grab any stored settings from the state and update buttons
+        temp_settings = states['settings-temp-store.data']
+        if temp_settings is None:
+            settings = data.settings() #defaults
+        else:
+            settings = pickle.loads(temp_settings.encode('latin1'))
+
+        # Init             
+        tile_btn_states = {"open-street-map":None, "carto-positron": None, "carto-darkmatter": None} 
+        res_btn_states = {"LOW":None, "MED":None, "INSANE":None}
+        col_inv_states = {"ON": None, "OFF": None}
+        
+        # Falsify
+        for key in tile_btn_states:
+            tile_btn_states[key] = False
+        
+        for key in res_btn_states:
+            res_btn_states[key] = False
+
+        for key in col_inv_states:
+            col_inv_states[key] = False
+
+        # Trueify
+        tile_btn_states[settings.map_tiles] = True
+        res_btn_states[settings.map_resolution] = True
+        if settings.col_invert == True:
+            col_inv_states["ON"] = True
+        else:
+            col_inv_states["OFF"] = True
+
+
+        # PROCESS USER INPUT
+
+        # Map resolution button group
+        if selection == "settingsbtn-resolution-low":
+            res_btn_states = {"LOW":True, "MED":False, "INSANE":False}
+            settings.map_resolution = "LOW"
+        elif selection == "settingsbtn-resolution-med":
+            res_btn_states = {"LOW":False, "MED":True, "INSANE":False}
+            settings.map_resolution = "MED"
+        elif selection == "settingsbtn-resolution-high":
+            res_btn_states = {"LOW":False, "MED":False, "INSANE":True}
+            settings.map_resolution = "HIGH"
+
+        # Tile button group
         if selection == "settingsbtn-mapstyle-openstreetmap":
-            tile_btn_states = {"open":True, "positron": False, "darkmatter": False}            
-            map_tiles = "open-street-map"
+            tile_btn_states = {"open-street-map":True, "carto-positron": False, "carto-darkmatter": False}            
+            settings.map_tiles = "open-street-map"
         elif selection == "settingsbtn-mapstyle-carto-positron":
-            tile_btn_states = {"open":False, "positron": True, "darkmatter": False}            
-            map_tiles = "carto-positron"
+            tile_btn_states = {"open-street-map":False, "carto-positron": True, "carto-darkmatter": False}            
+            settings.map_tiles = "carto-positron"
         elif selection == "settingsbtn-mapstyle-darkmatter":
-            tile_btn_states = {"open":False, "positron": False, "darkmatter": True} 
-            map_tiles = "carto-darkmatter"
+            tile_btn_states = {"open-street-map":False, "carto-positron": False, "carto-darkmatter": True} 
+            settings.map_tiles = "carto-darkmatter"
 
-        settings = data.settings()
-        settings.map_tiles = map_tiles
+        # Colour reverse
+        if selection == "settingsbtn-normal-colorscale":
+            col_inv_states = {"ON": False, "OFF": True}
+            settings.col_invert = False
+        elif selection == "settingsbtn-reverse-colorscale":
+            col_inv_states = {"ON": True, "OFF": False}
+            settings.col_invert = True
+        
         settings_serialized = pickle.dumps(settings).decode('latin1')
 
-        # List containing all the shit to return neatly
-        artifacts = [tile_btn_states["open"], tile_btn_states["positron"], tile_btn_states["darkmatter"], settings_serialized]
+        # List all the shit to return neatly
+        artifacts = [tile_btn_states["open-street-map"], tile_btn_states["carto-positron"], tile_btn_states["carto-darkmatter"],
+                     res_btn_states["LOW"], res_btn_states["MED"], res_btn_states["INSANE"],
+                     col_inv_states['OFF'], col_inv_states['ON']]
+        artifacts.append(settings_serialized)
 
         return artifacts
             
