@@ -49,8 +49,8 @@ def build():
                 dbc.ModalHeader(html.Div("This site is a front-end to thousands of datasets.", style={"fontFamily":INIT_MODAL_HEADER_FONT_GENERAL, "fontSize": INIT_MODAL_HEADER_FONT_SIZE, "fontWeight": INIT_MODAL_HEADER_FONT_WEIGHT })),
                 dbc.ModalBody(about_modal_body),
                 dbc.ModalFooter([
-                    dcc.Markdown(""" Built with ![Image](/static/img/heart1.png) in Python using [Dash](https://plotly.com/dash/)."""),
-                    dbc.Button("Close", id="modal-about-close", className="ml-auto",size=INIT_BUTTON_SIZE)
+                    html.Div(dcc.Markdown(""" Built with ![Image](/static/img/heart1.png) in Python using [Dash](https://plotly.com/dash/)."""), className="me-auto"),
+                    html.Div(dbc.Button("Close", id="modal-about-close",size=INIT_BUTTON_SIZE), className="me-2")
                     ]
                 ),
                 #html.Div([html.Audio(id='audio', src='/static/img/encarta_intro.mp3', autoPlay=True, loop=False )]) #,controls=True
@@ -60,6 +60,6 @@ def build():
             id="dbc-modal-about",
             centered=True,
             size="xl",
-            dialog_style={"max-width": "none", "width": INIT_ABOUT_MODAL_W}  #70%
+            dialog_style={"max-width": "none", "width": INIT_ABOUT_MODAL_W}  
         )
     return m

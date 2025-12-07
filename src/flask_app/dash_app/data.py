@@ -534,6 +534,42 @@ def get_list_of_dataset_labels_and_raw(master_config,var_type):
 
 
 @dataclass
+class settings:
+    """
+    The concept of site settings. Should include map resolution, colour schemes, mapbox tile theme etc.
+    """
+
+    # options
+    options_map_resolution: tuple = ("LOW", "MED", "INSANE")
+   
+    options_map_tiles: tuple = ("carto-positron", "carto-darkmatter", "open-street-map") # Stamen tiles are behind paywall now:  "stamen-terrain", "stamen-toner", "stamen-watercolor"
+
+    options_colour_scheme: tuple  = ("auto", 'aggrnyl', 'agsunset', 'algae', 'amp', 'armyrose', 'balance',
+                'blackbody', 'bluered', 'blues', 'blugrn', 'bluyl', 'brbg',
+                'brwnyl', 'bugn', 'bupu', 'burg', 'burgyl', 'cividis', 'curl',
+                'darkmint', 'deep', 'delta', 'dense', 'earth', 'edge', 'electric',
+                'emrld', 'fall', 'geyser', 'gnbu', 'gray', 'greens', 'greys',
+                'haline', 'hot', 'hsv', 'ice', 'icefire', 'inferno', 'jet',
+                'magenta', 'magma', 'matter', 'mint', 'mrybm', 'mygbm', 'oranges',
+                'orrd', 'oryel', 'peach', 'phase', 'picnic', 'pinkyl', 'piyg',
+                'plasma', 'plotly3', 'portland', 'prgn', 'pubu', 'pubugn', 'puor',
+                'purd', 'purp', 'purples', 'purpor', 'rainbow', 'rdbu', 'rdgy',
+                'rdpu', 'rdylbu', 'rdylgn', 'redor', 'reds', 'solar', 'spectral',
+                'speed', 'sunset', 'sunsetdark', 'teal', 'tealgrn', 'tealrose',
+                'tempo', 'temps', 'thermal', 'tropic', 'turbid', 'twilight',
+                'viridis', 'ylgn', 'ylgnbu', 'ylorbr', 'ylorrd')
+
+    # defaults
+    map_resolution: str = "LOW"
+    map_tiles = "carto-positron"
+    col_invert: bool=False
+    col_scheme = "rainbow" #inferno
+    
+
+
+
+
+@dataclass
 class url_path:  
     """
     The concept of a url path and it's elements to drive site behaviour. 

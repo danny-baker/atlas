@@ -4,6 +4,7 @@ import logging
 import plotly.express as px
 import plotly.graph_objs as go
 from . global_constants import *
+from . import charts
 
 #Obtain the root logger
 logger = logging.getLogger(LOGGER)
@@ -75,27 +76,9 @@ def build():
             dcc.Graph(
                 style={"height": INIT_MAP_H, "width": INIT_MAP_W, 'z-index':'2' }, 
                 id="geomap_figure",
-                figure = create_map_geomap_empty(),
+                figure = charts.create_map_geomap_empty(),
                 config={'displayModeBar': False, 'scrollZoom': True },              
             )
         ],)
     return body
 
-
-def create_map_geomap_empty():
-    #No method overloading in python, so have an empty map load for initial.
-    logger.info("Creating geomap empty...")
-    
-    fig = go.Figure(
-        go.Choroplethmapbox(        
-        )
-    )
-    
-    #zoom 1.6637151294876888 and centre {'lon': 27.607108241243623, 'lat': 3.4455217746834705}
-    fig.update_layout(
-        mapbox_style=mapbox_style[1], #default
-        mapbox_zoom=INIT_ZOOM,
-        mapbox_center={"lat": INIT_LATITUDE, "lon": INIT_LONGITUDE},   
-        margin={"r": 0, "t": 0, "l": 0, "b": 0},
-    )
-    return fig

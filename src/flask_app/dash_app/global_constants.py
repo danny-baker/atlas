@@ -7,22 +7,6 @@ PAGE_TITLE = f"\u00A0WORLD ATLAS 2.0\u00A0" #To prevent white space being trimme
 
 #DECLARE GLOBAL APPLICATION DATA
 
-mapbox_style = ["open-street-map", "carto-positron", "carto-darkmatter", "stamen-terrain", "stamen-toner", "stamen-watercolor"]
-
-geomap_colorscale = ["auto", 'aggrnyl', 'agsunset', 'algae', 'amp', 'armyrose', 'balance',
-             'blackbody', 'bluered', 'blues', 'blugrn', 'bluyl', 'brbg',
-             'brwnyl', 'bugn', 'bupu', 'burg', 'burgyl', 'cividis', 'curl',
-             'darkmint', 'deep', 'delta', 'dense', 'earth', 'edge', 'electric',
-             'emrld', 'fall', 'geyser', 'gnbu', 'gray', 'greens', 'greys',
-             'haline', 'hot', 'hsv', 'ice', 'icefire', 'inferno', 'jet',
-             'magenta', 'magma', 'matter', 'mint', 'mrybm', 'mygbm', 'oranges',
-             'orrd', 'oryel', 'peach', 'phase', 'picnic', 'pinkyl', 'piyg',
-             'plasma', 'plotly3', 'portland', 'prgn', 'pubu', 'pubugn', 'puor',
-             'purd', 'purp', 'purples', 'purpor', 'rainbow', 'rdbu', 'rdgy',
-             'rdpu', 'rdylbu', 'rdylgn', 'redor', 'reds', 'solar', 'spectral',
-             'speed', 'sunset', 'sunsetdark', 'teal', 'tealgrn', 'tealrose',
-             'tempo', 'temps', 'thermal', 'tropic', 'turbid', 'twilight',
-             'viridis', 'ylgn', 'ylgnbu', 'ylorbr', 'ylorrd']
 
 #build discrete colourscale (16 available)
 discrete_colorscale = [
@@ -83,7 +67,7 @@ INIT_BUTTON_SIZE = "sm"
 INIT_DROPDOWNITEM_LPAD = 0
 INIT_DROPDOWNITEM_RPAD = "0.65vw"
 INIT_SETTINGS_BORDER_CARD_WIDTH = "19vh" #settings modal was 17vh
-INIT_SETTINGS_MAP_CARD_WIDTH = "18vh" #settings modal
+INIT_SETTINGS_MAP_CARD_WIDTH = "19vh" #settings modal
 INIT_SETTINGS_DL_CARD_WIDTH = '31.5%'
 INIT_UGUIDE_MODAL_W = "70%"
 INIT_SETTINGS_MODAL_W = "70%"

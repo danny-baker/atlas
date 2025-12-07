@@ -13,6 +13,7 @@ import sys
 import xlsxwriter #needed for linux Ubuntu server
 import plotly.graph_objs as go
 import plotly
+import pickle
 
 #Obtain the root logger
 logger = logging.getLogger(LOGGER)
@@ -40,7 +41,8 @@ def init_callbacks(dash_app, dobj):
         c.append(Input("year-slider", "value"))
         c.append(Input('my-settings_json_store', 'data')) #these act purely as triggers after apply button pushed (like the hidden div), to call the main callback
         c.append(Input('my-settings_mapstyle_store', 'data')) #these act purely as triggers after apply button pushed (like the hidden div), to call the main callback
-        c.append(Input('url','href'))        
+        c.append(Input('url','href')),
+        c.append(Input("settings-updated?", "data"))
         #print(c)
         return c
     
@@ -72,42 +74,50 @@ def init_callbacks(dash_app, dobj):
         [
             State("geomap_figure", "figure"),            
             State("year-slider", "value"),
-            State("my-series","data"),        
-                   
-            #State('my-settings_json_store', 'data'), #allows data intself to be extracted
-            #State('my-settings_mapstyle_store', 'data'), #allows data intself to be extracted
-            State("my-settings_colorbar_store", 'data'),
-            State("my-settings_colorbar_reverse_store", 'data'),
-            
+            State("my-series","data"), 
             State('nav-search-menu', 'value'), 
             State("js-detected-viewport", 'data'),
             State('url','href'),
             State('flag-bar','data'),
-            State('flag-line','data')           
+            State('flag-line','data'),
+            State("settings-store", "data"),  #pickle serialized 
+            State("settings-updated?", "data")           
 
         ],
         
         prevent_initial_call=True
     )    
     def callback_main(*args):  
-                        
+        """
+        Main program logic for updating the map based on user input, such as selecting a dataset or changing year slider. 
+        Beware. Dragons be here. Logic is non trivial due to various ways in which datasets are updated (can be from URL path, user input, other callbacks etc.)
+        Uses a concept of a 'series', which is actually metatdata about the currently selected series in the form of a dictionary.
+        series: dict of type {dataset_id, dataset_label, dataset_raw, var_type, nav_cat, nav_cat_nest, colour, var_type, source, link, note} 
+        """  
+        
         # user selection
         selection = ctx.triggered_id
+        print(selection)
         states = ctx.states 
-        #print(states)       
-        logger.debug(f"Main callback. Selection is {selection}")        
+        logger.debug(f"Main callback. Selection is {selection}")  
+        #print(states)                     
 
-        # load colour palette
-        colorpalette = states['my-settings_colorbar_store.data']
-        colorpalette_reverse = states['my-settings_colorbar_reverse_store.data']  
-        if colorpalette is None: colorpalette = geomap_colorscale[INIT_COLOR_PALETTE] #39 inferno,  #55 plasma    
-        if colorpalette_reverse is None: colorpalette_reverse = INIT_COLOR_PALETTE_REVERSE # default True        
-
-        # series: dict of type {dataset_id, dataset_label, dataset_raw, var_type, nav_cat, nav_cat_nest, colour, var_type, source, link, note} 
+        # load settings  
+        if states['settings-store.data'] == None: settings = data.settings()
+        else: settings = pickle.loads(states['settings-store.data'].encode('latin1'))        
 
         #defaults
         fire_bar = 0
         fire_line = 0
+
+        # CASE: settings update
+        if selection == "settings-updated?":
+            if states['settings-updated?.data'] == "False":
+                raise PreventUpdate 
+            year = int(states['year-slider.value'])            
+            series_name = states['my-series.data']
+            series = dobj.config_key_dsraw[series_name]  
+            time_slider = data.get_time_slider(dobj, series['dataset_raw'], year=year)             
 
         # CASE: navmenu selection        
         if selection.isnumeric():                                 
@@ -132,7 +142,7 @@ def init_callbacks(dash_app, dobj):
             year = int(states['year-slider.value'])            
             series_name = states['my-series.data']
             series = dobj.config_key_dsraw[series_name]  
-            time_slider = data.get_time_slider(dobj, series['dataset_raw'], year=year)                          
+            time_slider = data.get_time_slider(dobj, series['dataset_raw'], year=year)                                 
 
         # CASE: url
         if selection == 'url':
@@ -168,7 +178,7 @@ def init_callbacks(dash_app, dobj):
                 
 
         # Build artifacts and return
-        fig = charts.create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year)
+        fig = charts.create_map_geomap(dobj, series, settings, year)
         series_label = f"\u00A0{series['dataset_label']} in {year}\u00A0"
         series_source = series['source']
         link = series['link']
@@ -477,8 +487,7 @@ def init_callbacks(dash_app, dobj):
         Output("dbc-modal-uguide", "is_open"),
         [
         Input("uguide-button", "n_clicks"), 
-        Input("modal-uguide-close", "n_clicks"),
-        #Input("button-userguide-about", "n_clicks"),
+        Input("modal-uguide-close", "n_clicks"),        
         ],
         [State("dbc-modal-uguide", "is_open")], 
         prevent_initial_call=True,
@@ -489,6 +498,108 @@ def init_callbacks(dash_app, dobj):
             return not is_open    
         return is_open
     
+
+
+    # Settings modal button states
+    @dash_app.callback(
+            [
+            Output('settingsbtn-mapstyle-openstreetmap', 'active'),
+            Output('settingsbtn-mapstyle-carto-positron', 'active'),
+            Output('settingsbtn-mapstyle-darkmatter', 'active'),
+            Output('settings-temp-store', 'data'),
+            ],
+            [
+            Input('settingsbtn-mapstyle-openstreetmap', 'n_clicks'),
+            Input('settingsbtn-mapstyle-carto-positron', 'n_clicks'),
+            Input('settingsbtn-mapstyle-darkmatter', 'n_clicks'),
+            ],
+            #prevent_initial_call=True            
+            )
+    def callback_settings_button_states(n1,n2,n3):
+        """
+        Describe active state for the many buttons on the settings modal, returning the overall state each time.
+        Returning updates the state live on the open settings modal, so we must be able to return ALL button active states.
+        Potentially also return the actual active states (map, colour scheme etc) that is active as stores so when applied, we can set.
+        We are essentially reimplementing logic for button groups where clicking one, unclicks the others. It's painful as hell.
+
+        First run should set defaults and save settings to dcc store
+        """
+        
+        selection = ctx.triggered_id  
+        print(selection)
+
+        # Defaults 
+        map_tiles="carto-positron"        
+        tile_btn_states = {"open":False, "positron": True, "darkmatter": False} # defaults (eventually get these from saved stores, but for now, it resets each modal load)
+
+        if selection == "settingsbtn-mapstyle-openstreetmap":
+            tile_btn_states = {"open":True, "positron": False, "darkmatter": False}            
+            map_tiles = "open-street-map"
+        elif selection == "settingsbtn-mapstyle-carto-positron":
+            tile_btn_states = {"open":False, "positron": True, "darkmatter": False}            
+            map_tiles = "carto-positron"
+        elif selection == "settingsbtn-mapstyle-darkmatter":
+            tile_btn_states = {"open":False, "positron": False, "darkmatter": True} 
+            map_tiles = "carto-darkmatter"
+
+        settings = data.settings()
+        settings.map_tiles = map_tiles
+        settings_serialized = pickle.dumps(settings).decode('latin1')
+
+        # List containing all the shit to return neatly
+        artifacts = [tile_btn_states["open"], tile_btn_states["positron"], tile_btn_states["darkmatter"], settings_serialized]
+
+        return artifacts
+            
+
+
+    #Settings modal callback (settings button push)
+    @dash_app.callback(
+        [
+        Output("dbc-modal-settings", "is_open"),
+        Output("settings-store", "data"),  #pickle serialized  
+        Output("settings-updated?", "data"), # "True" / "False"
+        ],
+        [
+        Input("settings-button", "n_clicks"), 
+        Input("modal-settings-apply", "n_clicks"),
+        Input("modal-settings-close", "n_clicks"),        
+        ],
+        [
+        State("dbc-modal-settings", "is_open"),           
+        State("settings-temp-store", "data"),  #pickle serialized 
+        State("settings-store", "data")  #pickle serialized  
+        ], 
+        prevent_initial_call=True,
+    )
+    def callback_settings_toggle(open, apply, close, is_open, new_settings, existing_settings):        
+     
+        selection = ctx.triggered_id          
+        settings_updated = False    
+        
+        if selection == 'settings-button' or selection == 'modal-settings-close':        
+            defaults = pickle.dumps(data.settings()).decode('latin1')
+            
+            if existing_settings is None:
+                settings = defaults
+            else:
+                settings = existing_settings
+            
+            return not is_open, settings, settings_updated
+        
+        if selection == 'modal-settings-apply':
+            logger.debug("Applying settings baby")   
+
+            # Grab settings from temp store (i.e. user changed input on modal) and write them out to the offical one used by main callback
+            new_settings = pickle.loads(new_settings.encode('latin1'))
+            new_settings_serialized = pickle.dumps(new_settings).decode('latin1')
+            settings_updated = True
+
+            return not is_open, new_settings_serialized, settings_updated
+        
+        return is_open
+        
+
 
     #Download dataset MAIN
     @dash_app.callback(Output('download_dataset_main', 'data'),
@@ -921,7 +1032,7 @@ def init_callbacks(dash_app, dobj):
 
 # Special stuff
 
-def js_callback_clientside_blur(dash_app):
+def js_callback_clientside_blur(dash_app):#
 
         #Special client side callback that removes unwanted focus on buttons that trigger modals (for hiding tooltip) using embedded javascript function
         dash_app.clientside_callback(

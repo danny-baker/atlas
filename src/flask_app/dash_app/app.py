@@ -103,8 +103,8 @@ def create_dash_layout(app):
   
     app.layout = html.Div([navmenu, header, body, footer, dcc_stores, hidden_div_triggers, url])    
 
-    #enable special clientside callbacks
-    js_callback_clientside_blur(app)
+    js_callback_clientside_blur(app) #enable special clientside callbacks
+        
     #js_callback_clientside_share(app)
     #callbacks.js_callback_clientside_viewport(app)         
     

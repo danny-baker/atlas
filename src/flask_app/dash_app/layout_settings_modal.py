@@ -1,11 +1,13 @@
 from dash import dash, html, dcc
 import dash_bootstrap_components as dbc
 from . global_constants import *
+from . import data
 
 
 
-settings_colour_scheme = html.Div([
 
+
+settings_colour_scheme = html.Div([#
     dcc.Markdown(""" 
     This controls how each region on the main map is coloured. 
     The main map is a choropleth, which is a type of map where regions are coloured based on the distibution of values in a data series. 
@@ -78,7 +80,7 @@ def build():
                             dbc.CardImg(src="/static/img/osmp.PNG", top=True, ), #style={'height':'58%'}
                             dbc.CardBody(dbc.Button("opn-street-map", size=INIT_BUTTON_SIZE, outline=True, active = False, color="secondary", id='settingsbtn-mapstyle-openstreetmap'),),
                         ],
-                        style={"width": INIT_SETTINGS_MAP_CARD_WIDTH, 'align-items': 'center', 'justify-content': 'center', "marginBottom": 0, "marginTop": '1vw', "marginLeft": '1vw', "marginRight": 0},
+                        style={"width": INIT_SETTINGS_MAP_CARD_WIDTH, 'align-items': 'center', 'justify-content': 'center', "marginBottom": 0, "marginTop": '1vw', "marginLeft": 0, "marginRight": '1vw'},
                         ),
                         
                         dbc.Card(
@@ -86,7 +88,7 @@ def build():
                             dbc.CardImg(src="/static/img/cart.PNG", top=True, ), #style={'height':'58%'}
                             dbc.CardBody(dbc.Button("carto-positron", size=INIT_BUTTON_SIZE, outline=True, active = True, color="secondary",id='settingsbtn-mapstyle-carto-positron'),),
                         ],
-                        style={"width": INIT_SETTINGS_MAP_CARD_WIDTH, 'align-items': 'center', 'justify-content': 'center', "marginBottom": 0, "marginTop": '1vw', "marginLeft": '1vw', "marginRight": 0},
+                        style={"width": INIT_SETTINGS_MAP_CARD_WIDTH, 'align-items': 'center', 'justify-content': 'center', "marginBottom": 0, "marginTop": '1vw', "marginLeft": 0, "marginRight": '1vw'},
                         ),
                         
                         dbc.Card(
@@ -94,34 +96,33 @@ def build():
                             dbc.CardImg(src="/static/img/dark.PNG", top=True, ), #style={'height':'58%'}
                             dbc.CardBody(dbc.Button("carto-dark",size=INIT_BUTTON_SIZE, outline=True, active = False, color="secondary",id='settingsbtn-mapstyle-darkmatter'),),
                         ],
-                        style={"width": INIT_SETTINGS_MAP_CARD_WIDTH, 'align-items': 'center', 'justify-content': 'center', "marginBottom": 0, "marginTop": '1vw', "marginLeft": '1vw', "marginRight": 0},
+                        style={"width": INIT_SETTINGS_MAP_CARD_WIDTH, 'align-items': 'center', 'justify-content': 'center', "marginBottom": 0, "marginTop": '1vw', "marginLeft": 0, "marginRight": '1vw'},
                         ),
                         
-                        dbc.Card(
-                        [
-                            dbc.CardImg(src="/static/img/terrain.PNG",  top=True), #style={'height':'58%'}
-                            dbc.CardBody(dbc.Button("terrain", size=INIT_BUTTON_SIZE,outline=True, active = False, color="secondary",id='settingsbtn-mapstyle-stamen-terrain'),),
-                        ],
-                        style={"width": INIT_SETTINGS_MAP_CARD_WIDTH, 'align-items': 'center', 'justify-content': 'center', "marginBottom": 0, "marginTop": '1vw', "marginLeft": '1vw', "marginRight": 0},
-                        ),
-                        
-                        dbc.Card(
-                        [
-                            dbc.CardImg(src="/static/img/charlie3.png", top=True,), #style={'height':'57%'}
-                            dbc.CardBody(dbc.Button("charlie",size=INIT_BUTTON_SIZE, outline=True, active = False, color="secondary",id='settingsbtn-mapstyle-stamen-toner'),),
-                        ],
-                        style={"width": INIT_SETTINGS_MAP_CARD_WIDTH, 'align-items': 'center', 'justify-content': 'center', "marginBottom": 0, "marginTop": '1vw', "marginLeft": '1vw', "marginRight": 0},
-                        ),
-                        
-                        dbc.Card(
-                        [
-                            dbc.CardImg(src="/static/img/watercolour.PNG", top=True), # style={'height':'58%'}
-                            dbc.CardBody(dbc.Button("watercolor", size=INIT_BUTTON_SIZE, outline=True, active = False, color="secondary",id='settingsbtn-mapstyle-stamen-watercolor'), ),
-                        ],
-                        style={"width": INIT_SETTINGS_MAP_CARD_WIDTH, 'align-items': 'center', 'justify-content': 'center', "marginBottom": 0, "marginTop": '1vw', "marginLeft": '1vw', "marginRight": 0},
-                        ),
-                    ]), #end row
-               
+                        #dbc.Card(
+                        #[
+                        #    dbc.CardImg(src="/static/img/terrain.PNG",  top=True), #style={'height':'58%'}
+                        #    dbc.CardBody(dbc.Button("terrain", size=INIT_BUTTON_SIZE,outline=True, active = False, color="secondary",id='settingsbtn-mapstyle-stamen-terrain'),),
+                        #],
+                        #style={"width": INIT_SETTINGS_MAP_CARD_WIDTH, 'align-items': 'center', 'justify-content': 'center', "marginBottom": 0, "marginTop": '1vw', "marginLeft": '1vw', "marginRight": 0},
+                        #),
+                       # 
+                        #dbc.Card(
+                        #[
+                        #    dbc.CardImg(src="/static/img/charlie3.png", top=True,), #style={'height':'57%'}
+                        #    dbc.CardBody(dbc.Button("charlie",size=INIT_BUTTON_SIZE, outline=True, active = False, color="secondary",id='settingsbtn-mapstyle-stamen-toner'),),
+                        #],
+                        #style={"width": INIT_SETTINGS_MAP_CARD_WIDTH, 'align-items': 'center', 'justify-content': 'center', "marginBottom": 0, "marginTop": '1vw', "marginLeft": '1vw', "marginRight": 0},
+                        #),
+                       # 
+                        #dbc.Card(
+                        #[
+                        #    dbc.CardImg(src="/static/img/watercolour.PNG", top=True), # style={'height':'58%'}
+                        #    dbc.CardBody(dbc.Button("watercolor", size=INIT_BUTTON_SIZE, outline=True, active = False, color="secondary",id='settingsbtn-mapstyle-stamen-watercolor'), ),
+                        #],
+                        #style={"width": INIT_SETTINGS_MAP_CARD_WIDTH, 'align-items': 'center', 'justify-content': 'center', "marginBottom": 0, "marginTop": '1vw', "marginLeft": '1vw', "marginRight": 0},
+                        #),
+                    ],style={"marginBottom": 0, "marginTop": 0, "marginLeft": 0, "marginRight": 0, }) #end row  
                     
                 ] ), #end div , style={'margin-left': '1vw'}
           ], style={'margin-left': '1vw'}),    # end main row
@@ -184,19 +185,21 @@ def build():
         id="dbc-modal-settings",
         centered=True,
         size="xl",
-        style={"max-width": "none", "width": INIT_SETTINGS_MODAL_W}
+        dialog_style={"max-width": "none", "width": INIT_SETTINGS_MODAL_W}
     )
     return m
 
 
-#construct colorscale button
+
+
 def create_dash_layout_settings_modal_colorscale_button(i):
-    
+    #construct a colorscale button   
+
     #hide the first 'auto' option as this messes with the ability to get the colorwheel
     if i == 0:
-        return dbc.Button(children=geomap_colorscale[i], color="light", className="mr-1", id=geomap_colorscale[i], style={'display': 'none'})
+        return dbc.Button(children=data.settings.options_colour_scheme[i], color="light", className="me-2", id=data.settings.options_colour_scheme[i], style={'display': 'none'})
     
     else:
-        return dbc.Button(children=geomap_colorscale[i], color="light", className="mr-1", id=geomap_colorscale[i], size=INIT_BUTTON_SIZE, style={'marginBottom':3})
+        return dbc.Button(children=data.settings.options_colour_scheme[i], color="light", className="me-2", id=data.settings.options_colour_scheme[i], size=INIT_BUTTON_SIZE, style={'marginBottom':5})
 
 

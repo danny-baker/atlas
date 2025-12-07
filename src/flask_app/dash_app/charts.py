@@ -20,7 +20,7 @@ def create_map_geomap_empty():
     )
     
     fig.update_layout(
-        mapbox_style=mapbox_style[1], #default
+        mapbox_style="carto-positron", #default
         mapbox_zoom=INIT_ZOOM,
         mapbox_center={"lat": INIT_LATITUDE, "lon": INIT_LONGITUDE},   
         margin={"r": 0, "t": 0, "l": 0, "b": 0},
@@ -28,13 +28,18 @@ def create_map_geomap_empty():
     return fig
 
 
-def create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year):    
+def create_map_geomap(dobj, series:dict, settings:object, year) -> go:    
     
+    #data
     series_name = series['dataset_raw']
     var_type = series['var_type']    
     stats = dobj.get_stats(series_name=series_name, year=year, sort_by='country', ascending=True)
-    geojson = dobj.map_lowres
-    mapstyle = mapbox_style[1] #default for now    
+    
+    #settings
+    map_res = settings.map_resolution
+    if map_res == "LOW": geojson = dobj.map_lowres        
+    elif map_res == "MED": geojson = dobj.map_medres 
+    elif map_res == "INSANE": geojson = dobj.map_hires 
 
     # DISCRETE DATA
     if var_type == 'discrete':            
@@ -75,7 +80,7 @@ def create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year):
                                     marker_line_width=1)        
                     
         fig.update_layout(
-            mapbox_style=mapstyle,
+            mapbox_style=settings.map_tiles,
             mapbox_zoom=INIT_ZOOM,
             mapbox_center={"lat": INIT_LATITUDE, "lon": INIT_LONGITUDE},   
             margin={"r": 0, "t": 0, "l": 0, "b": 0},        
@@ -103,8 +108,8 @@ def create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year):
                 customdata=stats['country'],                
                 hoverinfo="location+text",
                 hovertemplate=hovertemp,             
-                colorscale=colorpalette,
-                reversescale=colorpalette_reverse,                
+                colorscale=settings.col_scheme,
+                reversescale=settings.col_invert,                
                 colorbar= {'ticks': '', 'title': {'text': 'HIGH', 'side': 'top'}, 'showticklabels': False, 'bgcolor': 'rgba(0,0,0,0)', 'outlinewidth':0 },  #'xpad': 20, 'borderwidth': 10, 'bgcolor': 'blue'
                 zauto=True,
                 marker_opacity=0.5,
@@ -114,8 +119,8 @@ def create_map_geomap(dobj, series, colorpalette, colorpalette_reverse, year):
         )
             
         #add in some extras (needs to be done like this)
-        fig.update_layout(                             
-            mapbox_style=mapbox_style[1], #default
+        fig.update_layout(  
+            mapbox_style=settings.map_tiles,
             mapbox_zoom=INIT_ZOOM,
             mapbox_center={"lat": INIT_LATITUDE, "lon": INIT_LONGITUDE},   
             margin={"r": 0, "t": 0, "l": 0, "b": 0},
