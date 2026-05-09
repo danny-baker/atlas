@@ -1,10 +1,14 @@
+May 2026 Update:
+
+This project is still going, and I'm hoping to migrate the whole app to Dash 3.0. Truth be told I am about 20 hours short of shipping the Dash 2.0 update (see Appv2 branch). So I might do that first in the coming months. I'm also hoping to add a natural language interface to search for data and overhaul the UI.
+
 # Welcome
 
 **Inspired by Microsoft's [Encarta World Atlas (1997)](https://www.youtube.com/watch?v=QpbrFoXPXdU), the mission of this project is "to make important global datasets more accessible, for everyone"**
 
 This is the open-sourced repository for my [worldatlas.org](https://worldatlas.org) concept. It's a web application that visualises thousands of datasets using Plotly Dash, built in Python. With over 2,500 curated datasets, it's taken me around two years to build as a passion project. For a more detailed background with jokes, see my [white paper](https://medium.com/towards-data-science/ive-built-a-public-world-atlas-with-2-500-datasets-to-explore-8b9ae799e345) published in Towards Data Science (medium.com).
 
-For those who are learning and want to discover a bit more about the capabilities of Plotly [Dash](https://dash.plotly.com/introduction) and Python through this project, welcome. I've added notes in this readme file *especially* for you. For developers who may wish to contribute and enhance my shabby codebase, also, welcome. This is my first open-source project and I don't know how it works or if anyone wants to help. I've provided lots of technical detail on how the site works in the sections below. I've also provided a backlog of things I'd like to improve.
+For those who are learning and want to discover a bit more about the capabilities of Plotly [Dash](https://dash.plotly.com/introduction) and Python through this project, welcome. I've added notes in this readme file *especially* for you. If you're a beginner looking for pain-free deployment of your Dash app, Plotly released (2026) an in-house Dash app hosting platform called [Plotly Cloud](https://plotly.com/cloud/), for 1-button deployment. For brave developers who may wish to contribute and enhance my shabby codebase, also, welcome. This is my first open-source project and I don't know how it works or if anyone wants to help. I've provided lots of technical detail on how the site works in the sections below. I've also provided a backlog of things I'd like to improve.
 
 Please note this is a self-funded experiment with no seed funding. I've purchased the worldatlas.org domain out of my own savings and I personally pay for all the cloud infrastructure (virtual machines, hosting, etc). I'd really love some help to try to turn this prototype into something real; something that could become a learning center for all ages. (Pull requests are welcomed with open arms :heart_eyes:)
 
